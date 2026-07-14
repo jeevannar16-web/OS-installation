@@ -305,7 +305,22 @@ export default function SimulationPage() {
         )}
       </AnimatePresence>
 
-      <div className="min-h-full flex flex-col">
+      {/* Aurora background — consistent with landing page */}
+      <div className="aurora-bg" aria-hidden>
+        <div className="aurora-blob" />
+        <div className="aurora-blob" />
+        <div className="aurora-blob" />
+      </div>
+      <div className="dot-grid" aria-hidden />
+      <svg className="noise-overlay" aria-hidden>
+        <filter id="noise-sim">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#noise-sim)" />
+      </svg>
+
+      <div className="min-h-full flex flex-col relative z-0">
         {/* Header */}
         <header className="mx-auto w-full max-w-5xl px-6 py-5">
           <div className="flex items-center justify-between">

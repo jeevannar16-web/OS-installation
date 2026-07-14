@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { PATHS, OS_LIST } from "../data";
@@ -7,15 +7,22 @@ import Footer from "../components/Footer";
 import MiniDemo from "../components/MiniDemo";
 import BootSequence from "../components/BootSequence";
 
+/* ── Staggered entrance variants ─────────────────────────────── */
 const container = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
+  show: { transition: { staggerChildren: 0.07 } },
 };
 const item = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: "spring", stiffness: 260, damping: 22 },
+  },
 };
 
+/* ── Path Card ───────────────────────────────────────────────── */
 function PathCard({
   p,
   active,
@@ -33,13 +40,31 @@ function PathCard({
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`glass rounded-2xl p-6 text-left transition-all ${
-        active ? "ring-2 ring-accent shadow-[0_0_40px_-10px] shadow-accent" : ""
+      whileHover={{ y: -4, scale: 1.01 }}
+      whileTap={{ scale: 0.98 }}
+      className={`glass rounded-2xl p-6 text-left transition-all relative overflow-hidden ${
+        active
+          ? "ring-2 ring-accent shadow-[0_0_50px_-10px] shadow-accent bg-accent/[0.06]"
+          : "hover:border-white/[0.12]"
       }`}
     >
+      {/* Active glow backdrop */}
+      {active && (
+        <motion.div
+          layoutId="path-glow"
+          className="absolute inset-0 rounded-2xl bg-accent/[0.06] pointer-events-none"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        />
+      )}
+
       <div className="relative h-10 overflow-hidden">
-        <div className="text-3xl">{p.icon}</div>
-        {/* Hover animation cue */}
+        <motion.div
+          className="text-3xl"
+          animate={hovered ? { scale: 1.15, rotate: -5 } : { scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+        >
+          {p.icon}
+        </motion.div>
         <AnimatePresence>
           {hovered && (
             <motion.div
@@ -83,11 +108,27 @@ function PathCard({
       <div className="text-accent-soft text-xs uppercase tracking-wide mt-1">
         {p.tagline}
       </div>
-      <p className="mt-3 text-sm text-white/55">{p.description}</p>
+      <p className="mt-3 text-sm text-white/50 leading-relaxed">{p.description}</p>
+
+      {/* Active checkmark badge */}
+      <AnimatePresence>
+        {active && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+            className="absolute top-3 right-3 h-6 w-6 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-accent/30"
+          >
+            ✓
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.button>
   );
 }
 
+/* ── OS Card ─────────────────────────────────────────────────── */
 function OSCard({
   o,
   active,
@@ -103,46 +144,94 @@ function OSCard({
     <motion.button
       variants={item}
       onClick={() => !disabled && onClick()}
-      className={`glass rounded-2xl p-5 flex flex-col items-center text-center transition-all ${
+      whileHover={!disabled ? { y: -4, scale: 1.02 } : {}}
+      whileTap={!disabled ? { scale: 0.97 } : {}}
+      className={`glass rounded-2xl p-5 flex flex-col items-center text-center transition-all relative overflow-hidden ${
         disabled
-          ? "opacity-40 cursor-not-allowed grayscale"
-          : `hover:-translate-y-1 ${active ? "ring-2 ring-accent" : ""}`
+          ? "opacity-50 cursor-not-allowed grayscale-[0.3]"
+          : `hover:border-white/[0.14] ${active ? "ring-2 ring-accent bg-accent/[0.06]" : ""}`
       }`}
-      title={disabled ? "Coming soon" : undefined}
     >
-      <div
+      <motion.div
         className="text-4xl"
         style={{
           filter: disabled
-            ? "grayscale(1) opacity(0.5)"
+            ? "grayscale(1) opacity(0.4)"
             : `drop-shadow(0 0 12px ${o.branding.accent}66)`,
         }}
+        animate={!disabled && active ? { scale: [1, 1.08, 1] } : {}}
+        transition={{ duration: 0.4 }}
       >
         {o.branding.logo}
-      </div>
-      <div className="mt-3 font-semibold">{o.branding.name}</div>
+      </motion.div>
+      <div className="mt-3 font-semibold text-sm">{o.branding.name}</div>
+
+      {/* Coming soon ribbon */}
       {disabled && (
-        <span className="mt-1.5 rounded-full bg-white/5 text-white/30 text-[10px] px-2 py-0.5 border border-white/5">
-          Coming soon
-        </span>
+        <div className="ribbon-wrap absolute inset-0">
+          <div className="ribbon">Soon</div>
+        </div>
       )}
+
+      {/* Active checkmark badge */}
+      <AnimatePresence>
+        {active && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+            className="absolute top-2 right-2 h-5 w-5 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold shadow-lg shadow-accent/30"
+          >
+            ✓
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.button>
   );
 }
+
+/* ── Floating decorative icons ───────────────────────────────── */
+const FLOAT_ICONS = [
+  { icon: "💿", top: "12%", left: "5%", dur: "7s", delay: "0s", op: 0.12, fy: "-14px", fr: "8deg" },
+  { icon: "🔌", top: "25%", right: "3%", dur: "9s", delay: "-2s", op: 0.10, fy: "-10px", fr: "-5deg" },
+  { icon: "💻", top: "55%", left: "2%", dur: "8s", delay: "-4s", op: 0.08, fy: "-16px", fr: "6deg" },
+  { icon: "🐧", top: "70%", right: "6%", dur: "10s", delay: "-1s", op: 0.10, fy: "-12px", fr: "-7deg" },
+  { icon: "⚡", top: "40%", left: "8%", dur: "6s", delay: "-3s", op: 0.09, fy: "-8px", fr: "4deg" },
+  { icon: "🔧", top: "80%", left: "12%", dur: "11s", delay: "-5s", op: 0.07, fy: "-18px", fr: "-3deg" },
+];
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [path, setPath] = useState<InstallPath | null>(null);
   const [os, setOs] = useState<string | null>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [tiltX, setTiltX] = useState(0);
+  const [tiltY, setTiltY] = useState(0);
 
   const canStart = path && os;
   const selectedOS = os ? OS_LIST.find((x) => x.id === os) : null;
   const selectedPath = path ? PATHS.find((x) => x.id === path) : null;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleBootReady = useCallback((_ready?: boolean) => {
-    // Boot sequence overlay completed — content was always visible underneath
+  // Parallax tilt on hero demo card
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!heroRef.current) return;
+      const rect = heroRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      setTiltX(x * 6);
+      setTiltY(-y * 6);
+    },
+    []
+  );
+  const handleMouseLeave = useCallback(() => {
+    setTiltX(0);
+    setTiltY(0);
   }, []);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleBootReady = useCallback((_ready?: boolean) => {}, []);
 
   function start() {
     if (!path || !os) return;
@@ -155,176 +244,209 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-full flex flex-col relative overflow-hidden">
-      {/* Boot sequence — pure overlay, content renders underneath always */}
+      {/* Boot sequence overlay */}
       <BootSequence onReady={handleBootReady} />
 
-      {/* Ambient background motion */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <motion.div
-          animate={{
-            background: [
-              "radial-gradient(800px 600px at 20% 0%, rgba(124,92,255,0.08) 0%, transparent 60%)",
-              "radial-gradient(800px 600px at 80% 20%, rgba(124,92,255,0.06) 0%, transparent 60%)",
-              "radial-gradient(800px 600px at 20% 0%, rgba(124,92,255,0.08) 0%, transparent 60%)",
-            ],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-0"
-        />
-        <motion.div
-          animate={{
-            background: [
-              "radial-gradient(600px 500px at 90% 80%, rgba(6,182,212,0.06) 0%, transparent 55%)",
-              "radial-gradient(600px 500px at 30% 90%, rgba(6,182,212,0.04) 0%, transparent 55%)",
-              "radial-gradient(600px 500px at 90% 80%, rgba(6,182,212,0.06) 0%, transparent 55%)",
-            ],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-0"
-        />
+      {/* ── Aurora background ── */}
+      <div className="aurora-bg" aria-hidden>
+        <div className="aurora-blob" />
+        <div className="aurora-blob" />
+        <div className="aurora-blob" />
       </div>
 
-      {/* Main content — always rendered, boot sequence is overlay on top */}
-      <div className="relative z-0">
-            {/* Header */}
-            <header className="mx-auto w-full max-w-6xl px-6 py-6 flex items-center justify-between">
-              <div className="flex items-center gap-2 font-semibold">
-                <span className="text-xl">💿</span>
-                <span>OS Install Simulator</span>
-              </div>
-              <span className="text-xs uppercase tracking-widest text-white/40">
-                Practice · Don't risk
-              </span>
-            </header>
+      {/* ── Dot grid ── */}
+      <div className="dot-grid" aria-hidden />
 
-            {/* Hero with live mini-demo */}
-            <section className="mx-auto w-full max-w-5xl px-6 pt-8 pb-10">
-              <div className="flex flex-col lg:flex-row items-center gap-10">
-                {/* Text */}
-                <div className="flex-1 text-center lg:text-left">
-                  <motion.span
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="inline-block rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60"
-                  >
-                    Interactive · Realistic · 100% safe
-                  </motion.span>
-                  <motion.h1
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05, type: "spring", stiffness: 200, damping: 20 }}
-                    className="mt-5 text-4xl sm:text-5xl font-bold leading-tight"
-                  >
-                    Practice installing an OS
-                    <br />
-                    <span className="bg-gradient-to-r from-accent-soft to-accent bg-clip-text text-transparent">
-                      before you actually do it
-                    </span>
-                  </motion.h1>
-                  <motion.p
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.12 }}
-                    className="mt-5 text-white/60 text-lg max-w-lg"
-                  >
-                    Watch and interact with a convincingly real simulation — search &amp; download the ISO,
-                    flash a USB, survive the BIOS menu, and run the installer. No real hardware, no risk.
-                  </motion.p>
-                </div>
+      {/* ── SVG noise texture ── */}
+      <svg className="noise-overlay" aria-hidden>
+        <filter id="noise">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.65"
+            numOctaves="3"
+            stitchTiles="stitch"
+          />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#noise)" />
+      </svg>
 
-                {/* Live mini-demo */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, x: 20 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 20 }}
-                >
-                  <MiniDemo />
-                </motion.div>
-              </div>
-            </section>
-
-            {/* Path selection */}
-            <section className="mx-auto w-full max-w-6xl px-6 mt-6">
-              <h2 className="text-sm uppercase tracking-widest text-white/40 mb-4">
-                Step 1 — Choose how you'll install
-              </h2>
-              <motion.div
-                variants={container}
-                initial="hidden"
-                animate="show"
-                className="grid gap-4 sm:grid-cols-3"
-              >
-                {PATHS.map((p) => (
-                  <PathCard
-                    key={p.id}
-                    p={p}
-                    active={path === p.id}
-                    onClick={() => setPath(p.id)}
-                  />
-                ))}
-              </motion.div>
-            </section>
-
-            {/* OS selection */}
-            <section className="mx-auto w-full max-w-6xl px-6 mt-10">
-              <h2 className="text-sm uppercase tracking-widest text-white/40 mb-4">
-                Step 2 — Pick an operating system
-              </h2>
-              <motion.div
-                variants={container}
-                initial="hidden"
-                animate="show"
-                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"
-              >
-                {OS_LIST.map((o) => (
-                  <OSCard
-                    key={o.id}
-                    o={o}
-                    active={os === o.id}
-                    onClick={() => setOs(o.id)}
-                  />
-                ))}
-              </motion.div>
-            </section>
-
-            {/* CTA */}
-            <section className="mx-auto w-full max-w-6xl px-6 mt-10 mb-4">
-              <motion.button
-                whileTap={canStart ? { scale: 0.97 } : {}}
-                disabled={!canStart}
-                onClick={start}
-                className={`w-full sm:w-auto text-base font-semibold rounded-xl px-6 py-3 transition-all duration-500 ${
-                  canStart
-                    ? "bg-accent text-white shadow-[0_0_30px_-6px] shadow-accent hover:bg-accent-soft hover:shadow-[0_0_40px_-6px] hover:shadow-accent cursor-pointer"
-                    : "bg-white/5 text-white/30 border border-white/10 cursor-not-allowed"
-                }`}
-              >
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={ctaLabel}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {ctaLabel}
-                  </motion.span>
-                </AnimatePresence>
-              </motion.button>
-              {!canStart && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-3 text-sm text-white/40"
-                >
-                  Pick one install method above and one operating system.
-                </motion.p>
-              )}
-            </section>
-
-            <div className="flex-1" />
-            <Footer />
+      {/* ── Floating decorative icons (hidden on mobile) ── */}
+      <div className="hidden lg:block" aria-hidden>
+        {FLOAT_ICONS.map((fi, i) => (
+          <div
+            key={i}
+            className="float-icon text-2xl"
+            style={{
+              top: fi.top,
+              left: fi.left,
+              right: fi.right,
+              ["--dur" as string]: fi.dur,
+              ["--delay" as string]: fi.delay,
+              ["--op" as string]: fi.op,
+              ["--fy" as string]: fi.fy,
+              ["--fr" as string]: fi.fr,
+            }}
+          >
+            {fi.icon}
           </div>
+        ))}
+      </div>
+
+      {/* ── Main content ── */}
+      <div className="relative z-0">
+        {/* Header */}
+        <header className="mx-auto w-full max-w-6xl px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 font-semibold">
+            <span className="text-xl">💿</span>
+            <span className="text-white/90">OS Install Simulator</span>
+          </div>
+          <span className="text-[10px] uppercase tracking-[0.15em] text-white/30 font-medium">
+            Practice · Don't risk
+          </span>
+        </header>
+
+        {/* ── Hero Section ── */}
+        <section className="mx-auto w-full max-w-6xl px-6 pt-10 pb-16">
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            {/* Text */}
+            <div className="flex-1 text-center lg:text-left">
+              <motion.span
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="inline-block rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1 text-xs text-white/50 font-medium"
+              >
+                Interactive · Realistic · 100% safe
+              </motion.span>
+              <motion.h1
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05, type: "spring", stiffness: 200, damping: 20 }}
+                className="mt-6 text-4xl sm:text-5xl lg:text-[3.4rem] font-bold leading-[1.1] tracking-tight"
+              >
+                Practice installing an OS
+                <br />
+                <span className="gradient-text-animated font-extrabold">
+                  before you actually do it
+                </span>
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.12 }}
+                className="mt-6 text-white/50 text-lg max-w-lg leading-relaxed mx-auto lg:mx-0"
+              >
+                Watch and interact with a convincingly real simulation — search &amp; download the ISO,
+                flash a USB, survive the BIOS menu, and run the installer. No real hardware, no risk.
+              </motion.p>
+            </div>
+
+            {/* Live mini-demo with parallax tilt */}
+            <motion.div
+              ref={heroRef}
+              initial={{ opacity: 0, scale: 0.94, x: 30 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 160, damping: 18 }}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+              className="relative"
+              style={{
+                transform: `perspective(800px) rotateY(${tiltX}deg) rotateX(${tiltY}deg)`,
+                transition: "transform 0.15s ease-out",
+              }}
+            >
+              {/* Glow behind card */}
+              <div className="absolute -inset-8 rounded-3xl bg-accent/10 blur-3xl pointer-events-none" />
+              <div className="relative">
+                <MiniDemo />
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ── Path Selection ── */}
+        <section className="mx-auto w-full max-w-6xl px-6 mt-8">
+          <div className="section-label mb-5">
+            Step 1 — Choose how you'll install
+          </div>
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="grid gap-4 sm:grid-cols-3"
+          >
+            {PATHS.map((p) => (
+              <PathCard
+                key={p.id}
+                p={p}
+                active={path === p.id}
+                onClick={() => setPath(p.id)}
+              />
+            ))}
+          </motion.div>
+        </section>
+
+        {/* ── OS Selection ── */}
+        <section className="mx-auto w-full max-w-6xl px-6 mt-14">
+          <div className="section-label mb-5">
+            Step 2 — Pick an operating system
+          </div>
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"
+          >
+            {OS_LIST.map((o) => (
+              <OSCard
+                key={o.id}
+                o={o}
+                active={os === o.id}
+                onClick={() => setOs(o.id)}
+              />
+            ))}
+          </motion.div>
+        </section>
+
+        {/* ── CTA Button ── */}
+        <section className="mx-auto w-full max-w-6xl px-6 mt-12 mb-4">
+          <motion.button
+            whileTap={canStart ? { scale: 0.96 } : {}}
+            disabled={!canStart}
+            onClick={start}
+            className={`relative w-full sm:w-auto text-base font-semibold rounded-xl px-8 py-3.5 transition-all duration-500 ${
+              canStart
+                ? "bg-accent text-white shadow-[0_0_40px_-8px] shadow-accent hover:shadow-[0_0_50px_-6px] hover:shadow-accent cursor-pointer sheen-sweep"
+                : "bg-white/[0.03] text-white/25 border border-white/[0.06] cursor-not-allowed"
+            }`}
+          >
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={ctaLabel}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+                className="relative z-10"
+              >
+                {ctaLabel}
+              </motion.span>
+            </AnimatePresence>
+          </motion.button>
+          {!canStart && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-3 text-sm text-white/30"
+            >
+              Pick one install method above and one operating system.
+            </motion.p>
+          )}
+        </section>
+
+        <div className="flex-1" />
+        <Footer />
+      </div>
     </div>
   );
 }
