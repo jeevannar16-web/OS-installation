@@ -1,95 +1,217 @@
 <div align="center">
 
-# 💿 OS Install Simulator
+<img src="https://raw.githubusercontent.com/jeevannar16-web/OS-installation/main/public/og-banner.png" alt="OS Install Simulator" width="0" height="0" />
 
-**Practice installing an operating system before you actually do it.**
+# OS Install Simulator
 
-An interactive, fully-scripted simulation that walks you through installing Ubuntu, Windows, and
-more — via Virtual Machine, Dual Boot, or Live USB — using a convincingly realistic fake-OS UI
-theater. No real emulator, no risk. Just confidence.
+### Practice installing an operating system before you actually do it.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Built with React](https://img.shields.io/badge/Built%20with-React%20%2B%20Vite-61dafb?logo=react&logoColor=white)](https://react.dev)
-[![State Machine: XState](https://img.shields.io/badge/State%20Machine-XState-000000?logo=xstate&logoColor=white)](https://stately.ai/docs/xstate)
-[![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg)](#contributing)
+An interactive, pixel-perfect simulation that walks you through installing Ubuntu, Windows, Arch Linux, and more — via **Virtual Machine**, **Dual Boot**, or **Live USB** — using a convincingly realistic fake-OS UI.
+
+No real emulator. No risk to your hardware. Just confidence.
+
+<br />
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-7c5cff?style=for-the-badge&logo=github&logoColor=white)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React_18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite_5-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
+[![XState](https://img.shields.io/badge/XState_5-222222?style=for-the-badge&logo=xstate&logoColor=white)](https://stately.ai/docs/xstate)
 
 </div>
 
 ---
 
-## ✨ Why?
+## Why
 
 Buying a USB stick, downloading an ISO, and rebooting into a BIOS menu for the first time is
 intimidating. **OS Install Simulator** lets you rehearse the entire process in a safe, guided,
-visually faithful environment — so that when you sit down at real hardware, you already know
-exactly what to expect at every click.
+visually faithful environment — so when you sit down at real hardware, you already know exactly
+what to expect at every click.
 
 Think of it like [learngitbranching](https://learngitbranching.js.org/) — but for OS installation.
 
-## 🚀 Features
+---
 
-- 🖥️ **Three realistic paths** — Virtual Machine, Dual Boot, and Live USB, each with its own flow.
-- 🧭 **Guided, interactive scenes** — search & download the ISO, flash a USB drive (Rufus /
-  Ventoy / BalenaEtcher style), navigate a fake BIOS boot menu, partition a disk with a slider,
-  and run through a faithfully recreated installer wizard.
-- 🐧 🪟 **Multi-OS support** — Ubuntu and Windows 11 fully built; Arch, Debian, and Fedora
-  stubbed on the same data-driven engine.
-- ⚙️ **Real finite state machines** — every simulation is modeled with XState for predictable,
-  consistent behavior.
-- 🎞️ **Premium UI** — dark theme, glassmorphism, smooth Framer Motion scene transitions.
-- 🐢 **Speed toggle** — skip or fast-forward animations when you just want to click through.
-- 🌐 **100% client-side** — static-hostable on Vercel / Netlify / GitHub Pages. No backend.
+## Features
 
-## 🧱 Tech Stack
+| | Feature | Details |
+|---|---|---|
+| **Three install paths** | Virtual Machine, Dual Boot, Live USB — each has its own completely separate scene flow and state machine. |
+| **Interactive scenes** | Search & download ISO, flash USB (Rufus / Ventoy / BalenaEtcher), BIOS boot menu, disk partitioning, live desktop terminal, and a full installer wizard. |
+| **Multi-OS support** | Ubuntu, Windows 11, Arch Linux fully built. Debian & Fedora stubbed on the same data-driven engine. |
+| **VM path** | Create VirtualBox VM, attach ISO, boot from BIOS — entirely separate from physical hardware scenes. |
+| **XState v5 machines** | Every simulation is modeled with a real finite state machine for predictable, consistent behavior. |
+| **Sound effects** | Web Audio API — USB connect, click, success chimes. |
+| **Keyboard shortcuts** | `?` overlay, `Enter` to advance, `S` for speed toggle. |
+| **LocalStorage resume** | Progress is saved and can be resumed on reload. |
+| **Speed run mode** | Fast-forward all animations with a single toggle. |
+| **Premium UI** | Aurora background, constellation network layer, glassmorphism, animated gradient text, parallax tilt hero. |
+| **100% client-side** | Static-hostable on Vercel, Netlify, or GitHub Pages. Zero backend. |
 
-| Layer        | Choice                                            |
-| ------------ | ------------------------------------------------- |
-| Framework    | React + Vite + TypeScript                         |
-| Styling      | Tailwind CSS                                      |
-| Animation    | Framer Motion                                     |
-| State        | XState (simulation state machines)                |
-| Drag & Drop  | dnd-kit / native HTML5 DnD                        |
-| Routing      | React Router                                      |
+---
 
-## 🗺️ Simulation Flow
+## Tech Stack
 
-```text
-idle → searching → downloading → flashing_usb → rebooting
-     → boot_menu → partitioning (dual boot) → installing → complete
+```
+┌─────────────────────────────────────────────────────┐
+│  Framework       React 18 + Vite 5 + TypeScript 5   │
+│  Styling         Tailwind CSS 3                     │
+│  Animation       Framer Motion 11                   │
+│  State Machine   XState 5 + @xstate/react           │
+│  Routing         React Router 6                     │
+│  Drag & Drop     Native HTML5 DnD + @dnd-kit        │
+│  Audio           Web Audio API (no external deps)   │
+└─────────────────────────────────────────────────────┘
 ```
 
-> The VM path skips the physical framing of scenes 1–4 but keeps the same installer wizard.
+---
 
-## 📦 Getting Started (Local Dev)
+## Simulation Flow
+
+Each install path is a completely separate flow through the XState state machine:
+
+```
+┌─ Virtual Machine ──────────────────────────────────────┐
+│  Search → Download → Create VM → Mount ISO → Boot VM  │
+│  → Install → Close VM → Done                           │
+└────────────────────────────────────────────────────────┘
+
+┌─ Dual Boot ────────────────────────────────────────────┐
+│  Search → Download → Flash USB → Re-insert USB        │
+│  → Reboot → Boot Menu → Partition Disk → Install → Done│
+└────────────────────────────────────────────────────────┘
+
+┌─ Live USB ─────────────────────────────────────────────┐
+│  Search → Download → Flash USB → Re-insert USB        │
+│  → Reboot → Boot Menu → Welcome → Live Desktop        │
+│  → Install → Done                                      │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Getting Started
 
 ```bash
-# 1. Clone
+# Clone the repository
 git clone https://github.com/jeevannar16-web/OS-installation.git
 cd OS-installation
 
-# 2. Install dependencies
+# Install dependencies
 npm install
 
-# 3. Run the dev server
+# Start the dev server
 npm run dev
 ```
 
-Open the printed local URL in your browser. 🎉
+Open the printed local URL in your browser. That's it.
 
-## 🤝 Contributing
+### Commands
 
-Contributions are very welcome — whether that's adding a new OS data file, polishing a scene,
-or fixing a typo.
+| Command | Description |
+|---|---|
+| `npm run dev` | Start Vite dev server with HMR |
+| `npm run build` | Type-check + production build |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint` | Run TypeScript type-checking |
 
-1. Fork the repo and create your branch (`git checkout -b feature/my-os`).
-2. Make your changes.
-3. Commit (`git commit -m "Add Fedora installer data"`) and push.
-4. Open a Pull Request.
+---
 
-Adding a new OS is mostly **data entry** — drop a config into `src/data/<os>.ts` and the
-existing scene components render it.
+## Project Structure
 
-## 📄 License
+```
+src/
+├── components/
+│   ├── scenes/            # Individual simulation scenes
+│   │   ├── FakeBrowser.tsx     # Search for ISO
+│   │   ├── FileManager.tsx     # Locate + drag ISO
+│   │   ├── FlashUSB.tsx        # Rufus / Ventoy / BalenaEtcher
+│   │   ├── UsbReinsert.tsx     # Physical USB insertion
+│   │   ├── Reboot.tsx          # POST + BIOS entry
+│   │   ├── BootMenu.tsx        # BIOS boot device selection
+│   │   ├── Partition.tsx       # Disk partitioning slider
+│   │   ├── Install.tsx         # Generic installer wizard
+│   │   ├── ArchInstall.tsx     # Arch Linux terminal installer
+│   │   ├── LiveWelcome.tsx     # Try / Install choice
+│   │   ├── LiveDesktop.tsx     # Fake live desktop
+│   │   ├── CreateVM.tsx        # VirtualBox new VM wizard
+│   │   ├── MountISO.tsx        # Attach ISO in settings
+│   │   ├── VmBoot.tsx          # Power on + BIOS → boot menu
+│   │   ├── VmClose.tsx         # Close VM window
+│   │   └── Done.tsx            # 3D hardware completion scene
+│   ├── shared/            # Reusable UI + effects
+│   │   ├── Toast.tsx
+│   │   ├── FilePickerModal.tsx
+│   │   ├── InteractiveEffects.tsx  # SparkleBurst, Tooltip, PulseHint
+│   │   ├── sounds.ts              # Web Audio API
+│   │   └── Showcase.tsx           # First-visit walkthrough
+│   ├── shell/
+│   │   └── DesktopShell.tsx   # OS window frame
+│   ├── BootSequence.tsx       # Overlay boot animation
+│   ├── MiniDemo.tsx           # Hero preview widget
+│   └── Footer.tsx             # GitHub CTA + star count
+├── data/
+│   ├── types.ts               # Shared OSConfig types
+│   ├── ubuntu.ts              # Ubuntu config
+│   ├── windows.ts             # Windows 11 config
+│   ├── arch.ts                # Arch Linux config
+│   ├── debian.ts              # Debian (stub)
+│   └── fedora.ts              # Fedora (stub)
+├── machines/
+│   └── simulationMachine.ts   # XState state machine
+├── pages/
+│   ├── LandingPage.tsx        # Home — path + OS selection
+│   └── SimulationPage.tsx     # Scene router + progress bar
+└── index.css                  # Aurora, constellation, vignette
+```
+
+---
+
+## Adding a New OS
+
+Adding an OS is mostly a **data-entry exercise**. Create a new file in `src/data/`:
+
+```typescript
+// src/data/fedora.ts
+import type { OSConfig } from "./types";
+
+export const fedora: OSConfig = {
+  id: "fedora",
+  branding: {
+    name: "Fedora Linux",
+    shortName: "Fedora",
+    accent: "#294172",
+    surface: "#1a1a2e",
+    logo: "🎩",
+    officialUrl: "https://fedoraproject.org",
+  },
+  downloadPage: { /* ... */ },
+  iso: { filename: "Fedora-Workstation-40.iso", size: "2.1 GB" },
+  flashers: [ /* ... */ ],
+  wizard: [ /* ... */ ],
+  installTips: [ /* ... */ ],
+  searchKeywords: ["fedora", "workstation"],
+  completion: { headline: "Fedora is installed!", sub: "..." },
+};
+```
+
+Then register it in `src/data/index.ts` — no new components needed.
+
+---
+
+## Contributing
+
+Contributions are welcome — whether that's adding a new OS, polishing a scene, or fixing a typo.
+
+1. **Fork** the repo and create your branch (`git checkout -b feature/my-os`)
+2. Make your changes
+3. **Commit** and push (`git push origin feature/my-os`)
+4. Open a **Pull Request**
+
+---
+
+## License
 
 Released under the [MIT License](https://opensource.org/licenses/MIT).
 
@@ -97,8 +219,8 @@ Released under the [MIT License](https://opensource.org/licenses/MIT).
 
 <div align="center">
 
-Made with ☕ and way too many reboot simulations.
+**Built with React, XState, and an unreasonable number of reboot simulations.**
 
-⭐ If this helped you, consider starring the repo!
+If this helped you, consider giving it a ⭐
 
 </div>
