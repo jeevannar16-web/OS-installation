@@ -134,17 +134,14 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [path, setPath] = useState<InstallPath | null>(null);
   const [os, setOs] = useState<string | null>(null);
-  const [booted, setBooted] = useState(() => {
-    return sessionStorage.getItem("boot_sequence_seen") === "1";
-  });
 
   const canStart = path && os;
   const selectedOS = os ? OS_LIST.find((x) => x.id === os) : null;
   const selectedPath = path ? PATHS.find((x) => x.id === path) : null;
 
-  const handleBootReady = useCallback(() => {
-    sessionStorage.setItem("boot_sequence_seen", "1");
-    setBooted(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleBootReady = useCallback((_ready?: boolean) => {
+    // Boot sequence overlay completed — content was always visible underneath
   }, []);
 
   function start() {
@@ -158,10 +155,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-full flex flex-col relative overflow-hidden">
-      {/* Boot sequence */}
-      <AnimatePresence>
-        {!booted && <BootSequence onReady={handleBootReady} />}
-      </AnimatePresence>
+      {/* Boot sequence — pure overlay, content renders underneath always */}
+      <BootSequence onReady={handleBootReady} />
 
       {/* Ambient background motion */}
       <div className="pointer-events-none fixed inset-0 -z-10">
@@ -189,14 +184,8 @@ export default function LandingPage() {
         />
       </div>
 
-      {/* Main content — revealed after boot sequence */}
-      <AnimatePresence>
-        {booted && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
+      {/* Main content — always rendered, boot sequence is overlay on top */}
+      <div className="relative z-0">
             {/* Header */}
             <header className="mx-auto w-full max-w-6xl px-6 py-6 flex items-center justify-between">
               <div className="flex items-center gap-2 font-semibold">
@@ -335,9 +324,7 @@ export default function LandingPage() {
 
             <div className="flex-1" />
             <Footer />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
@@ -17,10 +18,10 @@ const REPO_URL = "https://github.com/jeevannar16-web/OS-installation";
 
 function useClock() {
   const [time, setTime] = useState(() => new Date());
-  useState(() => {
+  useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 10000);
     return () => clearInterval(t);
-  });
+  }, []);
   return time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
@@ -109,6 +110,7 @@ export default function Done({
   path: string;
   onComplete: () => void;
 }) {
+  const navigate = useNavigate();
   const isDualBoot = path === "dual-boot";
   const [phase, setPhase] = useState<DonePhase>(
     isDualBoot ? "grub" : path === "live-usb" ? "desktop" : "complete"
@@ -345,7 +347,7 @@ export default function Done({
 
               <div className="mt-8">
                 <button
-                  onClick={() => { playClick(); onComplete(); }}
+                  onClick={() => { playClick(); navigate("/"); }}
                   className="rounded-xl border border-white/10 bg-white/5 px-8 py-3 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors"
                 >
                   🔄 Start Over
