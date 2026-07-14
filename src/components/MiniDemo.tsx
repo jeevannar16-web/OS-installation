@@ -171,9 +171,12 @@ export default function MiniDemo() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="overflow-hidden rounded-xl bg-[#0e0e18] ring-1 ring-white/10 shadow-2xl">
+      <div className="relative overflow-hidden rounded-xl bg-[#0e0e18] ring-1 ring-white/10 shadow-2xl">
+        {/* Ambient glow */}
+        <div className="absolute -inset-4 bg-accent/5 blur-2xl pointer-events-none" />
+
         {/* Tab strip */}
-        <div className="flex items-center gap-1.5 bg-[#1a1a28] px-3 pt-2">
+        <div className="relative flex items-center gap-1.5 bg-[#1a1a28] px-3 pt-2">
           <div className="flex items-center gap-1.5 rounded-t-md bg-[#252536] px-3 py-1.5">
             <span className="text-[10px]">🐧</span>
             <span className="text-[10px] text-white/60 max-w-[100px] truncate">ubuntu.com</span>
@@ -181,14 +184,14 @@ export default function MiniDemo() {
         </div>
 
         {/* Content */}
-        <div className="relative h-[180px] overflow-hidden bg-[#0e0e18] p-4">
+        <div className="relative h-[200px] overflow-hidden bg-[#0e0e18] p-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={current.key}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25 }}
               className="h-full"
             >
               <current.Component />
@@ -197,7 +200,7 @@ export default function MiniDemo() {
         </div>
 
         {/* Phase indicator */}
-        <div className="flex items-center gap-1.5 bg-[#1a1a28] px-3 py-2">
+        <div className="relative flex items-center gap-1.5 bg-[#1a1a28] px-3 py-2">
           {PHASES.map((p, i) => (
             <div key={p.key} className="flex items-center gap-1.5">
               <div

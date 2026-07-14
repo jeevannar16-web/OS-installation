@@ -271,6 +271,35 @@ export default function LandingPage() {
         <rect width="100%" height="100%" filter="url(#noise)" />
       </svg>
 
+      {/* ── Constellation network mid-layer ── */}
+      <svg className="constellation-layer" aria-hidden viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+        {/* Nodes */}
+        <circle cx="120" cy="80" r="2" fill="#7c5cff" opacity="0.6" />
+        <circle cx="300" cy="150" r="1.5" fill="#06b6d4" opacity="0.5" />
+        <circle cx="520" cy="60" r="2" fill="#a855f7" opacity="0.4" />
+        <circle cx="680" cy="200" r="1.5" fill="#7c5cff" opacity="0.5" />
+        <circle cx="200" cy="350" r="1.8" fill="#06b6d4" opacity="0.3" />
+        <circle cx="450" cy="300" r="2" fill="#a855f7" opacity="0.4" />
+        <circle cx="700" cy="420" r="1.5" fill="#7c5cff" opacity="0.3" />
+        <circle cx="100" cy="500" r="1.8" fill="#06b6d4" opacity="0.4" />
+        <circle cx="550" cy="500" r="2" fill="#a855f7" opacity="0.3" />
+        <circle cx="350" cy="450" r="1.5" fill="#7c5cff" opacity="0.4" />
+        {/* Edges */}
+        <line x1="120" y1="80" x2="300" y2="150" stroke="#7c5cff" strokeWidth="0.5" opacity="0.15" />
+        <line x1="300" y1="150" x2="520" y2="60" stroke="#06b6d4" strokeWidth="0.5" opacity="0.12" />
+        <line x1="520" y1="60" x2="680" y2="200" stroke="#a855f7" strokeWidth="0.5" opacity="0.1" />
+        <line x1="300" y1="150" x2="450" y2="300" stroke="#7c5cff" strokeWidth="0.4" opacity="0.12" />
+        <line x1="200" y1="350" x2="450" y2="300" stroke="#06b6d4" strokeWidth="0.4" opacity="0.1" />
+        <line x1="450" y1="300" x2="700" y2="420" stroke="#a855f7" strokeWidth="0.4" opacity="0.08" />
+        <line x1="100" y1="500" x2="350" y2="450" stroke="#7c5cff" strokeWidth="0.4" opacity="0.1" />
+        <line x1="350" y1="450" x2="550" y2="500" stroke="#06b6d4" strokeWidth="0.4" opacity="0.1" />
+        <line x1="200" y1="350" x2="100" y2="500" stroke="#a855f7" strokeWidth="0.3" opacity="0.08" />
+        <line x1="680" y1="200" x2="700" y2="420" stroke="#7c5cff" strokeWidth="0.3" opacity="0.08" />
+      </svg>
+
+      {/* ── Radial vignette ── */}
+      <div className="vignette-overlay" aria-hidden />
+
       {/* ── Floating decorative icons (hidden on mobile) ── */}
       <div className="hidden lg:block" aria-hidden>
         {FLOAT_ICONS.map((fi, i) => (

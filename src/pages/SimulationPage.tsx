@@ -19,6 +19,9 @@ import LiveDesktop from "../components/scenes/LiveDesktop";
 import Partition from "../components/scenes/Partition";
 import Install from "../components/scenes/Install";
 import ArchInstall from "../components/scenes/ArchInstall";
+import CreateVM from "../components/scenes/CreateVM";
+import MountISO from "../components/scenes/MountISO";
+import VmBoot from "../components/scenes/VmBoot";
 import VmClose from "../components/scenes/VmClose";
 import Done from "../components/scenes/Done";
 
@@ -33,6 +36,9 @@ const SCENE_LABELS: Record<string, string> = {
   partitioning: "Partition",
   live_welcome: "Live Welcome",
   live_desktop: "Live Desktop",
+  create_vm: "Create VM",
+  mount_iso: "Mount ISO",
+  vm_boot: "Power On",
   installing: "Install",
   vm_close: "Close VM",
   complete: "Done",
@@ -48,6 +54,9 @@ const ACTIVE_APP: Record<string, AppInfo> = {
   live_welcome: { name: "Installer", icon: "💿" },
   live_desktop: { name: "Live Session", icon: "🖥️" },
   partitioning: { name: "Installer", icon: "🧩" },
+  create_vm: { name: "VirtualBox", icon: "💻" },
+  mount_iso: { name: "VirtualBox", icon: "💿" },
+  vm_boot: { name: "VirtualBox", icon: "▶" },
   installing: { name: "Installer", icon: "🧩" },
   vm_close: { name: "VirtualBox", icon: "💻" },
   complete: { name: "Done", icon: "🎉" },
@@ -65,12 +74,18 @@ const STATUS_TEXT: Record<string, string> = {
   live_welcome: "Choose between trying or installing…",
   live_desktop: "Exploring the live desktop environment…",
   partitioning: "Allocating disk space for the new OS…",
+  create_vm: "Setting up a new virtual machine…",
+  mount_iso: "Attaching the installation ISO…",
+  vm_boot: "Powering on the virtual machine…",
   installing: "Installing the operating system…",
   vm_close: "Closing the virtual machine…",
   complete: "Installation complete!",
 };
 
 const REPO_URL = "https://github.com/jeevannar16-web/OS-installation";
+
+const VM_ONLY = new Set(["create_vm", "mount_iso", "vm_boot"]);
+const PHYSICAL_ONLY = new Set(["flashing_usb", "usb_reinsert", "rebooting", "boot_menu"]);
 
 export default function SimulationPage() {
   const { os, path } = useParams();
@@ -85,26 +100,22 @@ export default function SimulationPage() {
   const current = String(state.value);
   const speed = state.context.speed;
 
-  // LocalStorage save/resume
   const STORAGE_KEY = "os-sim-progress";
 
   useEffect(() => {
-    // Try to resume from localStorage on mount
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         const data = JSON.parse(saved);
         if (data.osId && data.path && data.state && data.state !== "idle" && data.state !== "complete") {
-          // Only restore if it matches the current URL
           if (data.osId === os && data.path === path) {
-            // Machine state can't be directly restored with XState v5, but we track position
+            // Machine state can't be directly restored with XState v5
           }
         }
       } catch { /* ignore corrupt data */ }
     }
   }, [os, path]);
 
-  // Save progress to localStorage
   useEffect(() => {
     const current = String(state.value);
     if (current !== "idle") {
@@ -123,7 +134,6 @@ export default function SimulationPage() {
     }
   }, [state.value, config, path]);
 
-  // Keyboard shortcut overlay
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === "?" || (e.key === "/" && !e.ctrlKey && !e.metaKey)) {
@@ -149,7 +159,6 @@ export default function SimulationPage() {
     if (config && path && state.matches("idle")) {
       send({ type: "START", osId: config.id, path: path as never });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, path]);
 
   if (!config) {
@@ -167,6 +176,7 @@ export default function SimulationPage() {
   const cfg = config;
   const activeApp = ACTIVE_APP[current] ?? { name: "OS Simulator", icon: "💿" };
   const isFullscreen = FULLSCREEN_SCENES.has(current);
+  const isVm = path === "vm";
 
   function renderScene() {
     switch (current) {
@@ -217,6 +227,22 @@ export default function SimulationPage() {
         return (
           <Partition onComplete={() => send({ type: "PARTITION_DONE" })} />
         );
+      case "create_vm":
+        return (
+          <CreateVM config={cfg} onComplete={() => send({ type: "VM_CREATED" })} />
+        );
+      case "mount_iso":
+        return (
+          <MountISO config={cfg} onComplete={() => send({ type: "ISO_MOUNTED" })} />
+        );
+      case "vm_boot":
+        return (
+          <VmBoot
+            config={cfg}
+            speed={speed}
+            onComplete={() => send({ type: "VM_POWERED_ON" })}
+          />
+        );
       case "installing":
         if (cfg.id === "arch") {
           return (
@@ -247,13 +273,19 @@ export default function SimulationPage() {
     setShowcase(false);
   }
 
-  // Filter scenes based on path
   const visibleScenes = SIM_SCENES.filter((s) => {
     if (s === "idle") return false;
+    if (isVm) {
+      if (PHYSICAL_ONLY.has(s)) return false;
+      if (s === "partitioning") return false;
+      if (s === "live_welcome" || s === "live_desktop") return false;
+      return true;
+    }
+    if (VM_ONLY.has(s)) return false;
+    if (s === "vm_close") return false;
     if (s === "partitioning" && path !== "dual-boot") return false;
     if (s === "live_welcome" && path !== "live-usb") return false;
     if (s === "live_desktop" && path !== "live-usb") return false;
-    if (s === "vm_close" && path !== "vm") return false;
     return true;
   });
 
@@ -261,7 +293,6 @@ export default function SimulationPage() {
     <ToastProvider>
       {showcase && <Showcase onDismiss={handleShowcaseDismiss} />}
 
-      {/* Keyboard shortcut overlay */}
       <AnimatePresence>
         {showShortcuts && (
           <motion.div
@@ -305,7 +336,6 @@ export default function SimulationPage() {
         )}
       </AnimatePresence>
 
-      {/* Aurora background — consistent with landing page */}
       <div className="aurora-bg" aria-hidden>
         <div className="aurora-blob" />
         <div className="aurora-blob" />
@@ -320,8 +350,25 @@ export default function SimulationPage() {
         <rect width="100%" height="100%" filter="url(#noise-sim)" />
       </svg>
 
+      <svg className="constellation-layer" aria-hidden viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+        <circle cx="150" cy="100" r="1.5" fill="#7c5cff" opacity="0.5" />
+        <circle cx="400" cy="80" r="2" fill="#06b6d4" opacity="0.4" />
+        <circle cx="650" cy="150" r="1.5" fill="#a855f7" opacity="0.4" />
+        <circle cx="250" cy="300" r="1.8" fill="#7c5cff" opacity="0.3" />
+        <circle cx="550" cy="350" r="2" fill="#06b6d4" opacity="0.3" />
+        <circle cx="100" cy="450" r="1.5" fill="#a855f7" opacity="0.3" />
+        <circle cx="700" cy="480" r="1.8" fill="#7c5cff" opacity="0.3" />
+        <circle cx="400" cy="500" r="1.5" fill="#06b6d4" opacity="0.25" />
+        <line x1="150" y1="100" x2="400" y2="80" stroke="#7c5cff" strokeWidth="0.4" opacity="0.12" />
+        <line x1="400" y1="80" x2="650" y2="150" stroke="#06b6d4" strokeWidth="0.4" opacity="0.1" />
+        <line x1="250" y1="300" x2="550" y2="350" stroke="#a855f7" strokeWidth="0.3" opacity="0.08" />
+        <line x1="100" y1="450" x2="400" y2="500" stroke="#7c5cff" strokeWidth="0.3" opacity="0.08" />
+        <line x1="550" y1="350" x2="700" y2="480" stroke="#06b6d4" strokeWidth="0.3" opacity="0.06" />
+      </svg>
+
+      <div className="vignette-overlay" aria-hidden />
+
       <div className="min-h-full flex flex-col relative z-0">
-        {/* Header */}
         <header className="mx-auto w-full max-w-5xl px-6 py-5">
           <div className="flex items-center justify-between">
             <Link to="/" className="text-sm text-white/60 hover:text-white">
@@ -356,7 +403,7 @@ export default function SimulationPage() {
             </div>
           </div>
 
-          {/* Progress indicator */}
+          {/* Progress indicator — only shows scenes relevant to the current path */}
           <div className="mt-4 flex flex-wrap items-center gap-1">
             {visibleScenes.map((s) => {
               const idx = (SIM_SCENES as readonly string[]).indexOf(s);
@@ -385,7 +432,6 @@ export default function SimulationPage() {
             })}
           </div>
 
-          {/* What's happening now */}
           <div className="mt-2 min-h-[1.25rem]">
             <AnimatePresence mode="wait">
               <motion.div
@@ -402,7 +448,6 @@ export default function SimulationPage() {
           </div>
         </header>
 
-        {/* Main content */}
         {isFullscreen ? (
           <AnimatePresence mode="wait">
             <motion.div
@@ -439,7 +484,6 @@ export default function SimulationPage() {
           Simulation only — no files are downloaded or executed.
         </div>
 
-        {/* Persistent GitHub footer */}
         <div className="flex justify-center gap-2 pb-4">
           <a
             href={REPO_URL}

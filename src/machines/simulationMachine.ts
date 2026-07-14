@@ -2,19 +2,14 @@ import { setup, assign } from "xstate";
 import type { InstallPath } from "../data/types";
 
 /**
- * Generic, OS/path-agnostic simulation state machine.
+ * OS simulation state machine — two distinct flows:
  *
- * Flow (dual-boot):
+ * Physical path (dual-boot / live-usb):
  *   idle → searching → downloading → flashing_usb → usb_reinsert → rebooting → boot_menu
- *        → partitioning → installing → complete
+ *        → [partitioning | live_welcome → live_desktop] → installing → complete
  *
- * Flow (vm):
- *   idle → searching → downloading → flashing_usb → usb_reinsert → rebooting → boot_menu
- *        → installing → vm_close → complete
- *
- * Flow (live-usb):
- *   idle → searching → downloading → flashing_usb → usb_reinsert → rebooting → boot_menu
- *        → live_welcome → live_desktop → installing → complete
+ * VM path:
+ *   idle → searching → downloading → create_vm → mount_iso → vm_boot → installing → vm_close → complete
  */
 
 export type SimEvent =
@@ -28,6 +23,9 @@ export type SimEvent =
   | { type: "LIVE_TRY" }
   | { type: "LIVE_INSTALL" }
   | { type: "PARTITION_DONE" }
+  | { type: "VM_CREATED" }
+  | { type: "ISO_MOUNTED" }
+  | { type: "VM_POWERED_ON" }
   | { type: "INSTALL_DONE" }
   | { type: "VM_CLOSED" }
   | { type: "SET_SPEED"; speed: "normal" | "fast" }
@@ -48,6 +46,7 @@ export const simulationMachine = setup({
     isDualBoot: ({ context }) => context.path === "dual-boot",
     isLiveUsb: ({ context }) => context.path === "live-usb",
     isVm: ({ context }) => context.path === "vm",
+    isPhysical: ({ context }) => context.path !== "vm",
   },
   actions: {
     setMeta: assign(({ event }) => {
@@ -85,9 +84,15 @@ export const simulationMachine = setup({
     },
 
     downloading: {
-      on: { DOWNLOAD_DONE: "flashing_usb" },
+      on: {
+        DOWNLOAD_DONE: [
+          { guard: "isVm", target: "create_vm" },
+          { target: "flashing_usb" },
+        ],
+      },
     },
 
+    /* ── Physical path states ── */
     flashing_usb: {
       on: { FLASH_DONE: "usb_reinsert" },
     },
@@ -125,6 +130,20 @@ export const simulationMachine = setup({
       on: { PARTITION_DONE: "installing" },
     },
 
+    /* ── VM path states ── */
+    create_vm: {
+      on: { VM_CREATED: "mount_iso" },
+    },
+
+    mount_iso: {
+      on: { ISO_MOUNTED: "vm_boot" },
+    },
+
+    vm_boot: {
+      on: { VM_POWERED_ON: "installing" },
+    },
+
+    /* ── Shared terminal states ── */
     installing: {
       on: {
         INSTALL_DONE: [
@@ -144,7 +163,7 @@ export const simulationMachine = setup({
   },
 });
 
-/** Ordered list of scenes used by the persistent progress indicator. */
+/** Ordered list of ALL possible scenes — filtered per-path in the UI. */
 export const SIM_SCENES = [
   "idle",
   "searching",
@@ -156,6 +175,9 @@ export const SIM_SCENES = [
   "partitioning",
   "live_welcome",
   "live_desktop",
+  "create_vm",
+  "mount_iso",
+  "vm_boot",
   "installing",
   "vm_close",
   "complete",

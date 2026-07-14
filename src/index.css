@@ -121,6 +121,55 @@ body {
   mix-blend-mode: overlay;
 }
 
+/* ── Constellation network mid-layer ────────────────────────── */
+.constellation-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.25;
+}
+
+/* ── Radial vignette ────────────────────────────────────────── */
+.vignette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%);
+}
+
+/* ── Scroll parallax for aurora blobs ───────────────────────── */
+@supports (animation-timeline: scroll()) {
+  .aurora-blob:nth-child(1) {
+    animation: aurora-drift 22s ease-in-out infinite alternate,
+               aurora-parallax-1 linear both;
+    animation-timeline: auto, scroll();
+  }
+  .aurora-blob:nth-child(2) {
+    animation: aurora-drift 26s ease-in-out infinite alternate,
+               aurora-parallax-2 linear both;
+    animation-timeline: auto, scroll();
+  }
+  .aurora-blob:nth-child(3) {
+    animation: aurora-drift 20s ease-in-out infinite alternate,
+               aurora-parallax-3 linear both;
+    animation-timeline: auto, scroll();
+  }
+}
+@keyframes aurora-parallax-1 {
+  from { transform: translateY(0); }
+  to { transform: translateY(-80px); }
+}
+@keyframes aurora-parallax-2 {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50px); }
+}
+@keyframes aurora-parallax-3 {
+  from { transform: translateY(0); }
+  to { transform: translateY(-30px); }
+}
+
 /* ── Animated gradient text ─────────────────────────────────── */
 .gradient-text-animated {
   background: linear-gradient(
