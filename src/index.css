@@ -49,3 +49,12 @@ body {
     @apply btn bg-white/5 text-white/80 border border-white/10 hover:bg-white/10;
   }
 }
+
+/* Drag easing — real hand movement decelerates into targets */
+[draggable="true"] {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+[draggable="true"]:active {
+  cursor: grabbing !important;
+  transition: transform 0.05s ease-out;
+}

@@ -54,6 +54,21 @@ const ACTIVE_APP: Record<string, AppInfo> = {
 
 const FULLSCREEN_SCENES = new Set(["rebooting", "boot_menu", "live_welcome", "live_desktop"]);
 
+const STATUS_TEXT: Record<string, string> = {
+  searching: "Searching for the official download page…",
+  downloading: "Locating the ISO file in your Downloads folder…",
+  flashing_usb: "Flashing the ISO image to your USB drive…",
+  usb_reinsert: "Insert the USB into the target machine…",
+  rebooting: "Restarting and entering BIOS…",
+  boot_menu: "Select a boot device from the menu…",
+  live_welcome: "Choose between trying or installing…",
+  live_desktop: "Exploring the live desktop environment…",
+  partitioning: "Allocating disk space for the new OS…",
+  installing: "Installing the operating system…",
+  vm_close: "Closing the virtual machine…",
+  complete: "Installation complete!",
+};
+
 const REPO_URL = "https://github.com/jeevannar16-web/OS-installation";
 
 export default function SimulationPage() {
@@ -235,6 +250,22 @@ export default function SimulationPage() {
                 </div>
               );
             })}
+          </div>
+
+          {/* What's happening now */}
+          <div className="mt-2 min-h-[1.25rem]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={current}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+                className="text-xs text-white/40"
+              >
+                {STATUS_TEXT[current] ?? ""}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </header>
 
