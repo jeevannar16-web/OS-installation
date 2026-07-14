@@ -58,9 +58,17 @@ export type OSConfig = {
   /** Mock content for the fake download page (scene 2). */
   downloadPage: {
     title: string;
+    /** The query the user "types" into the fake browser search box. */
+    searchTerm: string;
+    /** Host shown in the green search-result URL, e.g. ubuntu.com. */
+    host: string;
     url: string;
     cta: string;
     blurb: string;
+    /** Optional version selector entries on the download page. */
+    versions?: string[];
+    /** Label above the version selector. */
+    selectorLabel?: string;
   };
   /** ISO artifact metadata shown in the fake file manager. */
   iso: { filename: string; size: string };

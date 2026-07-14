@@ -13,9 +13,13 @@ export const debian: OSConfig = {
   },
   downloadPage: {
     title: "Debian — Getting Debian",
+    searchTerm: "download debian",
+    host: "debian.org",
     url: "https://www.debian.org/distrib/",
     cta: "Download a small installation image",
     blurb: "The Universal Operating System — stable, free, and community-driven.",
+    versions: ["Debian 12.7.0 (amd64)", "Debian 12.7.0 (i386)", "Debian 12.7.0 (arm64)"],
+    selectorLabel: "Choose an architecture",
   },
   iso: { filename: "debian-12.7.0-amd64-netinst.iso", size: "0.7 GB" },
   flashers: [

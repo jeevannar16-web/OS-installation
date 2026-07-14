@@ -13,9 +13,13 @@ export const fedora: OSConfig = {
   },
   downloadPage: {
     title: "Fedora Workstation",
+    searchTerm: "download fedora",
+    host: "fedoraproject.org",
     url: "https://fedoraproject.org/workstation/",
     cta: "Download now",
     blurb: "A reliable, user-friendly, and powerful operating system built by the community.",
+    versions: ["Fedora 41 Workstation", "Fedora 41 KDE", "Fedora 41 Server"],
+    selectorLabel: "Choose your edition",
   },
   iso: { filename: "Fedora-Workstation-Live-x86_64-41.iso", size: "2.4 GB" },
   flashers: [

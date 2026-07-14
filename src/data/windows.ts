@@ -12,9 +12,13 @@ export const windows: OSConfig = {
   },
   downloadPage: {
     title: "Download Windows 11",
+    searchTerm: "download windows 11",
+    host: "microsoft.com",
     url: "https://www.microsoft.com/software-download/windows11",
-    cta: "Download ISO (64-bit)",
+    cta: "Download Now",
     blurb: "Create Windows 11 installation media, or download the ISO to build your own.",
+    versions: ["Windows 11 (multi-edition ISO)", "Windows 11 Home", "Windows 11 Pro"],
+    selectorLabel: "Select edition",
   },
   iso: { filename: "Win11_24H2_English_x64.iso", size: "6.5 GB" },
   flashers: [

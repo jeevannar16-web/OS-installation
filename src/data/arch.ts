@@ -13,9 +13,13 @@ export const arch: OSConfig = {
   },
   downloadPage: {
     title: "Arch Linux — Download",
+    searchTerm: "download arch linux",
+    host: "archlinux.org",
     url: "https://archlinux.org/download/",
     cta: "Download ISO",
     blurb: "A lightweight and flexible Linux distribution that follows the KISS principle.",
+    versions: ["archlinux-2024.07.01-x86_64.iso"],
+    selectorLabel: "Latest release",
   },
   iso: { filename: "archlinux-2024.07.01-x86_64.iso", size: "1.1 GB" },
   flashers: [

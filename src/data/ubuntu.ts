@@ -12,10 +12,14 @@ export const ubuntu: OSConfig = {
   },
   downloadPage: {
     title: "Download Ubuntu Desktop",
+    searchTerm: "download ubuntu",
+    host: "ubuntu.com",
     url: "https://ubuntu.com/download/desktop",
     cta: "Download Ubuntu 24.04 LTS",
     blurb:
       "The Ubuntu desktop is easy to use, free to download, and a world of customisation options.",
+    versions: ["Ubuntu 24.04.1 LTS", "Ubuntu 22.04.5 LTS", "Ubuntu 20.04.6 LTS"],
+    selectorLabel: "Download the latest LTS version",
   },
   iso: { filename: "ubuntu-24.04.1-desktop-amd64.iso", size: "5.9 GB" },
   flashers: [
