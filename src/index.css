@@ -18,6 +18,7 @@ body {
   color: #e7e7f0;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* Subtle scrollbar to match the dark theme */
@@ -59,7 +60,42 @@ body {
   transition: transform 0.05s ease-out;
 }
 
-/* Mobile responsive adjustments */
+/* ── Responsive breakpoints ────────────────────────────────────── */
+
+/* Small phones (≤ 375px) */
+@media (max-width: 375px) {
+  body {
+    font-size: 13px;
+  }
+  .btn {
+    @apply px-3 py-2 text-[11px] rounded-lg;
+  }
+  .btn-primary {
+    @apply px-3 py-2 text-[11px] rounded-lg;
+  }
+}
+
+/* Phones (≤ 640px) */
+@media (max-width: 640px) {
+  .btn {
+    @apply px-4 py-2.5 text-xs;
+  }
+  .btn-primary {
+    @apply px-4 py-2.5 text-xs;
+  }
+
+  /* Stack grid layouts to 1 column on mobile */
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Reduce padding on cards */
+  .glass {
+    @apply p-4;
+  }
+}
+
+/* Tablets (≤ 768px) */
 @media (max-width: 768px) {
   .btn {
     @apply px-4 py-2.5 text-xs;
@@ -69,7 +105,14 @@ body {
   }
 }
 
-/* Touch-friendly drag alternatives — show tap zones on touch devices */
+/* Large screens (≥ 1280px) */
+@media (min-width: 1280px) {
+  body {
+    font-size: 16px;
+  }
+}
+
+/* ── Touch-friendly drag alternatives ──────────────────────────── */
 @media (hover: none) and (pointer: coarse) {
   [draggable="true"] {
     cursor: grab !important;
@@ -77,27 +120,34 @@ body {
   [draggable="true"]:active {
     cursor: grabbing !important;
   }
-  /* Show visual affordance for draggable items on touch */
-  [draggable="true"]::after {
-    content: "👆 Tap and drag";
-    position: absolute;
-    bottom: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.3);
-    white-space: nowrap;
-    pointer-events: none;
-  }
 }
 
-/* Reduce motion for users who prefer it */
+/* ── Reduce motion for users who prefer it ─────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   [draggable="true"] {
     transition: none !important;
   }
   * {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── Safe area for notched phones ──────────────────────────────── */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* ── 3D perspective helper ─────────────────────────────────────── */
+.perspective-800 {
+  perspective: 800px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
 }

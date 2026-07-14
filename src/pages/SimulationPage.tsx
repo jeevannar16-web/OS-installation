@@ -235,7 +235,6 @@ export default function SimulationPage() {
           <Done
             config={cfg}
             path={path ?? ""}
-            onComplete={() => send({ type: "RESET" })}
           />
         );
       default:
