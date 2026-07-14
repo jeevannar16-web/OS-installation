@@ -4,15 +4,17 @@ import type { InstallPath } from "../data/types";
 /**
  * Generic, OS/path-agnostic simulation state machine.
  *
- * Flow:
- *   idle → searching → downloading → flashing_usb → rebooting → boot_menu
- *        → partitioning (dual boot only) → installing → complete
+ * Flow (dual-boot):
+ *   idle → searching → downloading → flashing_usb → usb_reinsert → rebooting → boot_menu
+ *        → partitioning → installing → complete
  *
- * The VM path reuses the same wizard but conceptually skips the physical framing;
- * the dual-boot path inserts a `partitioning` state between boot_menu and installing.
+ * Flow (vm):
+ *   idle → searching → downloading → flashing_usb → usb_reinsert → rebooting → boot_menu
+ *        → installing → vm_close → complete
  *
- * The "Live USB" path diverges from `boot_menu` directly into a live desktop and then
- * `complete` (no `installing` step) — modeled via the `LIVE_DONE` event below.
+ * Flow (live-usb):
+ *   idle → searching → downloading → flashing_usb → usb_reinsert → rebooting → boot_menu
+ *        → live_welcome → live_desktop → installing → complete
  */
 
 export type SimEvent =
@@ -20,11 +22,14 @@ export type SimEvent =
   | { type: "SEARCH_DONE" }
   | { type: "DOWNLOAD_DONE" }
   | { type: "FLASH_DONE" }
+  | { type: "USB_INSERTED" }
   | { type: "REBOOT_DONE" }
   | { type: "BOOT_SELECTED" }
-  | { type: "LIVE_DONE" } // live-usb path: boot into live desktop, skip install
+  | { type: "LIVE_TRY" }
+  | { type: "LIVE_INSTALL" }
   | { type: "PARTITION_DONE" }
   | { type: "INSTALL_DONE" }
+  | { type: "VM_CLOSED" }
   | { type: "SET_SPEED"; speed: "normal" | "fast" }
   | { type: "RESET" };
 
@@ -84,7 +89,11 @@ export const simulationMachine = setup({
     },
 
     flashing_usb: {
-      on: { FLASH_DONE: "rebooting" },
+      on: { FLASH_DONE: "usb_reinsert" },
+    },
+
+    usb_reinsert: {
+      on: { USB_INSERTED: "rebooting" },
     },
 
     rebooting: {
@@ -93,9 +102,7 @@ export const simulationMachine = setup({
 
     boot_menu: {
       on: {
-        // Live USB never installs — boots straight into a desktop, then completes.
-        LIVE_DONE: "complete",
-        // Dual boot and VM both continue; dual boot first partitions.
+        LIVE_TRY: "live_welcome",
         BOOT_SELECTED: [
           { guard: "isDualBoot", target: "partitioning" },
           { target: "installing" },
@@ -103,12 +110,32 @@ export const simulationMachine = setup({
       },
     },
 
+    live_welcome: {
+      on: {
+        LIVE_TRY: "live_desktop",
+        LIVE_INSTALL: "installing",
+      },
+    },
+
+    live_desktop: {
+      on: { LIVE_INSTALL: "installing" },
+    },
+
     partitioning: {
       on: { PARTITION_DONE: "installing" },
     },
 
     installing: {
-      on: { INSTALL_DONE: "complete" },
+      on: {
+        INSTALL_DONE: [
+          { guard: "isVm", target: "vm_close" },
+          { target: "complete" },
+        ],
+      },
+    },
+
+    vm_close: {
+      on: { VM_CLOSED: "complete" },
     },
 
     complete: {
@@ -123,9 +150,13 @@ export const SIM_SCENES = [
   "searching",
   "downloading",
   "flashing_usb",
+  "usb_reinsert",
   "rebooting",
   "boot_menu",
   "partitioning",
+  "live_welcome",
+  "live_desktop",
   "installing",
+  "vm_close",
   "complete",
 ] as const;

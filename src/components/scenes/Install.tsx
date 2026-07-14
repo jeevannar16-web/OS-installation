@@ -1,8 +1,42 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig, WizardStep } from "../../data/types";
+import { playClick, playKeyClick } from "../shared/sounds";
 
 type WizardPhase = "wizard" | "installing" | "done";
+
+function TypeableInput({
+  value,
+  onChange,
+  placeholder,
+  secret,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  secret?: boolean;
+}) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    if (val.length > value.length) {
+      const newChar = val[val.length - 1];
+      setTimeout(() => onChange(value + newChar), 60);
+    } else {
+      onChange(val);
+    }
+  }
+
+  return (
+    <input
+      type={secret ? "password" : "text"}
+      value={value}
+      onChange={handleChange}
+      onKeyDown={() => playKeyClick()}
+      placeholder={placeholder}
+      className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-accent/50 transition-colors placeholder:text-white/20"
+    />
+  );
+}
 
 function LanguageStep({
   step,
@@ -20,7 +54,7 @@ function LanguageStep({
         {step.options.map((opt) => (
           <button
             key={opt}
-            onClick={() => onChange(opt)}
+            onClick={() => { playClick(); onChange(opt); }}
             className={`w-full rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
               value === opt
                 ? "bg-accent/20 text-white ring-1 ring-accent/50"
@@ -51,7 +85,7 @@ function KeyboardStep({
         {step.layouts.map((layout) => (
           <button
             key={layout}
-            onClick={() => onChange(layout)}
+            onClick={() => { playClick(); onChange(layout); }}
             className={`w-full rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
               value === layout
                 ? "bg-accent/20 text-white ring-1 ring-accent/50"
@@ -82,7 +116,7 @@ function DiskStep({
         {step.choices.map((c) => (
           <button
             key={c.id}
-            onClick={() => onChange(c.id)}
+            onClick={() => { playClick(); onChange(c.id); }}
             className={`w-full rounded-lg px-4 py-3 text-left transition-colors ${
               value === c.id
                 ? "bg-accent/20 text-white ring-1 ring-accent/50"
@@ -128,16 +162,14 @@ function AccountStep({
         {step.prompts.map((p) => (
           <div key={p.label}>
             <label className="mb-1 block text-xs text-white/50">{p.label}</label>
-            <input
-              type={p.secret ? "password" : "text"}
+            <TypeableInput
               value={values[p.label] ?? ""}
-              onChange={(e) => {
-                onChange(p.label, e.target.value);
-                validate(p.label, e.target.value);
+              onChange={(v) => {
+                onChange(p.label, v);
+                validate(p.label, v);
               }}
-              onBlur={() => validate(p.label, values[p.label] ?? "")}
               placeholder={p.placeholder}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-accent/50 transition-colors placeholder:text-white/20"
+              secret={p.secret}
             />
             {errors[p.label] && (
               <div className="mt-1 text-xs text-red-400">{errors[p.label]}</div>
@@ -183,6 +215,20 @@ export default function Install({
 
   const installDuration = speed === "fast" ? 2000 : 8000;
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (phase !== "wizard") return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Enter" && canAdvance()) {
+        e.preventDefault();
+        handleNext();
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, stepIdx, values]);
+
   // Install progress
   useEffect(() => {
     if (phase !== "installing") return;
@@ -220,6 +266,7 @@ export default function Install({
   }
 
   function handleNext() {
+    playClick();
     if (isLastStep) {
       setPhase("installing");
     } else {
@@ -231,6 +278,11 @@ export default function Install({
     setValues((p) => ({ ...p, [field]: val }));
   }
 
+  // OS-specific surface color for the wizard card
+  const surfaceStyle = {
+    background: `linear-gradient(135deg, ${config.branding.surface}cc, #0a0a0f)`,
+  };
+
   return (
     <div className="mx-auto w-full max-w-2xl">
       <AnimatePresence mode="wait">
@@ -241,16 +293,18 @@ export default function Install({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-6"
+            className="rounded-2xl border border-white/10 p-6 shadow-2xl backdrop-blur-xl"
+            style={surfaceStyle}
           >
             {/* Step indicator */}
             <div className="mb-6 flex items-center gap-2">
               {steps.map((_, i) => (
                 <div
                   key={i}
-                  className={`h-1.5 flex-1 rounded-full transition-colors ${
-                    i <= stepIdx ? "bg-accent" : "bg-white/10"
-                  }`}
+                  className="h-1.5 flex-1 rounded-full transition-colors"
+                  style={{
+                    background: i <= stepIdx ? config.branding.accent : "rgba(255,255,255,0.1)",
+                  }}
                 />
               ))}
             </div>
@@ -287,12 +341,18 @@ export default function Install({
               {currentStep?.kind === "confirm" && <ConfirmStep step={currentStep} />}
             </div>
 
-            {/* Next / Install button */}
-            <div className="mt-6 flex justify-end">
+            {/* Next / Install button + keyboard hint */}
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-xs text-white/30">
+                Press <span className="font-mono text-white/50">Enter ↵</span> to continue
+              </div>
               <button
                 disabled={!canAdvance()}
                 onClick={handleNext}
                 className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{
+                  background: canAdvance() ? config.branding.accent : undefined,
+                }}
               >
                 {isLastStep ? "Install now →" : "Next →"}
               </button>
@@ -307,7 +367,8 @@ export default function Install({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-8 text-center"
+            className="rounded-2xl border border-white/10 p-8 text-center shadow-2xl backdrop-blur-xl"
+            style={surfaceStyle}
           >
             <div className="text-4xl mb-4">{config.branding.logo}</div>
             <h2 className="text-lg font-bold text-white/90">

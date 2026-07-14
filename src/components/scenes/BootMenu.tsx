@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { playKeyClick } from "../shared/sounds";
 
 const ENTRIES = [
   { id: "usb", label: "UEFI: Generic Flash Disk 8.0, Partition 1", correct: true },
@@ -21,15 +22,16 @@ export default function BootMenu({
       if (wrongFakeout) return;
       if (e.key === "ArrowUp") {
         e.preventDefault();
+        playKeyClick();
         setSelected((p) => (p > 0 ? p - 1 : ENTRIES.length - 1));
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
+        playKeyClick();
         setSelected((p) => (p < ENTRIES.length - 1 ? p + 1 : 0));
       } else if (e.key === "Enter") {
         e.preventDefault();
+        playKeyClick();
         selectEntry(selected);
-      } else if (e.key === "Escape") {
-        e.preventDefault();
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,7 +97,12 @@ export default function BootMenu({
               setSelected(i);
               selectEntry(i);
             }}
-            onMouseEnter={() => !wrongFakeout && setSelected(i)}
+            onMouseEnter={() => {
+              if (!wrongFakeout) {
+                playKeyClick();
+                setSelected(i);
+              }
+            }}
             className={`w-full rounded px-4 py-3 text-left text-sm transition-colors ${
               selected === i
                 ? "bg-white/15 text-white font-medium"
@@ -115,7 +122,6 @@ export default function BootMenu({
       <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-6 text-xs text-white/40">
         <span>↑↓ Select</span>
         <span>↵ Boot</span>
-        <span>Esc Exit</span>
       </div>
     </div>
   );

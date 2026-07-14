@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
+import { playClick } from "../shared/sounds";
 
 const GRUB_ENTRIES = [
   { id: "new", label: "", os: "" },
@@ -10,6 +11,8 @@ const GRUB_ENTRIES = [
 ];
 
 type DonePhase = "grub" | "desktop" | "complete";
+
+const REPO_URL = "https://github.com/jeevannar16-web/OS-installation";
 
 export default function Done({
   config,
@@ -33,6 +36,7 @@ export default function Done({
   }));
 
   function handleGrubSelect() {
+    playClick();
     setPhase("desktop");
   }
 
@@ -73,8 +77,7 @@ export default function Done({
                 </button>
               ))}
               <div className="mt-4 text-xs text-white/30">
-                Use the ↑ and ↓ keys to select which entry is highlighted.
-                Press enter to boot the selected entry.
+                Use ↑↓ to select. Press Enter to boot.
               </div>
             </div>
           </motion.div>
@@ -89,14 +92,12 @@ export default function Done({
             exit={{ opacity: 0 }}
             className="space-y-4"
           >
-            {/* Fake desktop background */}
             <div
               className="relative h-[500px] overflow-hidden rounded-2xl border border-white/10"
               style={{
                 background: `linear-gradient(135deg, ${config.branding.surface} 0%, #0a0a1a 100%)`,
               }}
             >
-              {/* Login screen overlay */}
               {!loginDone && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -106,14 +107,10 @@ export default function Done({
                   <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/10 text-4xl ring-2 ring-white/20">
                     {config.branding.logo}
                   </div>
-                  <div className="mt-3 text-lg font-semibold text-white/90">
-                    User
-                  </div>
-                  <div className="mt-2 text-xs text-white/40">
-                    Click to log in
-                  </div>
+                  <div className="mt-3 text-lg font-semibold text-white/90">User</div>
+                  <div className="mt-2 text-xs text-white/40">Click to log in</div>
                   <button
-                    onClick={() => setLoginDone(true)}
+                    onClick={() => { playClick(); setLoginDone(true); }}
                     className="mt-4 rounded-lg bg-white/10 px-6 py-2 text-sm text-white/80 hover:bg-white/15 transition-colors"
                   >
                     Log In
@@ -121,7 +118,6 @@ export default function Done({
                 </motion.div>
               )}
 
-              {/* Desktop icons after login */}
               {loginDone && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -146,7 +142,7 @@ export default function Done({
                   </div>
                   <div className="absolute bottom-4 left-0 right-0 flex justify-center">
                     <button
-                      onClick={() => onComplete()}
+                      onClick={() => { playClick(); onComplete(); }}
                       className="rounded-xl bg-white/10 border border-white/10 px-6 py-3 text-sm font-semibold text-white hover:bg-white/15 transition-colors"
                     >
                       Continue to completion →
@@ -201,24 +197,44 @@ export default function Done({
                 </div>
               </div>
 
-              <div className="mt-8">
+              {/* GitHub CTA */}
+              <div className="mt-8 flex items-center justify-center gap-3">
                 <a
-                  href="https://github.com"
+                  href={REPO_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-5 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors"
                 >
                   ⭐ Star on GitHub
                 </a>
+                <a
+                  href={`${REPO_URL}/fork`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-5 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors"
+                >
+                  🍴 Fork
+                </a>
+                <a
+                  href={`https://github.com/jeevannar16-web`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-5 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors"
+                >
+                  👤 Follow
+                </a>
+              </div>
+
+              {/* Start Over */}
+              <div className="mt-8">
+                <button
+                  onClick={() => { playClick(); onComplete(); }}
+                  className="rounded-xl border border-white/10 bg-white/5 px-8 py-3 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors"
+                >
+                  🔄 Start Over
+                </button>
               </div>
             </div>
-
-            <button
-              onClick={() => onComplete()}
-              className="btn-ghost mx-auto block"
-            >
-              ← Start over
-            </button>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,19 +1,24 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useMachine } from "@xstate/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simulationMachine, SIM_SCENES } from "../machines/simulationMachine";
 import { getOS } from "../data";
 import { ToastProvider } from "../components/shared/Toast";
+import Showcase from "../components/shared/Showcase";
 import Footer from "../components/Footer";
 import DesktopShell, { type AppInfo } from "../components/shell/DesktopShell";
 import FakeBrowser from "../components/scenes/FakeBrowser";
 import FileManager from "../components/scenes/FileManager";
 import FlashUSB from "../components/scenes/FlashUSB";
+import UsbReinsert from "../components/scenes/UsbReinsert";
 import Reboot from "../components/scenes/Reboot";
 import BootMenu from "../components/scenes/BootMenu";
+import LiveWelcome from "../components/scenes/LiveWelcome";
+import LiveDesktop from "../components/scenes/LiveDesktop";
 import Partition from "../components/scenes/Partition";
 import Install from "../components/scenes/Install";
+import VmClose from "../components/scenes/VmClose";
 import Done from "../components/scenes/Done";
 
 const SCENE_LABELS: Record<string, string> = {
@@ -21,10 +26,14 @@ const SCENE_LABELS: Record<string, string> = {
   searching: "Search & Download",
   downloading: "Locate ISO",
   flashing_usb: "Flash USB",
+  usb_reinsert: "Insert USB",
   rebooting: "Reboot",
   boot_menu: "Boot Menu",
   partitioning: "Partition",
+  live_welcome: "Live Welcome",
+  live_desktop: "Live Desktop",
   installing: "Install",
+  vm_close: "Close VM",
   complete: "Done",
 };
 
@@ -32,21 +41,29 @@ const ACTIVE_APP: Record<string, AppInfo> = {
   searching: { name: "Browser", icon: "🌐" },
   downloading: { name: "Files", icon: "📁" },
   flashing_usb: { name: "USB Tool", icon: "🔌" },
+  usb_reinsert: { name: "Setup", icon: "🔌" },
   rebooting: { name: "System", icon: "⏻" },
   boot_menu: { name: "Boot Menu", icon: "💻" },
+  live_welcome: { name: "Installer", icon: "💿" },
+  live_desktop: { name: "Live Session", icon: "🖥️" },
   partitioning: { name: "Installer", icon: "🧩" },
   installing: { name: "Installer", icon: "🧩" },
+  vm_close: { name: "VirtualBox", icon: "💻" },
   complete: { name: "Done", icon: "🎉" },
 };
 
-/** Scenes that render fullscreen without the desktop shell. */
-const FULLSCREEN_SCENES = new Set(["rebooting", "boot_menu"]);
+const FULLSCREEN_SCENES = new Set(["rebooting", "boot_menu", "live_welcome", "live_desktop"]);
+
+const REPO_URL = "https://github.com/jeevannar16-web/OS-installation";
 
 export default function SimulationPage() {
   const { os, path } = useParams();
   const config = getOS(os);
 
   const [state, send] = useMachine(simulationMachine);
+  const [showcase, setShowcase] = useState(() => {
+    return !sessionStorage.getItem("showcase_seen");
+  });
 
   useEffect(() => {
     if (config && path && state.matches("idle")) {
@@ -87,38 +104,48 @@ export default function SimulationPage() {
         return <FileManager config={cfg} onComplete={() => send({ type: "DOWNLOAD_DONE" })} />;
       case "flashing_usb":
         return (
-          <FlashUSB
-            config={cfg}
-            speed={speed}
-            onComplete={() => send({ type: "FLASH_DONE" })}
-          />
+          <FlashUSB config={cfg} speed={speed} onComplete={() => send({ type: "FLASH_DONE" })} />
+        );
+      case "usb_reinsert":
+        return (
+          <UsbReinsert onComplete={() => send({ type: "USB_INSERTED" })} />
         );
       case "rebooting":
         return (
-          <Reboot
-            speed={speed}
-            onComplete={() => send({ type: "REBOOT_DONE" })}
-          />
+          <Reboot speed={speed} onComplete={() => send({ type: "REBOOT_DONE" })} />
         );
       case "boot_menu":
         return (
           <BootMenu
-            onComplete={() => send({ type: path === "live-usb" ? "LIVE_DONE" : "BOOT_SELECTED" })}
+            onComplete={() => send({ type: path === "live-usb" ? "LIVE_TRY" : "BOOT_SELECTED" })}
+          />
+        );
+      case "live_welcome":
+        return (
+          <LiveWelcome
+            config={cfg}
+            onTry={() => send({ type: "LIVE_TRY" })}
+            onInstall={() => send({ type: "LIVE_INSTALL" })}
+          />
+        );
+      case "live_desktop":
+        return (
+          <LiveDesktop
+            config={cfg}
+            onInstallClick={() => send({ type: "LIVE_INSTALL" })}
           />
         );
       case "partitioning":
         return (
-          <Partition
-            onComplete={() => send({ type: "PARTITION_DONE" })}
-          />
+          <Partition onComplete={() => send({ type: "PARTITION_DONE" })} />
         );
       case "installing":
         return (
-          <Install
-            config={cfg}
-            speed={speed}
-            onComplete={() => send({ type: "INSTALL_DONE" })}
-          />
+          <Install config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} />
+        );
+      case "vm_close":
+        return (
+          <VmClose config={cfg} onComplete={() => send({ type: "VM_CLOSED" })} />
         );
       case "complete":
         return (
@@ -133,10 +160,27 @@ export default function SimulationPage() {
     }
   }
 
+  function handleShowcaseDismiss() {
+    sessionStorage.setItem("showcase_seen", "1");
+    setShowcase(false);
+  }
+
+  // Filter scenes based on path
+  const visibleScenes = SIM_SCENES.filter((s) => {
+    if (s === "idle") return false;
+    if (s === "partitioning" && path !== "dual-boot") return false;
+    if (s === "live_welcome" && path !== "live-usb") return false;
+    if (s === "live_desktop" && path !== "live-usb") return false;
+    if (s === "vm_close" && path !== "vm") return false;
+    return true;
+  });
+
   return (
     <ToastProvider>
+      {showcase && <Showcase onDismiss={handleShowcaseDismiss} />}
+
       <div className="min-h-full flex flex-col">
-        {/* Header — always visible */}
+        {/* Header */}
         <header className="mx-auto w-full max-w-5xl px-6 py-5">
           <div className="flex items-center justify-between">
             <Link to="/" className="text-sm text-white/60 hover:text-white">
@@ -152,7 +196,7 @@ export default function SimulationPage() {
                     ? "border-accent bg-accent/20 text-white"
                     : "border-white/10 text-white/50 hover:text-white"
                 }`}
-                title="Speed run mode (off by default)"
+                title="Speed run mode"
               >
                 ⏭ speed run
               </button>
@@ -164,13 +208,9 @@ export default function SimulationPage() {
             </div>
           </div>
 
-          {/* Progress indicator — always visible */}
+          {/* Progress indicator */}
           <div className="mt-4 flex flex-wrap items-center gap-1">
-            {SIM_SCENES.filter((s) => {
-              if (s === "idle") return false;
-              if (s === "partitioning" && path !== "dual-boot") return false;
-              return true;
-            }).map((s) => {
+            {visibleScenes.map((s) => {
               const idx = (SIM_SCENES as readonly string[]).indexOf(s);
               const active = idx === currentIndex;
               const done = idx < currentIndex;
@@ -232,8 +272,28 @@ export default function SimulationPage() {
         )}
 
         <div className="px-6 pb-2 text-center text-[11px] text-white/30">
-          Simulation only — no files are downloaded or executed. For the real thing, use the
-          official links at the end.
+          Simulation only — no files are downloaded or executed.
+        </div>
+
+        {/* Persistent GitHub footer */}
+        <div className="flex justify-center gap-2 pb-4">
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-white/20 hover:text-white/40 transition-colors"
+          >
+            ⭐ Star on GitHub
+          </a>
+          <span className="text-white/10">·</span>
+          <a
+            href="https://github.com/jeevannar16-web"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-white/20 hover:text-white/40 transition-colors"
+          >
+            Follow @jeevannar16-web
+          </a>
         </div>
 
         <Footer />
