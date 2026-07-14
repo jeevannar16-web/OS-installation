@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { PATHS, OS_LIST } from "../data";
 import type { InstallPath } from "../data/types";
 import Footer from "../components/Footer";
 import MiniDemo from "../components/MiniDemo";
+import BootSequence from "../components/BootSequence";
 
 const container = {
   hidden: {},
@@ -133,10 +134,18 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [path, setPath] = useState<InstallPath | null>(null);
   const [os, setOs] = useState<string | null>(null);
+  const [booted, setBooted] = useState(() => {
+    return sessionStorage.getItem("boot_sequence_seen") === "1";
+  });
 
   const canStart = path && os;
   const selectedOS = os ? OS_LIST.find((x) => x.id === os) : null;
   const selectedPath = path ? PATHS.find((x) => x.id === path) : null;
+
+  const handleBootReady = useCallback(() => {
+    sessionStorage.setItem("boot_sequence_seen", "1");
+    setBooted(true);
+  }, []);
 
   function start() {
     if (!path || !os) return;
@@ -149,6 +158,11 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-full flex flex-col relative overflow-hidden">
+      {/* Boot sequence */}
+      <AnimatePresence>
+        {!booted && <BootSequence onReady={handleBootReady} />}
+      </AnimatePresence>
+
       {/* Ambient background motion */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <motion.div
@@ -175,144 +189,155 @@ export default function LandingPage() {
         />
       </div>
 
-      {/* Header */}
-      <header className="mx-auto w-full max-w-6xl px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2 font-semibold">
-          <span className="text-xl">💿</span>
-          <span>OS Install Simulator</span>
-        </div>
-        <span className="text-xs uppercase tracking-widest text-white/40">
-          Practice · Don't risk
-        </span>
-      </header>
-
-      {/* Hero with live mini-demo */}
-      <section className="mx-auto w-full max-w-5xl px-6 pt-8 pb-10">
-        <div className="flex flex-col lg:flex-row items-center gap-10">
-          {/* Text */}
-          <div className="flex-1 text-center lg:text-left">
-            <motion.span
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-block rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60"
-            >
-              Interactive · Realistic · 100% safe
-            </motion.span>
-            <motion.h1
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05, type: "spring", stiffness: 200, damping: 20 }}
-              className="mt-5 text-4xl sm:text-5xl font-bold leading-tight"
-            >
-              Practice installing an OS
-              <br />
-              <span className="bg-gradient-to-r from-accent-soft to-accent bg-clip-text text-transparent">
-                before you actually do it
-              </span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.12 }}
-              className="mt-5 text-white/60 text-lg max-w-lg"
-            >
-              Watch and interact with a convincingly real simulation — search &amp; download the ISO,
-              flash a USB, survive the BIOS menu, and run the installer. No real hardware, no risk.
-            </motion.p>
-          </div>
-
-          {/* Live mini-demo */}
+      {/* Main content — revealed after boot sequence */}
+      <AnimatePresence>
+        {booted && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, x: 20 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 20 }}
-          >
-            <MiniDemo />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Path selection */}
-      <section className="mx-auto w-full max-w-6xl px-6 mt-6">
-        <h2 className="text-sm uppercase tracking-widest text-white/40 mb-4">
-          Step 1 — Choose how you'll install
-        </h2>
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid gap-4 sm:grid-cols-3"
-        >
-          {PATHS.map((p) => (
-            <PathCard
-              key={p.id}
-              p={p}
-              active={path === p.id}
-              onClick={() => setPath(p.id)}
-            />
-          ))}
-        </motion.div>
-      </section>
-
-      {/* OS selection */}
-      <section className="mx-auto w-full max-w-6xl px-6 mt-10">
-        <h2 className="text-sm uppercase tracking-widest text-white/40 mb-4">
-          Step 2 — Pick an operating system
-        </h2>
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"
-        >
-          {OS_LIST.map((o) => (
-            <OSCard
-              key={o.id}
-              o={o}
-              active={os === o.id}
-              onClick={() => setOs(o.id)}
-            />
-          ))}
-        </motion.div>
-      </section>
-
-      {/* CTA */}
-      <section className="mx-auto w-full max-w-6xl px-6 mt-10 mb-4">
-        <motion.button
-          whileTap={canStart ? { scale: 0.97 } : {}}
-          disabled={!canStart}
-          onClick={start}
-          className={`w-full sm:w-auto text-base font-semibold rounded-xl px-6 py-3 transition-all duration-500 ${
-            canStart
-              ? "bg-accent text-white shadow-[0_0_30px_-6px] shadow-accent hover:bg-accent-soft hover:shadow-[0_0_40px_-6px] hover:shadow-accent cursor-pointer"
-              : "bg-white/5 text-white/30 border border-white/10 cursor-not-allowed"
-          }`}
-        >
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={ctaLabel}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.2 }}
-            >
-              {ctaLabel}
-            </motion.span>
-          </AnimatePresence>
-        </motion.button>
-        {!canStart && (
-          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-3 text-sm text-white/40"
+            transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Pick one install method above and one operating system.
-          </motion.p>
-        )}
-      </section>
+            {/* Header */}
+            <header className="mx-auto w-full max-w-6xl px-6 py-6 flex items-center justify-between">
+              <div className="flex items-center gap-2 font-semibold">
+                <span className="text-xl">💿</span>
+                <span>OS Install Simulator</span>
+              </div>
+              <span className="text-xs uppercase tracking-widest text-white/40">
+                Practice · Don't risk
+              </span>
+            </header>
 
-      <div className="flex-1" />
-      <Footer />
+            {/* Hero with live mini-demo */}
+            <section className="mx-auto w-full max-w-5xl px-6 pt-8 pb-10">
+              <div className="flex flex-col lg:flex-row items-center gap-10">
+                {/* Text */}
+                <div className="flex-1 text-center lg:text-left">
+                  <motion.span
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="inline-block rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60"
+                  >
+                    Interactive · Realistic · 100% safe
+                  </motion.span>
+                  <motion.h1
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05, type: "spring", stiffness: 200, damping: 20 }}
+                    className="mt-5 text-4xl sm:text-5xl font-bold leading-tight"
+                  >
+                    Practice installing an OS
+                    <br />
+                    <span className="bg-gradient-to-r from-accent-soft to-accent bg-clip-text text-transparent">
+                      before you actually do it
+                    </span>
+                  </motion.h1>
+                  <motion.p
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12 }}
+                    className="mt-5 text-white/60 text-lg max-w-lg"
+                  >
+                    Watch and interact with a convincingly real simulation — search &amp; download the ISO,
+                    flash a USB, survive the BIOS menu, and run the installer. No real hardware, no risk.
+                  </motion.p>
+                </div>
+
+                {/* Live mini-demo */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 20 }}
+                >
+                  <MiniDemo />
+                </motion.div>
+              </div>
+            </section>
+
+            {/* Path selection */}
+            <section className="mx-auto w-full max-w-6xl px-6 mt-6">
+              <h2 className="text-sm uppercase tracking-widest text-white/40 mb-4">
+                Step 1 — Choose how you'll install
+              </h2>
+              <motion.div
+                variants={container}
+                initial="hidden"
+                animate="show"
+                className="grid gap-4 sm:grid-cols-3"
+              >
+                {PATHS.map((p) => (
+                  <PathCard
+                    key={p.id}
+                    p={p}
+                    active={path === p.id}
+                    onClick={() => setPath(p.id)}
+                  />
+                ))}
+              </motion.div>
+            </section>
+
+            {/* OS selection */}
+            <section className="mx-auto w-full max-w-6xl px-6 mt-10">
+              <h2 className="text-sm uppercase tracking-widest text-white/40 mb-4">
+                Step 2 — Pick an operating system
+              </h2>
+              <motion.div
+                variants={container}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"
+              >
+                {OS_LIST.map((o) => (
+                  <OSCard
+                    key={o.id}
+                    o={o}
+                    active={os === o.id}
+                    onClick={() => setOs(o.id)}
+                  />
+                ))}
+              </motion.div>
+            </section>
+
+            {/* CTA */}
+            <section className="mx-auto w-full max-w-6xl px-6 mt-10 mb-4">
+              <motion.button
+                whileTap={canStart ? { scale: 0.97 } : {}}
+                disabled={!canStart}
+                onClick={start}
+                className={`w-full sm:w-auto text-base font-semibold rounded-xl px-6 py-3 transition-all duration-500 ${
+                  canStart
+                    ? "bg-accent text-white shadow-[0_0_30px_-6px] shadow-accent hover:bg-accent-soft hover:shadow-[0_0_40px_-6px] hover:shadow-accent cursor-pointer"
+                    : "bg-white/5 text-white/30 border border-white/10 cursor-not-allowed"
+                }`}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={ctaLabel}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {ctaLabel}
+                  </motion.span>
+                </AnimatePresence>
+              </motion.button>
+              {!canStart && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-3 text-sm text-white/40"
+                >
+                  Pick one install method above and one operating system.
+                </motion.p>
+              )}
+            </section>
+
+            <div className="flex-1" />
+            <Footer />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
