@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig, WizardStep } from "../../data/types";
 import { playClick, playKeyClick } from "../shared/sounds";
+import { SparkleBurst } from "../shared/InteractiveEffects";
 
 type WizardPhase = "wizard" | "installing" | "done";
 
@@ -297,6 +298,7 @@ export default function Install({
   const [values, setValues] = useState<Record<string, string>>({});
   const [progress, setProgress] = useState(0);
   const [tipIdx, setTipIdx] = useState(0);
+  const [showSparkle, setShowSparkle] = useState(false);
 
   const steps = config.wizard;
   const currentStep = steps[stepIdx];
@@ -328,7 +330,11 @@ export default function Install({
       const pct = Math.min(100, ((now - start) / installDuration) * 100);
       setProgress(pct);
       if (pct < 100) raf = requestAnimationFrame(tick);
-      else setTimeout(() => onComplete(), 600);
+      else {
+        setShowSparkle(true);
+        setTimeout(() => setShowSparkle(false), 1500);
+        setTimeout(() => onComplete(), 600);
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -376,6 +382,7 @@ export default function Install({
 
   return (
     <div className="mx-auto w-full max-w-2xl">
+      <SparkleBurst trigger={showSparkle} />
       <AnimatePresence mode="wait">
         {/* Wizard steps */}
         {phase === "wizard" && (

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playKeyClick, playClick } from "../shared/sounds";
+import { SparkleBurst, PulseHint } from "../shared/InteractiveEffects";
 
 /**
  * Arch Linux guided terminal install.
@@ -324,17 +325,20 @@ export default function ArchInstall({
 
   if (phase === "done" || isComplete) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="mx-auto max-w-2xl rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center shadow-2xl"
-      >
-        <div className="text-4xl mb-4">{config.branding.logo}</div>
-        <h2 className="text-lg font-bold text-emerald-300">Arch Linux installed!</h2>
-        <p className="mt-2 text-sm text-white/50">
-          You completed the full terminal-based install. Rebooting…
-        </p>
-      </motion.div>
+      <>
+        <SparkleBurst trigger={true} />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mx-auto max-w-2xl rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center shadow-2xl"
+        >
+          <div className="text-4xl mb-4">{config.branding.logo}</div>
+          <h2 className="text-lg font-bold text-emerald-300">Arch Linux installed!</h2>
+          <p className="mt-2 text-sm text-white/50">
+            You completed the full terminal-based install. Rebooting…
+          </p>
+        </motion.div>
+      </>
     );
   }
 
@@ -447,6 +451,7 @@ export default function ArchInstall({
             </motion.span>
           )}
         </div>
+        <PulseHint pulse={hintVisible}>
         <button
           onClick={handleAutoComplete}
           disabled={isProcessing}
@@ -454,6 +459,7 @@ export default function ArchInstall({
         >
           ⏩ Auto-complete step
         </button>
+        </PulseHint>
       </div>
     </div>
   );

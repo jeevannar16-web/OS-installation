@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { Tooltip } from "../shared/InteractiveEffects";
 
 const TOTAL_GB = 500;
 const MIN_NEW_GB = 20;
@@ -54,6 +55,11 @@ export default function Partition({
         <p className="mt-2 text-sm text-white/50">
           Drag the divider to allocate space for the new OS installation.
         </p>
+        <Tooltip text="Click and drag left/right to resize the partition">
+          <span className="mt-1 inline-block text-xs text-accent/60 cursor-help border-b border-dashed border-accent/30">
+            💡 Drag the bar below
+          </span>
+        </Tooltip>
       </div>
 
       {/* Partition bar */}

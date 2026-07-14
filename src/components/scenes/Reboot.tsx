@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getRandomBios } from "../../data/bios";
 import { playPostBeep, playKeyClick, playSuccess } from "../shared/sounds";
+import { Tooltip, PulseHint } from "../shared/InteractiveEffects";
 
 type RebootPhase = "flicker" | "fade_out" | "post" | "memory" | "prompt" | "missed" | "done";
 
@@ -132,11 +133,11 @@ export default function Reboot({
             exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-4"
           >
-            <div className="text-5xl">{bios.logo}</div>
-            <div className="text-sm font-bold tracking-widest text-white/70">
+            <div className="text-3xl sm:text-5xl">{bios.logo}</div>
+            <div className="text-xs sm:text-sm font-bold tracking-widest text-white/70">
               {bios.name}
             </div>
-            <div className="text-xs text-white/40">{bios.memLabel}</div>
+            <div className="text-[10px] sm:text-xs text-white/40">{bios.memLabel}</div>
             <div className="mt-2 text-xs text-white/30">Initializing hardware…</div>
           </motion.div>
         )}
@@ -169,7 +170,7 @@ export default function Reboot({
             exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-6"
           >
-            <div className="text-5xl">{bios.logo}</div>
+            <div className="text-3xl sm:text-5xl">{bios.logo}</div>
             <div className="font-mono text-center space-y-1">
               <div className="text-sm text-white/70">
                 Press <span className="font-bold text-white">F2</span> to enter Setup,{" "}
@@ -183,6 +184,8 @@ export default function Reboot({
                 {countdown}s remaining
               </motion.div>
             </div>
+            <PulseHint>
+            <Tooltip text="Press F12 key or click to enter boot menu — you have 3 seconds!">
             <button
               onClick={() => {
                 playKeyClick();
@@ -194,6 +197,8 @@ export default function Reboot({
             >
               Press F12 (or click here)
             </button>
+            </Tooltip>
+            </PulseHint>
           </motion.div>
         )}
 
@@ -211,7 +216,7 @@ export default function Reboot({
               animate={{ opacity: 1 }}
               className="text-center"
             >
-              <div className="text-4xl mb-3">🪟</div>
+              <div className="text-3xl sm:text-4xl mb-3">🪟</div>
               <div className="text-sm text-white/60">Booting to Windows Boot Manager…</div>
               <div className="mt-2 text-xs text-white/40">
                 (Wrong boot device — you need to catch F12!)

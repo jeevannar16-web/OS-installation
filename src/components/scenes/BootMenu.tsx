@@ -79,8 +79,8 @@ export default function BootMenu({
       )}
 
       {/* Title */}
-      <div className="mb-8 text-center">
-        <div className="text-lg font-bold text-white/90 tracking-wider">
+      <div className="mb-6 sm:mb-8 text-center px-4">
+        <div className="text-base sm:text-lg font-bold text-white/90 tracking-wider">
           BOOT MENU
         </div>
         <div className="mt-1 text-xs text-white/40">
@@ -89,7 +89,7 @@ export default function BootMenu({
       </div>
 
       {/* Boot entries */}
-      <div className="w-full max-w-xl space-y-1">
+      <div className="w-full max-w-xl space-y-1 px-4">
         {ENTRIES.map((entry, i) => (
           <button
             key={entry.id}

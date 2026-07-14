@@ -4,6 +4,7 @@ import type { OSConfig } from "../../data/types";
 import { useToast } from "../shared/Toast";
 import FilePickerModal from "../shared/FilePickerModal";
 import { playUsbConnect, playSuccess, playClick } from "../shared/sounds";
+import { SparkleBurst, Tooltip, PulseHint } from "../shared/InteractiveEffects";
 
 type Phase = "plug_in" | "tool_select" | "rufus" | "ventoy" | "balena";
 
@@ -119,7 +120,7 @@ function RufusTool({
         <div className="bg-[#f5f5f5] p-4 space-y-3">
           {/* Device dropdown */}
           <div className="flex items-center gap-3">
-            <label className="w-28 text-xs font-semibold text-gray-600">Device</label>
+            <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">Device</label>
             <select
               value={device}
               onChange={(e) => { playClick(); setDevice(e.target.value); }}
@@ -135,7 +136,7 @@ function RufusTool({
 
           {/* Boot selection */}
           <div className="flex items-center gap-3">
-            <label className="w-28 text-xs font-semibold text-gray-600">Boot selection</label>
+            <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">Boot selection</label>
             <button
               onClick={() => setPickerOpen(true)}
               className="flex-1 rounded border border-gray-300 bg-white px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
@@ -168,7 +169,7 @@ function RufusTool({
           {showAdvanced && (
             <div className="space-y-2 rounded border border-gray-200 bg-white/50 p-3">
               <div className="flex items-center gap-3">
-                <label className="w-28 text-xs font-semibold text-gray-600">Partition scheme</label>
+                <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">Partition scheme</label>
                 <select
                   value={partScheme}
                   onChange={(e) => setPartScheme(e.target.value)}
@@ -179,7 +180,7 @@ function RufusTool({
                 </select>
               </div>
               <div className="flex items-center gap-3">
-                <label className="w-28 text-xs font-semibold text-gray-600">File system</label>
+                <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">File system</label>
                 <select
                   value={fileSys}
                   onChange={(e) => setFileSys(e.target.value)}
@@ -191,7 +192,7 @@ function RufusTool({
                 </select>
               </div>
               <div className="flex items-center gap-3">
-                <label className="w-28 text-xs font-semibold text-gray-600">Cluster size</label>
+                <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">Cluster size</label>
                 <select className="flex-1 rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800">
                   <option>Default allocation size</option>
                   <option>512 bytes</option>
@@ -354,7 +355,7 @@ function VentoyTool({
           <div className="text-xs text-white/50">
             Ventoy is installed — just copy the ISO. No reformat needed.
           </div>
-          <div className="flex gap-6 items-start">
+          <div className="flex flex-col sm:flex-row gap-6 items-start">
             <motion.div
               draggable
               onDragStart={() => setDragging(true)}
@@ -594,6 +595,7 @@ export default function FlashUSB({
   const [dragging, setDragging] = useState(false);
   const [overPort, setOverPort] = useState(false);
   const [flashComplete, setFlashComplete] = useState(false);
+  const [showSparkle, setShowSparkle] = useState(false);
   const toast = useToast();
 
   const handleUsbDrop = useCallback(() => {
@@ -605,10 +607,18 @@ export default function FlashUSB({
     setTimeout(() => setPhase("tool_select"), 800);
   }, [toast]);
 
+  useEffect(() => {
+    if (flashComplete) {
+      setShowSparkle(true);
+      setTimeout(() => setShowSparkle(false), 1500);
+    }
+  }, [flashComplete]);
+
   const tools = config.flashers;
 
   return (
     <div className="mx-auto w-full max-w-4xl">
+      <SparkleBurst trigger={showSparkle} />
       <AnimatePresence mode="wait">
         {/* PHASE 1: USB Plug-in */}
         {phase === "plug_in" && (
@@ -627,7 +637,8 @@ export default function FlashUSB({
               </p>
             </div>
 
-            <div className="relative flex items-center gap-24 py-8">
+            <div className="relative flex flex-col sm:flex-row items-center gap-8 sm:gap-24 py-8">
+              <Tooltip text="Grab and drag me to the port →">
               <motion.div
                 draggable
                 onDragStart={() => setDragging(true)}
@@ -648,8 +659,9 @@ export default function FlashUSB({
                 </div>
                 <div className="text-xs text-white/50">USB Stick</div>
               </motion.div>
+              </Tooltip>
 
-              <div className="text-2xl text-white/20">→</div>
+              <div className="text-2xl text-white/20 rotate-90 sm:rotate-0">→</div>
 
               <motion.div
                 onDragOver={(e) => { e.preventDefault(); setOverPort(true); }}
@@ -694,7 +706,7 @@ export default function FlashUSB({
               <div className="text-sm uppercase tracking-widest text-white/40">Step 2</div>
               <h2 className="mt-1 text-xl font-bold text-white">Choose your flashing tool</h2>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {tools.map((t) => (
                 <button
                   key={t.id}
@@ -752,6 +764,7 @@ export default function FlashUSB({
                     ✓ Safe to Remove Hardware
                   </motion.div>
                 ) : (
+                  <PulseHint>
                   <button
                     onClick={() => {
                       playClick();
@@ -763,6 +776,7 @@ export default function FlashUSB({
                   >
                     ⏏️ Safely Eject
                   </button>
+                  </PulseHint>
                 )}
               </div>
             )}

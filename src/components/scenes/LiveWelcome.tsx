@@ -15,7 +15,7 @@ export default function LiveWelcome({
 
   return (
     <div
-      className="flex h-[680px] items-center justify-center rounded-2xl border border-white/10"
+      className="flex min-h-[400px] sm:h-[680px] items-center justify-center rounded-2xl border border-white/10"
       style={{
         background: `linear-gradient(135deg, ${config.branding.surface} 0%, #0a0a1a 100%)`,
       }}
@@ -26,12 +26,12 @@ export default function LiveWelcome({
         className="flex flex-col items-center gap-6 px-6 text-center"
       >
         <div className="text-6xl">{config.branding.logo}</div>
-        <h1 className="text-3xl font-bold text-white/90">Welcome to {name}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white/90">Welcome to {name}</h1>
         <p className="max-w-md text-sm text-white/50">
           You've successfully booted from USB. Choose what you'd like to do:
         </p>
 
-        <div className="flex gap-4 mt-4">
+        <div className="flex flex-col sm:flex-row gap-4 mt-4">
           <button
             onClick={() => {
               playClick();

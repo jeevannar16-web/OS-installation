@@ -57,14 +57,14 @@ export default function LiveDesktop({
 
   return (
     <div
-      className="relative h-[680px] overflow-hidden rounded-2xl border border-white/10"
+      className="relative min-h-[400px] sm:h-[680px] overflow-hidden rounded-2xl border border-white/10"
       style={{
         background: `linear-gradient(135deg, ${config.branding.surface} 0%, #0a0a1a 100%)`,
       }}
     >
       {/* Desktop icons */}
       <div className="absolute inset-0 p-6">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <button
             onClick={() => { playClick(); setTermOpen(true); }}
             className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors"
@@ -103,7 +103,7 @@ export default function LiveDesktop({
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute left-1/2 top-1/2 z-10 flex h-[400px] w-[560px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a2e] shadow-2xl"
+            className="absolute left-1/2 top-1/2 z-10 flex h-[300px] sm:h-[400px] w-[calc(100%-2rem)] sm:w-[560px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a2e] shadow-2xl"
           >
             {/* Title bar */}
             <div className="flex items-center gap-2 bg-[#2a2a3e] px-3 py-2">
@@ -159,7 +159,7 @@ export default function LiveDesktop({
       {/* Taskbar */}
       <div className="absolute inset-x-0 bottom-0 z-20 flex h-10 items-center gap-3 border-t border-white/10 bg-black/60 px-4 backdrop-blur">
         <div className="text-sm font-semibold text-white/80">{config.branding.logo} {name}</div>
-        <div className="ml-auto text-xs text-white/50">
+        <div className="ml-auto text-xs text-white/50 hidden sm:block">
           Live Session — {name} is running from USB
         </div>
       </div>
