@@ -194,6 +194,95 @@ function ConfirmStep({
   );
 }
 
+function NetworkStep({
+  step,
+  value,
+  onChange,
+}: {
+  step: Extract<WizardStep, { kind: "network" }>;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const signalBars = (signal: number) => {
+    const bars = [];
+    for (let i = 1; i <= 4; i++) {
+      bars.push(
+        <div
+          key={i}
+          className={`w-1 rounded-sm ${i <= signal ? "bg-emerald-400" : "bg-white/15"}`}
+          style={{ height: `${4 + i * 3}px` }}
+        />
+      );
+    }
+    return <div className="flex items-end gap-0.5">{bars}</div>;
+  };
+
+  return (
+    <div className="space-y-3">
+      <h3 className="text-lg font-bold text-white/90">{step.title}</h3>
+      <div className="space-y-1">
+        {step.interfaces.map((iface) => (
+          <button
+            key={iface.id}
+            onClick={() => { playClick(); onChange(iface.id); }}
+            className={`w-full flex items-center gap-3 rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
+              value === iface.id
+                ? "bg-accent/20 text-white ring-1 ring-accent/50"
+                : "text-white/70 hover:bg-white/5"
+            }`}
+          >
+            <span className="text-lg">{iface.id.startsWith("wifi") ? "📶" : "🔌"}</span>
+            <span className="flex-1">{iface.label}</span>
+            {iface.signal && signalBars(iface.signal)}
+          </button>
+        ))}
+        <button
+          onClick={() => { playClick(); onChange("skip"); }}
+          className={`w-full rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
+            value === "skip"
+              ? "bg-accent/20 text-white ring-1 ring-accent/50"
+              : "text-white/50 hover:bg-white/5"
+          }`}
+        >
+          Skip for now — I'll configure later
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TimezoneStep({
+  step,
+  value,
+  onChange,
+}: {
+  step: Extract<WizardStep, { kind: "timezone" }>;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <h3 className="text-lg font-bold text-white/90">{step.title}</h3>
+      <div className="max-h-[240px] overflow-y-auto space-y-1 pr-1">
+        {step.zones.map((zone) => (
+          <button
+            key={zone}
+            onClick={() => { playClick(); onChange(zone); }}
+            className={`w-full rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
+              value === zone
+                ? "bg-accent/20 text-white ring-1 ring-accent/50"
+                : "text-white/70 hover:bg-white/5"
+            }`}
+          >
+            <span className="text-lg mr-2">🌍</span>
+            {zone}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Install({
   config,
   speed,
@@ -258,6 +347,8 @@ export default function Install({
     if (!currentStep) return false;
     if (currentStep.kind === "language") return !!values["language"];
     if (currentStep.kind === "keyboard") return !!values["keyboard"];
+    if (currentStep.kind === "network") return !!values["network"];
+    if (currentStep.kind === "timezone") return !!values["timezone"];
     if (currentStep.kind === "disk") return !!values["disk"];
     if (currentStep.kind === "account") {
       return currentStep.prompts.every((p) => (values[p.label] ?? "").trim().length > 0);
@@ -322,6 +413,20 @@ export default function Install({
                   step={currentStep}
                   value={values["keyboard"] ?? ""}
                   onChange={(v) => setVal("keyboard", v)}
+                />
+              )}
+              {currentStep?.kind === "network" && (
+                <NetworkStep
+                  step={currentStep}
+                  value={values["network"] ?? ""}
+                  onChange={(v) => setVal("network", v)}
+                />
+              )}
+              {currentStep?.kind === "timezone" && (
+                <TimezoneStep
+                  step={currentStep}
+                  value={values["timezone"] ?? ""}
+                  onChange={(v) => setVal("timezone", v)}
                 />
               )}
               {currentStep?.kind === "disk" && (

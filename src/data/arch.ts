@@ -2,7 +2,6 @@ import type { OSConfig } from "./types";
 
 export const arch: OSConfig = {
   id: "arch",
-  stub: true,
   branding: {
     name: "Arch Linux",
     shortName: "Arch",
@@ -27,30 +26,15 @@ export const arch: OSConfig = {
     { id: "ventoy", name: "Ventoy", note: "Multi-ISO on one stick" },
     { id: "balena", name: "BalenaEtcher", note: "Also works" },
   ],
-  wizard: [
-    { kind: "language", title: "Arch ISO Boot", options: ["Arch Linux install medium (x86_64)"] },
-    { kind: "keyboard", title: "Keymap", layouts: ["us", "uk", "dvorak"] },
-    {
-      kind: "disk",
-      title: "Partition the disk",
-      choices: [
-        { id: "manual", label: "cfdisk / fdisk (manual)", hint: "You partition by hand on Arch." },
-      ],
-    },
-    {
-      kind: "account",
-      title: "Set root & user",
-      prompts: [
-        { label: "Root password", placeholder: "••••••••", secret: true },
-        { label: "Username", placeholder: "archuser" },
-      ],
-    },
-    { kind: "confirm", title: "pacstrap", body: "Install the base system with pacstrap." },
+  wizard: [],
+  installTips: [
+    "Booting into the live environment…",
+    "Setting up the terminal…",
+    "You'll use the terminal for everything.",
   ],
-  installTips: ["Booting into the live environment…", "You'll use the terminal for everything."],
   searchKeywords: ["arch linux", "download arch", "arch iso", "archlinux", "arch linux download"],
   completion: {
-    headline: "Arch is more hands-on — coming soon!",
-    sub: "The manual terminal flow is stubbed. Full build planned for a later milestone.",
+    headline: "You just installed Arch Linux — the hard way! 🏹",
+    sub: "You used the terminal for everything. That's the Arch way.",
   },
 };

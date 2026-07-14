@@ -58,3 +58,46 @@ body {
   cursor: grabbing !important;
   transition: transform 0.05s ease-out;
 }
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .btn {
+    @apply px-4 py-2.5 text-xs;
+  }
+  .btn-primary {
+    @apply px-4 py-2.5 text-xs;
+  }
+}
+
+/* Touch-friendly drag alternatives — show tap zones on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  [draggable="true"] {
+    cursor: grab !important;
+  }
+  [draggable="true"]:active {
+    cursor: grabbing !important;
+  }
+  /* Show visual affordance for draggable items on touch */
+  [draggable="true"]::after {
+    content: "👆 Tap and drag";
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.3);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  [draggable="true"] {
+    transition: none !important;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

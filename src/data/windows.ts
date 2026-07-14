@@ -30,6 +30,11 @@ export const windows: OSConfig = {
     { kind: "language", title: "Windows Setup", options: ["English (United States)", "English (United Kingdom)", "Español", "Français"] },
     { kind: "keyboard", title: "Keyboard layout", layouts: ["US", "UK", "International"] },
     {
+      kind: "timezone",
+      title: "Select your timezone",
+      zones: ["(UTC-05:00) Eastern Time", "(UTC-06:00) Central Time", "(UTC-07:00) Mountain Time", "(UTC-08:00) Pacific Time", "(UTC+00:00) London", "(UTC+05:30) India", "(UTC+09:00) Tokyo"],
+    },
+    {
       kind: "disk",
       title: "Where do you want to install Windows?",
       choices: [

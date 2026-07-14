@@ -41,6 +41,8 @@ export type Branding = {
 export type WizardStep =
   | { kind: "language"; title: string; options: string[] }
   | { kind: "keyboard"; title: string; layouts: string[] }
+  | { kind: "network"; title: string; interfaces: { id: string; label: string; signal?: number }[] }
+  | { kind: "timezone"; title: string; zones: string[] }
   | {
       kind: "disk";
       title: string;

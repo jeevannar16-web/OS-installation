@@ -31,6 +31,21 @@ export const ubuntu: OSConfig = {
     { kind: "language", title: "Welcome", options: ["English", "Español", "Français", "Deutsch", "中文"] },
     { kind: "keyboard", title: "Keyboard layout", layouts: ["English (US)", "English (UK)", "Dvorak", "Colemak"] },
     {
+      kind: "network",
+      title: "Connect to a network",
+      interfaces: [
+        { id: "wifi-home", label: "HomeWiFi", signal: 4 },
+        { id: "wifi-neighbors", label: "Neighbor_5G", signal: 3 },
+        { id: "wifi-guest", label: "GuestNetwork", signal: 2 },
+        { id: "ethernet", label: "Wired Ethernet", signal: 5 },
+      ],
+    },
+    {
+      kind: "timezone",
+      title: "Select your timezone",
+      zones: ["UTC (London)", "EST (New York)", "CST (Chicago)", "MST (Denver)", "PST (Los Angeles)", "IST (Mumbai)", "JST (Tokyo)", "AEST (Sydney)"],
+    },
+    {
       kind: "disk",
       title: "Installation type",
       choices: [

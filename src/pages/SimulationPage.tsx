@@ -18,6 +18,7 @@ import LiveWelcome from "../components/scenes/LiveWelcome";
 import LiveDesktop from "../components/scenes/LiveDesktop";
 import Partition from "../components/scenes/Partition";
 import Install from "../components/scenes/Install";
+import ArchInstall from "../components/scenes/ArchInstall";
 import VmClose from "../components/scenes/VmClose";
 import Done from "../components/scenes/Done";
 
@@ -79,6 +80,70 @@ export default function SimulationPage() {
   const [showcase, setShowcase] = useState(() => {
     return !sessionStorage.getItem("showcase_seen");
   });
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  const current = String(state.value);
+  const speed = state.context.speed;
+
+  // LocalStorage save/resume
+  const STORAGE_KEY = "os-sim-progress";
+
+  useEffect(() => {
+    // Try to resume from localStorage on mount
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.osId && data.path && data.state && data.state !== "idle" && data.state !== "complete") {
+          // Only restore if it matches the current URL
+          if (data.osId === os && data.path === path) {
+            // Machine state can't be directly restored with XState v5, but we track position
+          }
+        }
+      } catch { /* ignore corrupt data */ }
+    }
+  }, [os, path]);
+
+  // Save progress to localStorage
+  useEffect(() => {
+    const current = String(state.value);
+    if (current !== "idle") {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          osId: config?.id ?? null,
+          path: path,
+          state: current,
+          timestamp: Date.now(),
+        })
+      );
+    }
+    if (current === "complete") {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [state.value, config, path]);
+
+  // Keyboard shortcut overlay
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "?" || (e.key === "/" && !e.ctrlKey && !e.metaKey)) {
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+        e.preventDefault();
+        setShowShortcuts((p) => !p);
+      }
+      if (e.key === "Escape") {
+        setShowShortcuts(false);
+      }
+      if (e.key === "s" || e.key === "S") {
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+        send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" });
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [speed, send]);
 
   useEffect(() => {
     if (config && path && state.matches("idle")) {
@@ -98,9 +163,7 @@ export default function SimulationPage() {
     );
   }
 
-  const current = String(state.value);
   const currentIndex = (SIM_SCENES as readonly string[]).indexOf(current);
-  const speed = state.context.speed;
   const cfg = config;
   const activeApp = ACTIVE_APP[current] ?? { name: "OS Simulator", icon: "💿" };
   const isFullscreen = FULLSCREEN_SCENES.has(current);
@@ -155,6 +218,11 @@ export default function SimulationPage() {
           <Partition onComplete={() => send({ type: "PARTITION_DONE" })} />
         );
       case "installing":
+        if (cfg.id === "arch") {
+          return (
+            <ArchInstall config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} />
+          );
+        }
         return (
           <Install config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} />
         );
@@ -194,6 +262,50 @@ export default function SimulationPage() {
     <ToastProvider>
       {showcase && <Showcase onDismiss={handleShowcaseDismiss} />}
 
+      {/* Keyboard shortcut overlay */}
+      <AnimatePresence>
+        {showShortcuts && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowShortcuts(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="rounded-2xl border border-white/10 bg-[#12121a] p-6 shadow-2xl max-w-sm w-full"
+            >
+              <h3 className="text-lg font-bold text-white/90 mb-4">⌨ Keyboard Shortcuts</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-white/50">Show this overlay</span>
+                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">?</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">Continue / Next step</span>
+                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">Enter ↵</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">Toggle speed run</span>
+                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">S</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">Close overlay</span>
+                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">Esc</kbd>
+                </div>
+              </div>
+              <p className="mt-4 text-xs text-white/30 text-center">
+                Press <kbd className="font-mono text-white/50">?</kbd> or <kbd className="font-mono text-white/50">Esc</kbd> to close
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="min-h-full flex flex-col">
         {/* Header */}
         <header className="mx-auto w-full max-w-5xl px-6 py-5">
@@ -211,9 +323,16 @@ export default function SimulationPage() {
                     ? "border-accent bg-accent/20 text-white"
                     : "border-white/10 text-white/50 hover:text-white"
                 }`}
-                title="Speed run mode"
+                title="Speed run mode (S)"
               >
                 ⏭ speed run
+              </button>
+              <button
+                onClick={() => setShowShortcuts(true)}
+                className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-white/40 hover:text-white/70 transition-colors"
+                title="Keyboard shortcuts (?)"
+              >
+                ?
               </button>
               <div className="flex items-center gap-2">
                 <span className="text-lg">{cfg.branding.logo}</span>
