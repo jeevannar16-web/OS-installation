@@ -384,75 +384,313 @@ function UsbInsertionLaptop({ config }: { config: OSConfig }) {
   );
 }
 
-/* ── VM Window with boot animation ───────────────────────────── */
+/* ── VM Window — realistic VirtualBox with desktop + GitHub browser ── */
 function VmWindow3D({ config }: { config: OSConfig }) {
-  const [booted, setBooted] = useState(false);
+  const [phase, setPhase] = useState<"booting" | "desktop" | "browser">("booting");
 
   useEffect(() => {
-    const t = setTimeout(() => setBooted(true), 2000);
-    return () => clearTimeout(t);
+    const t1 = setTimeout(() => setPhase("desktop"), 1800);
+    const t2 = setTimeout(() => setPhase("browser"), 3200);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
-    <div className="relative" style={{ perspective: "800px" }}>
+    <div className="relative" style={{ perspective: "900px" }}>
       <motion.div
-        initial={{ rotateY: -10, rotateX: 5, scale: 0.85 }}
-        animate={{ rotateY: 0, rotateX: 3, scale: 1 }}
-        transition={{ type: "spring", stiffness: 80, damping: 18, delay: 0.2 }}
+        initial={{ rotateY: -12, rotateX: 4, scale: 0.88 }}
+        animate={{ rotateY: 0, rotateX: 2, scale: 1 }}
+        transition={{ type: "spring", stiffness: 60, damping: 16, delay: 0.15 }}
         style={{ transformStyle: "preserve-3d" }}
       >
-        {/* Host window frame */}
-        <div className="rounded-xl bg-gradient-to-b from-gray-700 to-gray-800 p-1.5 shadow-2xl border border-white/5">
-          {/* Title bar */}
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 rounded-t-lg">
-            <div className="h-2 w-2 rounded-full bg-red-400/70" />
-            <div className="h-2 w-2 rounded-full bg-yellow-400/70" />
-            <div className="h-2 w-2 rounded-full bg-green-400/70" />
-            <span className="ml-2 text-[7px] sm:text-[8px] text-white/30 font-mono">VirtualBox — {config.branding.name}</span>
+        {/* VirtualBox window frame */}
+        <div className="mx-auto w-[320px] sm:w-[440px] md:w-[560px] rounded-xl bg-gradient-to-b from-[#e8e8e8] to-[#d4d4d4] p-[3px] shadow-2xl border border-gray-500/30">
+          {/* ── Title bar ── */}
+          <div className="flex items-center gap-1.5 rounded-t-lg bg-gradient-to-b from-[#f0f0f0] to-[#e0e0e0] px-2 py-1 border-b border-gray-400/40">
+            <div className="flex gap-1">
+              <div className="h-[10px] w-[10px] rounded-full bg-[#ff5f57] border border-[#e0443e]" />
+              <div className="h-[10px] w-[10px] rounded-full bg-[#febc2e] border border-[#d9a01e]" />
+              <div className="h-[10px] w-[10px] rounded-full bg-[#28c840] border border-[#1aab29]" />
+            </div>
+            <div className="flex-1 text-center">
+              <span className="text-[8px] sm:text-[10px] font-medium text-gray-600">
+                Oracle VM VirtualBox — {config.branding.name}
+              </span>
+            </div>
+            <div className="flex gap-1">
+              <div className="h-[8px] w-[10px] rounded-sm bg-gray-300 border border-gray-400/50 flex items-center justify-center text-[6px] text-gray-500">—</div>
+              <div className="h-[8px] w-[10px] rounded-sm bg-gray-300 border border-gray-400/50 flex items-center justify-center text-[6px] text-gray-500">□</div>
+              <div className="h-[8px] w-[10px] rounded-sm bg-gray-300 border border-gray-400/50 flex items-center justify-center text-[6px] text-gray-500">×</div>
+            </div>
           </div>
-          {/* VM screen */}
+
+          {/* ── Menu bar ── */}
+          <div className="flex items-center gap-3 bg-[#f5f5f5] px-2 py-[2px] border-b border-gray-300/60">
+            {["File", "Machine", "View", "Devices", "Help"].map((m) => (
+              <span key={m} className="text-[7px] sm:text-[8px] text-gray-600 hover:bg-gray-200 px-1 rounded cursor-default">{m}</span>
+            ))}
+            <div className="flex-1" />
+            {/* VirtualBox toolbar icons */}
+            <div className="flex gap-1">
+              <div className="h-[6px] w-[12px] rounded-sm bg-gray-300 border border-gray-400/30" />
+              <div className="h-[6px] w-[12px] rounded-sm bg-gray-300 border border-gray-400/30" />
+              <div className="h-[6px] w-[12px] rounded-sm bg-gray-300 border border-gray-400/30" />
+            </div>
+          </div>
+
+          {/* ── VM Screen ── */}
           <div
-            className="relative aspect-[16/10] rounded-b-lg overflow-hidden"
-            style={{ background: `linear-gradient(135deg, ${config.branding.surface}, #0a0a1a)` }}
+            className="relative rounded-b-lg overflow-hidden"
+            style={{ background: "#000" }}
           >
-            <div className="absolute inset-0" style={{
-              background: `radial-gradient(circle at 50% 50%, ${config.branding.accent}20 0%, transparent 50%)`
-            }} />
-            {/* Boot sequence */}
+            {/* Status bar at bottom of VM */}
+            <div className="absolute bottom-0 inset-x-0 h-3 bg-[#2a2a2a] border-t border-gray-600/40 flex items-center px-2 z-40">
+              <div className="flex items-center gap-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[5px] sm:text-[6px] text-gray-400 font-mono">Running</span>
+              </div>
+              <div className="flex-1" />
+              <span className="text-[5px] sm:text-[6px] text-gray-500 font-mono">1 CPU | 4096 MB | 50 GB</span>
+            </div>
+
+            {/* ── Boot phase ── */}
             <AnimatePresence mode="wait">
-              {!booted ? (
-                <motion.div key="boot" exit={{ opacity: 0 }} className="absolute inset-4 flex flex-col items-center justify-center">
+              {phase === "booting" && (
+                <motion.div key="boot" exit={{ opacity: 0 }} className="relative aspect-[16/10] flex flex-col items-center justify-center bg-black">
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="text-2xl sm:text-3xl mb-2"
+                    className="text-3xl sm:text-4xl mb-3"
                   >
                     💿
                   </motion.div>
-                  <div className="text-[8px] sm:text-[10px] text-white/40 font-mono">Loading…</div>
+                  <div className="text-[8px] sm:text-[10px] text-white/40 font-mono">Loading {config.branding.name}…</div>
+                  <div className="mt-3 h-1.5 w-28 sm:w-36 overflow-hidden rounded-full bg-white/10">
+                    <motion.div
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 1.6, ease: "easeInOut" }}
+                      className="h-full rounded-full"
+                      style={{ background: config.branding.accent }}
+                    />
+                  </div>
                 </motion.div>
-              ) : (
-                <motion.div
-                  key="desktop"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="absolute inset-4 flex flex-col items-center justify-center"
-                >
+              )}
+
+              {phase === "desktop" && (
+                <motion.div key="desktop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative aspect-[16/10] overflow-hidden">
+                  {/* Desktop wallpaper */}
+                  <div className="absolute inset-0" style={{
+                    background: `radial-gradient(circle at 30% 40%, ${config.branding.accent}30 0%, transparent 50%),
+                                 radial-gradient(circle at 70% 60%, ${config.branding.accent}15 0%, transparent 40%),
+                                 linear-gradient(135deg, ${config.branding.surface} 0%, #0a0a1a 100%)`
+                  }} />
+
+                  {/* Desktop icons inside VM */}
+                  <div className="absolute inset-3 sm:inset-4 grid grid-cols-2 gap-2 content-start">
+                    {[
+                      { icon: "📁", label: "Files" },
+                      { icon: "🌐", label: "Browser" },
+                      { icon: "⚙️", label: "Settings" },
+                      { icon: "💻", label: "Terminal" },
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 + i * 0.1 }}
+                        className="flex flex-col items-center gap-0.5 rounded p-1 hover:bg-white/10 cursor-pointer"
+                      >
+                        <span className="text-sm sm:text-lg">{item.icon}</span>
+                        <span className="text-[5px] sm:text-[6px] text-white/50">{item.label}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* VM desktop taskbar */}
+                  <div className="absolute bottom-3 inset-x-0 h-4 sm:h-5 bg-black/50 border-t border-white/10 flex items-center px-2 justify-between">
+                    <span className="text-[5px] sm:text-[7px] text-white/50 font-semibold">{config.branding.logo} Activities</span>
+                    <span className="text-[4px] sm:text-[6px] text-white/30 font-mono">14:32</span>
+                  </div>
+                </motion.div>
+              )}
+
+              {phase === "browser" && (
+                <motion.div key="browser" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative aspect-[16/10] overflow-hidden">
+                  {/* Desktop wallpaper */}
+                  <div className="absolute inset-0" style={{
+                    background: `radial-gradient(circle at 30% 40%, ${config.branding.accent}30 0%, transparent 50%),
+                                 radial-gradient(circle at 70% 60%, ${config.branding.accent}15 0%, transparent 40%),
+                                 linear-gradient(135deg, ${config.branding.surface} 0%, #0a0a1a 100%)`
+                  }} />
+
+                  {/* ── Browser window inside VM ── */}
                   <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="text-3xl sm:text-4xl mb-2"
+                    initial={{ opacity: 0, scale: 0.9, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 120, damping: 16 }}
+                    className="absolute inset-2 sm:inset-3 rounded-lg overflow-hidden shadow-2xl border border-white/10 flex flex-col"
                   >
-                    {config.branding.logo}
+                    {/* Browser chrome */}
+                    <div className="bg-[#202124] flex flex-col">
+                      {/* Tab bar */}
+                      <div className="flex items-center gap-0.5 px-1 pt-0.5">
+                        <div className="flex items-center gap-1 bg-[#35363a] rounded-t-md px-2 py-0.5 max-w-[70%]">
+                          <span className="text-[5px] sm:text-[7px]">🐙</span>
+                          <span className="text-[5px] sm:text-[7px] text-white/70 truncate">GitHub — jeevannar16-web</span>
+                          <span className="text-[5px] text-white/30 ml-1 cursor-pointer">×</span>
+                        </div>
+                        <div className="h-3 w-3 rounded-full bg-white/5 flex items-center justify-center text-[6px] text-white/30 cursor-pointer">+</div>
+                      </div>
+                      {/* URL bar */}
+                      <div className="flex items-center gap-1.5 px-1.5 pb-0.5">
+                        <div className="flex-1 bg-[#303134] rounded-full px-2 py-[2px] flex items-center gap-1">
+                          <span className="text-[5px] text-green-400">🔒</span>
+                          <span className="text-[5px] sm:text-[7px] text-white/50 font-mono truncate">github.com/jeevannar16-web</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── GitHub page content ── */}
+                    <div className="flex-1 bg-[#0d1117] overflow-hidden">
+                      <div className="p-2 sm:p-3">
+                        {/* GitHub header */}
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span className="text-xs sm:text-sm">🐙</span>
+                          <span className="text-[7px] sm:text-[9px] text-white/80 font-semibold">GitHub</span>
+                          <div className="flex-1" />
+                          <div className="h-2 w-12 sm:w-16 rounded-full bg-white/5 border border-white/10" />
+                        </div>
+
+                        {/* Profile section */}
+                        <div className="flex items-start gap-2 mb-2">
+                          {/* Avatar */}
+                          <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center text-[8px] sm:text-[10px] text-white font-bold shrink-0">
+                            J
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[7px] sm:text-[9px] text-white/90 font-semibold">jeevannar16-web</div>
+                            <div className="text-[5px] sm:text-[6px] text-white/30">Full Stack Developer</div>
+                          </div>
+                        </div>
+
+                        {/* Repository card */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="rounded-md border border-[#30363d] bg-[#161b22] p-1.5 sm:p-2"
+                        >
+                          {/* Repo header */}
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-[6px] sm:text-[8px] text-blue-400">📁</span>
+                            <span className="text-[6px] sm:text-[8px] text-blue-400 font-semibold">OS-installation</span>
+                            <span className="text-[4px] sm:text-[5px] px-1 py-[1px] rounded border border-[#30363d] text-white/30">Public</span>
+                          </div>
+
+                          <div className="text-[5px] sm:text-[6px] text-white/40 mb-1.5">
+                            Interactive OS Installation Simulator — practice installing Linux, Windows, or Arch in your browser
+                          </div>
+
+                          {/* Language bar */}
+                          <div className="flex items-center gap-1 mb-1.5">
+                            <div className="h-1 w-1 rounded-full bg-blue-400" />
+                            <span className="text-[4px] sm:text-[5px] text-white/30">TypeScript 92%</span>
+                            <div className="h-1 w-1 rounded-full bg-yellow-400" />
+                            <span className="text-[4px] sm:text-[5px] text-white/30">CSS 6%</span>
+                            <div className="h-1 w-1 rounded-full bg-cyan-400" />
+                            <span className="text-[4px] sm:text-[5px] text-white/30">HTML 2%</span>
+                          </div>
+
+                          {/* Stats */}
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-[4px] sm:text-[5px] text-white/30">⭐ 12</span>
+                            <span className="text-[4px] sm:text-[5px] text-white/30">🍴 8</span>
+                            <span className="text-[4px] sm:text-[5px] text-white/30">👀 3</span>
+                          </div>
+
+                          {/* Action buttons — FORK & FOLLOW */}
+                          <div className="flex items-center gap-1">
+                            <motion.a
+                              href={`${REPO_URL}/fork`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="flex items-center gap-0.5 rounded-md bg-[#21262d] border border-[#30363d] px-1.5 sm:px-2 py-[2px] text-[5px] sm:text-[7px] text-white/70 hover:bg-[#30363d] cursor-pointer"
+                            >
+                              <span>🍴</span> Fork
+                            </motion.a>
+                            <motion.a
+                              href="https://github.com/jeevannar16-web"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="flex items-center gap-0.5 rounded-md bg-[#238636] border border-[#2ea043] px-1.5 sm:px-2 py-[2px] text-[5px] sm:text-[7px] text-white/90 hover:bg-[#2ea043] cursor-pointer"
+                            >
+                              <span>👤</span> Follow
+                            </motion.a>
+                            <motion.a
+                              href={REPO_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="flex items-center gap-0.5 rounded-md bg-[#21262d] border border-[#30363d] px-1.5 sm:px-2 py-[2px] text-[5px] sm:text-[7px] text-yellow-400 hover:bg-[#30363d] cursor-pointer"
+                            >
+                              <span>⭐</span> Star
+                            </motion.a>
+                          </div>
+                        </motion.div>
+
+                        {/* Contribution graph hint */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="mt-1.5 flex items-center gap-[2px]"
+                        >
+                          {Array.from({ length: 20 }, (_, i) => (
+                            <div
+                              key={i}
+                              className="rounded-[1px]"
+                              style={{
+                                width: "3px",
+                                height: "3px",
+                                background: i % 5 === 0 ? "#1a7f37" : i % 3 === 0 ? "#0e4429" : "#161b22",
+                              }}
+                            />
+                          ))}
+                          <span className="text-[4px] text-white/20 ml-0.5">contributions</span>
+                        </motion.div>
+                      </div>
+                    </div>
                   </motion.div>
-                  <div className="text-[8px] sm:text-[10px] text-white/70 font-semibold">{config.branding.name}</div>
-                  <div className="text-[5px] sm:text-[6px] text-white/30 mt-1">Running in VirtualBox</div>
+
+                  {/* VM desktop taskbar */}
+                  <div className="absolute bottom-3 inset-x-0 h-4 sm:h-5 bg-black/50 border-t border-white/10 flex items-center px-2 justify-between z-30">
+                    <span className="text-[5px] sm:text-[7px] text-white/50 font-semibold">{config.branding.logo} Activities</span>
+                    <span className="text-[4px] sm:text-[6px] text-white/30 font-mono">14:32</span>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-br from-white/4 via-transparent to-transparent pointer-events-none" />
           </div>
         </div>
+
+        {/* VirtualBox status bar below window */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mx-auto mt-1 flex items-center justify-between rounded-b-lg bg-[#e0e0e0] px-3 py-[2px] border-t border-gray-400/30 w-[320px] sm:w-[440px] md:w-[560px]"
+        >
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="text-[6px] sm:text-[7px] text-gray-500 font-mono">{config.branding.shortName} [Running]</span>
+          </div>
+          <span className="text-[5px] sm:text-[6px] text-gray-400 font-mono">VirtualBox 7.0</span>
+        </motion.div>
       </motion.div>
     </div>
   );
@@ -486,13 +724,15 @@ function AchievementBadge({
 function StepChecklist({ path }: { path: string }) {
   const steps = [
     { label: "Downloaded ISO", done: true },
+    ...(path === "vm" ? [{ label: "Created VirtualBox VM", done: true }] : []),
     { label: "Flashed bootable USB", done: true },
     { label: "Entered BIOS / Boot Menu", done: true },
     ...(path === "dual-boot" ? [{ label: "Partitioned disk", done: true }] : []),
     ...(path === "live-usb" ? [{ label: "Tried live environment", done: true }] : []),
-    { label: "Inserted USB into port", done: true },
+    ...(path === "vm" ? [{ label: "Mounted ISO in VM", done: true }] : []),
     { label: "Installed operating system", done: true },
     { label: "Booted into new OS", done: true },
+    ...(path === "vm" ? [{ label: "Opened GitHub in VM browser", done: true }] : []),
   ];
 
   return (
@@ -635,8 +875,8 @@ export default function Done({
         </motion.div>
       </div>
 
-      {/* ── Interactive Desktop Preview ── */}
-      {showDesktop && (
+      {/* ── Interactive Desktop Preview (skip for VM — already shown above) ── */}
+      {showDesktop && path !== "vm" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
