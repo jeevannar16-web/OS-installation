@@ -4,10 +4,17 @@ import { useMachine } from "@xstate/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simulationMachine, SIM_SCENES } from "../machines/simulationMachine";
 import { getOS } from "../data";
+import { ToastProvider } from "../components/shared/Toast";
 import Footer from "../components/Footer";
 import DesktopShell, { type AppInfo } from "../components/shell/DesktopShell";
 import FakeBrowser from "../components/scenes/FakeBrowser";
 import FileManager from "../components/scenes/FileManager";
+import FlashUSB from "../components/scenes/FlashUSB";
+import Reboot from "../components/scenes/Reboot";
+import BootMenu from "../components/scenes/BootMenu";
+import Partition from "../components/scenes/Partition";
+import Install from "../components/scenes/Install";
+import Done from "../components/scenes/Done";
 
 const SCENE_LABELS: Record<string, string> = {
   idle: "Start",
@@ -21,16 +28,6 @@ const SCENE_LABELS: Record<string, string> = {
   complete: "Done",
 };
 
-const NEXT_EVENT: Record<string, string> = {
-  searching: "SEARCH_DONE",
-  downloading: "DOWNLOAD_DONE",
-  flashing_usb: "FLASH_DONE",
-  rebooting: "REBOOT_DONE",
-  boot_menu: "BOOT_SELECTED",
-  partitioning: "PARTITION_DONE",
-  installing: "INSTALL_DONE",
-};
-
 const ACTIVE_APP: Record<string, AppInfo> = {
   searching: { name: "Browser", icon: "🌐" },
   downloading: { name: "Files", icon: "📁" },
@@ -42,22 +39,8 @@ const ACTIVE_APP: Record<string, AppInfo> = {
   complete: { name: "Done", icon: "🎉" },
 };
 
-function Placeholder({ label, onNext }: { label: string; onNext?: () => void }) {
-  return (
-    <div className="glass rounded-2xl p-10 text-center">
-      <div className="text-xs uppercase tracking-widest text-white/40">Scene</div>
-      <h1 className="mt-2 text-2xl font-bold capitalize">{label.replace(/_/g, " ")}</h1>
-      <p className="mt-3 text-white/55">
-        This scene is coming in a later build step. The flow and state machine are already wired.
-      </p>
-      {onNext && (
-        <button className="btn-primary mt-6" onClick={onNext}>
-          Advance scene →
-        </button>
-      )}
-    </div>
-  );
-}
+/** Scenes that render fullscreen without the desktop shell. */
+const FULLSCREEN_SCENES = new Set(["rebooting", "boot_menu"]);
 
 export default function SimulationPage() {
   const { os, path } = useParams();
@@ -86,9 +69,9 @@ export default function SimulationPage() {
   const current = String(state.value);
   const currentIndex = (SIM_SCENES as readonly string[]).indexOf(current);
   const speed = state.context.speed;
-  const nextEvent = NEXT_EVENT[current];
   const cfg = config;
   const activeApp = ACTIVE_APP[current] ?? { name: "OS Simulator", icon: "💿" };
+  const isFullscreen = FULLSCREEN_SCENES.has(current);
 
   function renderScene() {
     switch (current) {
@@ -102,99 +85,159 @@ export default function SimulationPage() {
         );
       case "downloading":
         return <FileManager config={cfg} onComplete={() => send({ type: "DOWNLOAD_DONE" })} />;
-      default:
+      case "flashing_usb":
         return (
-          <Placeholder
-            label={current}
-            onNext={nextEvent ? () => send({ type: nextEvent as never }) : undefined}
+          <FlashUSB
+            config={cfg}
+            speed={speed}
+            onComplete={() => send({ type: "FLASH_DONE" })}
           />
         );
+      case "rebooting":
+        return (
+          <Reboot
+            speed={speed}
+            onComplete={() => send({ type: "REBOOT_DONE" })}
+          />
+        );
+      case "boot_menu":
+        return (
+          <BootMenu
+            onComplete={() => send({ type: path === "live-usb" ? "LIVE_DONE" : "BOOT_SELECTED" })}
+          />
+        );
+      case "partitioning":
+        return (
+          <Partition
+            onComplete={() => send({ type: "PARTITION_DONE" })}
+          />
+        );
+      case "installing":
+        return (
+          <Install
+            config={cfg}
+            speed={speed}
+            onComplete={() => send({ type: "INSTALL_DONE" })}
+          />
+        );
+      case "complete":
+        return (
+          <Done
+            config={cfg}
+            path={path ?? ""}
+            onComplete={() => send({ type: "RESET" })}
+          />
+        );
+      default:
+        return null;
     }
   }
 
   return (
-    <div className="min-h-full flex flex-col">
-      <header className="mx-auto w-full max-w-5xl px-6 py-5">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="text-sm text-white/60 hover:text-white">
-            ← OS Install Simulator
-          </Link>
-          <div className="flex items-center gap-3 text-sm">
-            <button
-              onClick={() =>
-                send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" })
-              }
-              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                speed === "fast"
-                  ? "border-accent bg-accent/20 text-white"
-                  : "border-white/10 text-white/50 hover:text-white"
-              }`}
-              title="Speed run mode (off by default)"
-            >
-              ⏭ speed run
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{cfg.branding.logo}</span>
-              <span className="font-semibold">{cfg.branding.shortName}</span>
-              <span className="text-white/40">· {path}</span>
+    <ToastProvider>
+      <div className="min-h-full flex flex-col">
+        {/* Header — always visible */}
+        <header className="mx-auto w-full max-w-5xl px-6 py-5">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="text-sm text-white/60 hover:text-white">
+              ← OS Install Simulator
+            </Link>
+            <div className="flex items-center gap-3 text-sm">
+              <button
+                onClick={() =>
+                  send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" })
+                }
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                  speed === "fast"
+                    ? "border-accent bg-accent/20 text-white"
+                    : "border-white/10 text-white/50 hover:text-white"
+                }`}
+                title="Speed run mode (off by default)"
+              >
+                ⏭ speed run
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{cfg.branding.logo}</span>
+                <span className="font-semibold">{cfg.branding.shortName}</span>
+                <span className="text-white/40">· {path}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Progress indicator */}
-        <div className="mt-4 flex flex-wrap items-center gap-1">
-          {SIM_SCENES.filter((s) => s !== "idle").map((s, i) => {
-            const idx = i + 1;
-            const active = idx === currentIndex;
-            const done = idx < currentIndex;
-            return (
-              <div key={s} className="flex items-center gap-1">
-                <div
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs ${
-                    active
-                      ? "bg-accent text-white"
-                      : done
-                        ? "bg-white/10 text-white/70"
-                        : "bg-white/5 text-white/35"
-                  }`}
-                >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      active ? "bg-white" : done ? "bg-emerald-400" : "bg-white/30"
+          {/* Progress indicator — always visible */}
+          <div className="mt-4 flex flex-wrap items-center gap-1">
+            {SIM_SCENES.filter((s) => {
+              if (s === "idle") return false;
+              if (s === "partitioning" && path !== "dual-boot") return false;
+              return true;
+            }).map((s) => {
+              const idx = (SIM_SCENES as readonly string[]).indexOf(s);
+              const active = idx === currentIndex;
+              const done = idx < currentIndex;
+              return (
+                <div key={s} className="flex items-center gap-1">
+                  <div
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs ${
+                      active
+                        ? "bg-accent text-white"
+                        : done
+                          ? "bg-white/10 text-white/70"
+                          : "bg-white/5 text-white/35"
                     }`}
-                  />
-                  {SCENE_LABELS[s]}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        active ? "bg-white" : done ? "bg-emerald-400" : "bg-white/30"
+                      }`}
+                    />
+                    {SCENE_LABELS[s]}
+                  </div>
                 </div>
-                {idx < SIM_SCENES.length - 1 && <span className="text-white/20">›</span>}
-              </div>
-            );
-          })}
-        </div>
-      </header>
+              );
+            })}
+          </div>
+        </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 pb-8">
-        <DesktopShell activeApp={activeApp}>
+        {/* Main content */}
+        {isFullscreen ? (
           <AnimatePresence mode="wait">
             <motion.div
               key={current}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="w-full max-w-4xl"
+              className="flex-1"
             >
               {renderScene()}
             </motion.div>
           </AnimatePresence>
-        </DesktopShell>
-      </main>
+        ) : (
+          <main className="mx-auto w-full max-w-5xl flex-1 px-6 pb-8">
+            <DesktopShell activeApp={activeApp}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={current}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full max-w-4xl"
+                >
+                  {renderScene()}
+                </motion.div>
+              </AnimatePresence>
+            </DesktopShell>
+          </main>
+        )}
 
-      <div className="px-6 pb-2 text-center text-[11px] text-white/30">
-        Simulation only — no files are downloaded or executed. For the real thing, use the
-        official links at the end.
+        <div className="px-6 pb-2 text-center text-[11px] text-white/30">
+          Simulation only — no files are downloaded or executed. For the real thing, use the
+          official links at the end.
+        </div>
+
+        <Footer />
       </div>
-
-      <Footer />
-    </div>
+    </ToastProvider>
   );
 }
