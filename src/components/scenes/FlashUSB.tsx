@@ -31,9 +31,11 @@ function formatLogLine(line: string): { text: string; color?: string } {
 function RufusTool({
   config,
   speed,
+  onFlashDone,
 }: {
   config: OSConfig;
   speed: "normal" | "fast";
+  onFlashDone: () => void;
 }) {
   const [device, setDevice] = useState(USB_DEVICES[0].id);
   const [isoFile, setIsoFile] = useState<string | null>(null);
@@ -83,7 +85,10 @@ function RufusTool({
       } else {
         clearInterval(logInterval);
         playSuccess();
-        setTimeout(() => setRufusPhase("done"), 400);
+        setTimeout(() => {
+          setRufusPhase("done");
+          onFlashDone();
+        }, 400);
       }
     };
     raf = requestAnimationFrame(tick);
@@ -276,9 +281,11 @@ function RufusTool({
 function VentoyTool({
   config,
   speed,
+  onFlashDone,
 }: {
   config: OSConfig;
   speed: "normal" | "fast";
+  onFlashDone: () => void;
 }) {
   const [ventoyPhase, setVentoyPhase] = useState<VentoyPhase>("idle");
   const [progress, setProgress] = useState(0);
@@ -303,7 +310,10 @@ function VentoyTool({
         playSuccess();
         setTimeout(() => {
           if (ventoyPhase === "installing") setVentoyPhase("copying");
-          else setVentoyPhase("done");
+          else {
+            setVentoyPhase("done");
+            onFlashDone();
+          }
         }, 300);
       }
     };
@@ -427,9 +437,11 @@ function VentoyTool({
 function EtcherTool({
   config,
   speed,
+  onFlashDone,
 }: {
   config: OSConfig;
   speed: "normal" | "fast";
+  onFlashDone: () => void;
 }) {
   const [etcherPhase, setEtcherPhase] = useState<EtcherPhase>("pick_file");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -451,7 +463,10 @@ function EtcherTool({
         raf = requestAnimationFrame(tick);
       } else {
         playSuccess();
-        setTimeout(() => setEtcherPhase("done"), 400);
+        setTimeout(() => {
+          setEtcherPhase("done");
+          onFlashDone();
+        }, 400);
       }
     };
     raf = requestAnimationFrame(tick);
@@ -578,6 +593,7 @@ export default function FlashUSB({
   const [usbConnected, setUsbConnected] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [overPort, setOverPort] = useState(false);
+  const [flashComplete, setFlashComplete] = useState(false);
   const toast = useToast();
 
   const handleUsbDrop = useCallback(() => {
@@ -720,14 +736,12 @@ export default function FlashUSB({
               ← Back to tools
             </button>
 
-            {phase === "rufus" && <RufusTool config={config} speed={speed} />}
-            {phase === "ventoy" && <VentoyTool config={config} speed={speed} />}
-            {phase === "balena" && <EtcherTool config={config} speed={speed} />}
+            {phase === "rufus" && <RufusTool config={config} speed={speed} onFlashDone={() => setFlashComplete(true)} />}
+            {phase === "ventoy" && <VentoyTool config={config} speed={speed} onFlashDone={() => setFlashComplete(true)} />}
+            {phase === "balena" && <EtcherTool config={config} speed={speed} onFlashDone={() => setFlashComplete(true)} />}
 
-            {/* Safely Eject */}
-            {((phase === "rufus" && selectedTool === "rufus") ||
-              (phase === "ventoy" && selectedTool === "ventoy") ||
-              (phase === "balena" && selectedTool === "balena")) && (
+            {/* Safely Eject — only show after flashing is complete */}
+            {flashComplete && (
               <div className="flex justify-center pt-4">
                 {ejected ? (
                   <motion.div
