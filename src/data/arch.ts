@@ -48,6 +48,7 @@ export const arch: OSConfig = {
     { kind: "confirm", title: "pacstrap", body: "Install the base system with pacstrap." },
   ],
   installTips: ["Booting into the live environment…", "You'll use the terminal for everything."],
+  searchKeywords: ["arch linux", "download arch", "arch iso", "archlinux", "arch linux download"],
   completion: {
     headline: "Arch is more hands-on — coming soon!",
     sub: "The manual terminal flow is stubbed. Full build planned for a later milestone.",

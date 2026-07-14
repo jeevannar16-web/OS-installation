@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { simulationMachine, SIM_SCENES } from "../machines/simulationMachine";
 import { getOS } from "../data";
 import Footer from "../components/Footer";
+import DesktopShell, { type AppInfo } from "../components/shell/DesktopShell";
 import FakeBrowser from "../components/scenes/FakeBrowser";
 import FileManager from "../components/scenes/FileManager";
 
@@ -28,6 +29,17 @@ const NEXT_EVENT: Record<string, string> = {
   boot_menu: "BOOT_SELECTED",
   partitioning: "PARTITION_DONE",
   installing: "INSTALL_DONE",
+};
+
+const ACTIVE_APP: Record<string, AppInfo> = {
+  searching: { name: "Browser", icon: "🌐" },
+  downloading: { name: "Files", icon: "📁" },
+  flashing_usb: { name: "USB Tool", icon: "🔌" },
+  rebooting: { name: "System", icon: "⏻" },
+  boot_menu: { name: "Boot Menu", icon: "💻" },
+  partitioning: { name: "Installer", icon: "🧩" },
+  installing: { name: "Installer", icon: "🧩" },
+  complete: { name: "Done", icon: "🎉" },
 };
 
 function Placeholder({ label, onNext }: { label: string; onNext?: () => void }) {
@@ -76,6 +88,7 @@ export default function SimulationPage() {
   const speed = state.context.speed;
   const nextEvent = NEXT_EVENT[current];
   const cfg = config;
+  const activeApp = ACTIVE_APP[current] ?? { name: "OS Simulator", icon: "💿" };
 
   function renderScene() {
     switch (current) {
@@ -101,15 +114,30 @@ export default function SimulationPage() {
 
   return (
     <div className="min-h-full flex flex-col">
-      <header className="mx-auto w-full max-w-4xl px-6 py-5">
+      <header className="mx-auto w-full max-w-5xl px-6 py-5">
         <div className="flex items-center justify-between">
           <Link to="/" className="text-sm text-white/60 hover:text-white">
             ← OS Install Simulator
           </Link>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-lg">{config.branding.logo}</span>
-            <span className="font-semibold">{config.branding.shortName}</span>
-            <span className="text-white/40">· {path}</span>
+          <div className="flex items-center gap-3 text-sm">
+            <button
+              onClick={() =>
+                send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" })
+              }
+              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                speed === "fast"
+                  ? "border-accent bg-accent/20 text-white"
+                  : "border-white/10 text-white/50 hover:text-white"
+              }`}
+              title="Speed run mode (off by default)"
+            >
+              ⏭ speed run
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{cfg.branding.logo}</span>
+              <span className="font-semibold">{cfg.branding.shortName}</span>
+              <span className="text-white/40">· {path}</span>
+            </div>
           </div>
         </div>
 
@@ -144,18 +172,21 @@ export default function SimulationPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-6 pb-8">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={current}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3 }}
-          >
-            {renderScene()}
-          </motion.div>
-        </AnimatePresence>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-6 pb-8">
+        <DesktopShell activeApp={activeApp}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3 }}
+              className="w-full max-w-4xl"
+            >
+              {renderScene()}
+            </motion.div>
+          </AnimatePresence>
+        </DesktopShell>
       </main>
 
       <div className="px-6 pb-2 text-center text-[11px] text-white/30">

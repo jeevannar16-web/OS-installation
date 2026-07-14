@@ -50,6 +50,7 @@ export const debian: OSConfig = {
     { kind: "confirm", title: "Finish", body: "Install the GRUB boot loader to the disk." },
   ],
   installTips: ["Detecting hardware…", "Installing the base system…", "Configuring apt…"],
+  searchKeywords: ["debian", "download debian", "debian iso", "debian linux", "debian 12"],
   completion: {
     headline: "Debian flow is stubbed — coming soon!",
     sub: "Reusing the same components; data only needs filling in.",

@@ -59,6 +59,14 @@ export const windows: OSConfig = {
     "Installing updates…",
     "Finishing up…",
   ],
+  searchKeywords: [
+    "windows 11",
+    "download windows 11",
+    "windows 11 iso",
+    "windows iso",
+    "windows download",
+    "microsoft windows",
+  ],
   completion: {
     headline: "You just simulated installing Windows 11! 🎉",
     sub: "Same flow you'll see on real hardware. Go make that bootable USB for real.",

@@ -50,6 +50,7 @@ export const fedora: OSConfig = {
     { kind: "confirm", title: "Begin Installation", body: "Anaconda will now write changes to disk." },
   ],
   installTips: ["Writing disk image…", "Setting up packages…", "Configuring system…"],
+  searchKeywords: ["fedora", "download fedora", "fedora iso", "fedora workstation", "fedora linux"],
   completion: {
     headline: "Fedora flow is stubbed — coming soon!",
     sub: "Reusing the same components; data only needs filling in.",

@@ -4,39 +4,73 @@ import type { OSConfig } from "../../data/types";
 
 type Phase = "address" | "search" | "download" | "downloading" | "done";
 
-type SearchResult = {
+type Result = {
   title: string;
   url: string;
-  desc: string;
-  official: boolean;
+  snippet: string;
+  official?: boolean;
+  related?: boolean;
 };
 
-function buildResults(config: OSConfig): SearchResult[] {
+function isRelevant(query: string, keywords: string[]): boolean {
+  const norm = query.toLowerCase().replace(/[^a-z0-9 ]/g, " ").trim();
+  if (!norm) return false;
+  const qt = norm.split(/\s+/).filter((t) => t.length > 1);
+  return keywords.some((k) => {
+    const kn = k.toLowerCase();
+    if (kn.includes(norm) || norm.includes(kn)) return true;
+    const kt = kn.split(/\s+/);
+    return kt.some((t) => qt.includes(t) && t.length > 2);
+  });
+}
+
+function buildRelevant(config: OSConfig): Result[] {
   const dp = config.downloadPage;
   return [
     {
       title: `${config.branding.name} | The official ${config.branding.name} website`,
       url: dp.url.replace(/^https?:\/\//, ""),
-      desc: dp.blurb,
+      snippet: dp.blurb,
       official: true,
     },
     {
-      title: `Download ${config.branding.name} — Free & Safe | Softonic`,
-      url: `softonic.com/${config.id}/download`,
-      desc: `Get ${config.branding.name} for your computer. Alternative mirrors and installers available.`,
-      official: false,
-    },
-    {
-      title: `How to install ${config.branding.name} in 2024 (step-by-step)`,
+      title: `How to install ${config.branding.name} (step-by-step guide)`,
       url: `howtogeek.com/how-to-install-${config.id}`,
-      desc: `A complete walkthrough covering USB creation, partitioning, and first boot.`,
-      official: false,
+      snippet: `Everything you need: create the USB, partition your disk, and finish first boot.`,
+      related: true,
     },
     {
-      title: `${config.branding.name} Community Forum — reddit`,
+      title: `${config.branding.name} download (64-bit) — FOSSHub`,
+      url: `fosshub.com/${config.id}`,
+      snippet: `Mirror downloads and older point releases for ${config.branding.name}.`,
+      related: true,
+    },
+    {
+      title: `${config.branding.name} Community Forum`,
       url: `reddit.com/r/${config.id}`,
-      desc: `Talk to other users, share screenshots, and get help with your setup.`,
-      official: false,
+      snippet: `Talk to other users, share screenshots, and get help with your setup.`,
+      related: true,
+    },
+  ];
+}
+
+function buildIrrelevant(): Result[] {
+  return [
+    {
+      title: "Cat — Wikipedia",
+      url: "en.wikipedia.org/wiki/Cat",
+      snippet:
+        "The cat (Felis catus) is a domestic species of small carnivorous mammal.",
+    },
+    {
+      title: "Breaking News — Latest Headlines & Top Stories",
+      url: "news.example.com",
+      snippet: "The latest national and world news, from politics to entertainment.",
+    },
+    {
+      title: "10-Day Weather Forecast for Your Area",
+      url: "weather.example.com",
+      snippet: "Hour-by-hour conditions, radar, and severe-weather alerts.",
     },
   ];
 }
@@ -53,29 +87,14 @@ export default function FakeBrowser({
   const dp = config.downloadPage;
   const [phase, setPhase] = useState<Phase>("address");
   const [query, setQuery] = useState("");
-  const [typing, setTyping] = useState(false);
   const [nudge, setNudge] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [version, setVersion] = useState(dp.versions?.[0] ?? "");
-  const results = buildResults(config);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Autotype the search term when the user clicks "Skip typing".
-  useEffect(() => {
-    if (!typing) return;
-    let i = 0;
-    setQuery("");
-    const t = setInterval(() => {
-      i += 1;
-      setQuery(dp.searchTerm.slice(0, i));
-      if (i >= dp.searchTerm.length) {
-        clearInterval(t);
-        setTimeout(() => setPhase("search"), 350);
-      }
-    }, 45);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typing]);
+  const relevant = isRelevant(query, config.searchKeywords);
+  const results = relevant ? buildRelevant(config) : buildIrrelevant();
+  const didYouMean = `download ${config.branding.shortName.toLowerCase()}`;
 
   // Drive the fake download progress.
   useEffect(() => {
@@ -98,8 +117,6 @@ export default function FakeBrowser({
   }, [phase, speed]);
 
   function submitSearch() {
-    const q = query.trim();
-    if (!q) return;
     setNudge(null);
     setPhase("search");
   }
@@ -139,18 +156,22 @@ export default function FakeBrowser({
               ↻
             </button>
           </div>
-          <div className="flex flex-1 items-center gap-2 rounded-full bg-[#202124] px-4 py-1.5 text-sm">
+          <form
+            className="flex flex-1 items-center gap-2 rounded-full bg-[#202124] px-4 py-1.5 text-sm"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitSearch();
+            }}
+          >
             <span className="text-emerald-400">🔒</span>
-            {phase === "address" ? (
+            {phase === "address" || phase === "search" ? (
               <input
                 ref={inputRef}
                 value={query}
-                disabled={typing}
                 onChange={(e) => {
                   setQuery(e.target.value);
                   setNudge(null);
                 }}
-                onKeyDown={(e) => e.key === "Enter" && submitSearch()}
                 placeholder="Search or enter a URL"
                 className="w-full bg-transparent text-white/90 outline-none placeholder:text-white/30"
                 autoFocus
@@ -158,7 +179,10 @@ export default function FakeBrowser({
             ) : (
               <span className="w-full truncate text-white/80">{addressUrl}</span>
             )}
-          </div>
+            <button type="submit" className="text-white/40 hover:text-white" aria-label="Search">
+              🔍
+            </button>
+          </form>
           <div className="h-7 w-7 rounded-full bg-white/10" />
         </div>
 
@@ -171,16 +195,13 @@ export default function FakeBrowser({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex h-full flex-col items-center justify-center gap-5 px-6 text-center"
+                className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"
               >
                 <div className="text-6xl">{config.branding.logo}</div>
-                <div className="text-lg text-white/60">Search for the OS you want to install</div>
-                <button
-                  onClick={() => setTyping(true)}
-                  className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-soft"
-                >
-                  Skip typing — search “{dp.searchTerm}”
-                </button>
+                <div className="text-lg text-white/60">New Tab</div>
+                <p className="text-sm text-[#5f6368]">
+                  Try searching for what you'd actually type.
+                </p>
               </motion.div>
             )}
 
@@ -192,8 +213,19 @@ export default function FakeBrowser({
                 exit={{ opacity: 0 }}
                 className="h-full overflow-y-auto px-8 py-6"
               >
+                {!relevant && (
+                  <button
+                    onClick={() => {
+                      setQuery(didYouMean);
+                      setNudge(null);
+                    }}
+                    className="mb-4 rounded-lg border border-accent/40 bg-accent/5 px-4 py-2 text-left text-sm text-accent hover:bg-accent/10"
+                  >
+                    Did you mean: <span className="font-semibold">{didYouMean}</span>?
+                  </button>
+                )}
                 <div className="mb-4 text-sm text-[#5f6368]">
-                  About {results.length * 840_000 + 1200} results ({((Math.random() * 0.4) + 0.3).toFixed(2)} seconds)
+                  About {results.length * 840_000 + 1200} results
                 </div>
                 <div className="space-y-5">
                   {results.map((r) => (
@@ -203,9 +235,10 @@ export default function FakeBrowser({
                         if (r.official) {
                           setNudge(null);
                           setPhase("download");
-                        } else {
+                        } else if (r.related) {
                           setNudge("Hmm, let's stick with the official source for safety.");
                         }
+                        // Irrelevant results do nothing — they're just noise.
                       }}
                       className={`block w-full text-left ${r.official ? "rounded-lg ring-2 ring-accent/60 bg-accent/5 p-2" : ""}`}
                     >
@@ -215,7 +248,7 @@ export default function FakeBrowser({
                       >
                         {r.title}
                       </div>
-                      <div className="text-sm text-[#4d5156]">{r.desc}</div>
+                      <div className="text-sm text-[#4d5156]">{r.snippet}</div>
                     </button>
                   ))}
                 </div>
@@ -321,18 +354,6 @@ export default function FakeBrowser({
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="mt-4 flex items-center justify-between text-sm text-white/50">
-        <span>
-          {phase === "address" && "Type a search or hit “Skip typing”."}
-          {phase === "search" && "Click the official result to continue."}
-          {phase === "download" && "Click the download button to grab the ISO."}
-          {phase === "downloading" && "Your ISO is downloading…"}
-        </span>
-        <button className="btn-ghost" onClick={onComplete}>
-          Skip this scene →
-        </button>
-      </div>
     </div>
   );
 }

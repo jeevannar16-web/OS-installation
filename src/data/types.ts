@@ -78,6 +78,8 @@ export type OSConfig = {
   wizard: WizardStep[];
   /** Tips that rotate during the install progress bar. */
   installTips: string[];
+  /** Keywords the fake browser search matches against to show relevant results. */
+  searchKeywords: string[];
   /** Final completion card copy. */
   completion: { headline: string; sub: string };
 };

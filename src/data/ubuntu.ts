@@ -62,6 +62,14 @@ export const ubuntu: OSConfig = {
     "Creating your user account…",
     "Almost there — finishing up…",
   ],
+  searchKeywords: [
+    "ubuntu",
+    "download ubuntu",
+    "ubuntu iso",
+    "ubuntu linux",
+    "linux ubuntu",
+    "ubuntu 24.04",
+  ],
   completion: {
     headline: "You just simulated installing Ubuntu! 🎉",
     sub: "That was the full dual-boot flow. You're ready to try it on real hardware.",

@@ -136,11 +136,8 @@ export default function FileManager({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between text-sm text-white/50">
-        <span>Your ISO landed in Downloads. Drag it onto the flashing tool to continue.</span>
-        <button className="btn-ghost" onClick={onComplete}>
-          Skip this scene →
-        </button>
+      <div className="mt-4 text-center text-sm text-white/50">
+        Your ISO landed in Downloads. Drag it onto the flashing tool to continue.
       </div>
     </div>
   );
