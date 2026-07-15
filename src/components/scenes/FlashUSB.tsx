@@ -639,12 +639,7 @@ export default function FlashUSB({
       {/* No AnimatePresence mode="wait" here — it causes a blank gap between phases */}
         {/* PHASE 1: USB Plug-in — realistic desk scene */}
         {phase === "plug_in" && (
-          <motion.div
-            key="plug_in"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="relative overflow-hidden rounded-2xl"
-          >
+          <div className="relative overflow-hidden rounded-2xl">
             {/* Physical desk backdrop */}
             <div className="absolute inset-0 bg-gradient-to-b from-[#2a2218] via-[#1e1812] to-[#151010] rounded-2xl" />
             <div className="absolute inset-0 opacity-[0.04]"
@@ -790,17 +785,12 @@ export default function FlashUSB({
                 )}
               </AnimatePresence>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* PHASE 2: Tool Selection */}
         {phase === "tool_select" && (
-          <motion.div
-            key="tool_select"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-4"
-          >
+          <div className="space-y-4">
             <div className="text-center mb-6">
               <div className="text-sm uppercase tracking-widest text-white/40">Step 2</div>
               <h2 className="mt-1 text-xl font-bold text-white">Choose your flashing tool</h2>
@@ -834,17 +824,12 @@ export default function FlashUSB({
                 );
               })}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* PHASE 3: Tool UIs */}
         {(phase === "rufus" || phase === "ventoy" || phase === "balena" || phase === "unsupported") && (
-          <motion.div
-            key={phase}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
+          <div className="space-y-4">
             <button
               onClick={() => { playClick(); setPhase("tool_select"); setSelectedTool(null); }}
               className="text-sm text-white/50 hover:text-white flex items-center gap-1"
@@ -913,7 +898,7 @@ export default function FlashUSB({
                 </div>
               </motion.div>
             )}
-          </motion.div>
+          </div>
         )}
     </div>
   );

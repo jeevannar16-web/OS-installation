@@ -449,33 +449,15 @@ export default function SimulationPage() {
         </header>
 
         {isFullscreen ? (
-          <AnimatePresence mode="popLayout">
-            <motion.div
-              key={current}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex-1"
-            >
-              {renderScene()}
-            </motion.div>
-          </AnimatePresence>
+          <div className="flex-1" key={current}>
+            {renderScene()}
+          </div>
         ) : (
           <main className="mx-auto w-full max-w-5xl flex-1 px-6 pb-8">
             <DesktopShell activeApp={activeApp}>
-              <AnimatePresence mode="popLayout">
-                <motion.div
-                  key={current}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full max-w-4xl"
-                >
-                  {renderScene()}
-                </motion.div>
-              </AnimatePresence>
+              <div className="w-full max-w-4xl" key={current}>
+                {renderScene()}
+              </div>
             </DesktopShell>
           </main>
         )}

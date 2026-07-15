@@ -53,6 +53,8 @@ export function SparkleBurst({
     return () => clearTimeout(timer);
   }, [trigger, originRef]);
 
+  if (particles.length === 0) return null;
+
   return (
     <div className="pointer-events-none fixed inset-0 z-[200]">
       <AnimatePresence>
