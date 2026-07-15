@@ -398,17 +398,17 @@ export default function SimulationPage() {
       <div className="vignette-overlay" aria-hidden />
 
       <div className="min-h-full flex flex-col relative z-0">
-        <header className="mx-auto w-full max-w-5xl px-6 py-5">
+        <header className="mx-auto w-full max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem] px-4 sm:px-6 py-3 sm:py-5">
           <div className="flex items-center justify-between">
-            <Link to="/" className="text-sm text-white/60 hover:text-white">
+            <Link to="/" className="text-xs sm:text-sm text-white/60 hover:text-white">
               ← OS Install Simulator
             </Link>
-            <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
               <button
                 onClick={() =>
                   send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" })
                 }
-                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                className={`rounded-full border px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs transition-colors ${
                   speed === "fast"
                     ? "border-accent bg-accent/20 text-white"
                     : "border-white/10 text-white/50 hover:text-white"
@@ -419,21 +419,21 @@ export default function SimulationPage() {
               </button>
               <button
                 onClick={() => setShowShortcuts(true)}
-                className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-white/40 hover:text-white/70 transition-colors"
+                className="rounded-full border border-white/10 px-2 sm:px-2.5 py-1 text-[10px] sm:text-xs text-white/40 hover:text-white/70 transition-colors"
                 title="Keyboard shortcuts (?)"
               >
                 ?
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-lg">{cfg.branding.logo}</span>
-                <span className="font-semibold">{cfg.branding.shortName}</span>
-                <span className="text-white/40">· {path}</span>
+                <span className="text-base sm:text-lg">{cfg.branding.logo}</span>
+                <span className="font-semibold text-xs sm:text-sm">{cfg.branding.shortName}</span>
+                <span className="text-white/40 hidden sm:inline">· {path}</span>
               </div>
             </div>
           </div>
 
           {/* Progress indicator — only shows scenes relevant to the current path */}
-          <div className="mt-4 flex flex-wrap items-center gap-1">
+          <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-1">
             {visibleScenes.map((s) => {
               const idx = (SIM_SCENES as readonly string[]).indexOf(s);
               const active = idx === currentIndex;
@@ -441,7 +441,7 @@ export default function SimulationPage() {
               return (
                 <div key={s} className="flex items-center gap-1">
                   <div
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs ${
+                    className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs ${
                       active
                         ? "bg-accent text-white"
                         : done
@@ -450,18 +450,18 @@ export default function SimulationPage() {
                     }`}
                   >
                     <span
-                      className={`h-1.5 w-1.5 rounded-full ${
+                      className={`h-1 sm:h-1.5 w-1 sm:w-1.5 rounded-full ${
                         active ? "bg-white" : done ? "bg-emerald-400" : "bg-white/30"
                       }`}
                     />
-                    {SCENE_LABELS[s]}
+                    <span className="hidden sm:inline">{SCENE_LABELS[s]}</span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="mt-2 min-h-[1.25rem] text-xs text-white/40" key={`status-${current}`}>
+          <div className="mt-1.5 sm:mt-2 min-h-[1rem] sm:min-h-[1.25rem] text-[10px] sm:text-xs text-white/40" key={`status-${current}`}>
             {STATUS_TEXT[current] ?? ""}
           </div>
         </header>
@@ -473,9 +473,9 @@ export default function SimulationPage() {
             </ErrorBoundary>
           </div>
         ) : (
-          <main className="mx-auto w-full max-w-5xl flex-1 px-6 pb-8">
+          <main className="mx-auto w-full max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem] flex-1 px-3 sm:px-6 pb-6 sm:pb-8">
             <DesktopShell activeApp={activeApp}>
-              <div className="w-full max-w-4xl" key={current}>
+              <div className="w-full max-w-5xl" key={current}>
                 <ErrorBoundary label={current}>
                   {renderScene()}
                 </ErrorBoundary>
@@ -484,7 +484,7 @@ export default function SimulationPage() {
           </main>
         )}
 
-        <div className="px-6 pb-4 text-center text-[11px] text-white/30">
+        <div className="px-4 sm:px-6 pb-3 sm:pb-4 text-center text-[10px] sm:text-[11px] text-white/30">
           Simulation only — no files are downloaded or executed.
         </div>
 

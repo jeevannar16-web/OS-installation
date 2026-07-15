@@ -10,7 +10,7 @@ export default function VmClose({
   onComplete: () => void;
 }) {
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
+    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl space-y-6">
       {/* VM Window */}
       <motion.div
         initial={{ opacity: 1 }}
@@ -43,7 +43,7 @@ export default function VmClose({
 
         {/* Guest OS screen content */}
         <div
-          className="flex h-[420px] items-center justify-center"
+          className="flex h-[420px] lg:h-[520px] xl:h-[600px] items-center justify-center"
           style={{
             background: `linear-gradient(135deg, ${config.branding.surface} 0%, #0a0a1a 100%)`,
           }}

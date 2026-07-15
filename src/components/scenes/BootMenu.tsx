@@ -70,16 +70,16 @@ export default function BootMenu({
 
       {/* Title */}
       <div className="mb-6 sm:mb-8 text-center px-4">
-        <div className="text-base sm:text-lg font-bold text-white/90 tracking-wider">
+        <div className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-white/90 tracking-wider">
           BOOT MENU
         </div>
-        <div className="mt-1 text-xs text-white/40">
+        <div className="mt-1 text-xs sm:text-sm text-white/40">
           Select a boot device and press Enter
         </div>
       </div>
 
       {/* Boot entries */}
-      <div className="w-full max-w-xl space-y-1 px-4">
+      <div className="w-full max-w-xl lg:max-w-2xl space-y-1 px-4">
         {ENTRIES.map((entry, i) => (
           <button
             key={entry.id}
@@ -93,7 +93,7 @@ export default function BootMenu({
                 setSelected(i);
               }
             }}
-            className={`w-full rounded px-4 py-3 text-left text-sm transition-colors ${
+            className={`w-full rounded px-4 py-3 lg:py-4 text-left text-sm sm:text-base transition-colors ${
               selected === i
                 ? "bg-white/15 text-white font-medium"
                 : "text-white/60 hover:bg-white/5"
@@ -102,14 +102,14 @@ export default function BootMenu({
             <span className="mr-3 text-white/30">{selected === i ? "▶" : " "}</span>
             {entry.label}
             {entry.correct && (
-              <span className="ml-2 text-[10px] text-emerald-400/60">(USB)</span>
+              <span className="ml-2 text-[10px] sm:text-xs text-emerald-400/60">(USB)</span>
             )}
           </button>
         ))}
       </div>
 
       {/* Footer bar */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-6 text-xs text-white/40">
+      <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-6 text-xs sm:text-sm text-white/40">
         <span>↑↓ Select</span>
         <span>↵ Boot</span>
       </div>

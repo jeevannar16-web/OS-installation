@@ -57,7 +57,7 @@ export default function LiveDesktop({
 
   return (
     <div
-      className="relative min-h-[400px] sm:h-[680px] overflow-hidden rounded-2xl border border-white/10"
+      className="relative min-h-[400px] sm:h-[680px] lg:h-[75vh] overflow-hidden rounded-2xl border border-white/10"
       style={{
         background: `linear-gradient(135deg, ${config.branding.surface} 0%, #0a0a1a 100%)`,
       }}
@@ -103,7 +103,7 @@ export default function LiveDesktop({
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute left-1/2 top-1/2 z-10 flex h-[300px] sm:h-[400px] w-[calc(100%-2rem)] sm:w-[560px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a2e] shadow-2xl"
+            className="absolute left-1/2 top-1/2 z-10 flex h-[300px] sm:h-[400px] lg:h-[500px] w-[calc(100%-2rem)] sm:w-[560px] lg:w-[700px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a2e] shadow-2xl"
           >
             {/* Title bar */}
             <div className="flex items-center gap-2 bg-[#2a2a3e] px-3 py-2">

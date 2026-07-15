@@ -381,7 +381,7 @@ export default function Install({
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="mx-auto w-full max-w-2xl lg:max-w-3xl">
       <SparkleBurst trigger={showSparkle} />
       <AnimatePresence mode="wait">
         {/* Wizard steps */}
@@ -399,7 +399,7 @@ export default function Install({
               {steps.map((_, i) => (
                 <div
                   key={i}
-                  className="h-1.5 flex-1 rounded-full transition-colors"
+                  className="h-1.5 lg:h-2 flex-1 rounded-full transition-colors"
                   style={{
                     background: i <= stepIdx ? config.branding.accent : "rgba(255,255,255,0.1)",
                   }}
@@ -482,14 +482,14 @@ export default function Install({
             className="rounded-2xl border border-white/10 p-8 text-center shadow-2xl backdrop-blur-xl"
             style={surfaceStyle}
           >
-            <div className="text-4xl mb-4">{config.branding.logo}</div>
-            <h2 className="text-lg font-bold text-white/90">
+            <div className="text-4xl lg:text-5xl xl:text-6xl mb-4">{config.branding.logo}</div>
+            <h2 className="text-lg lg:text-xl xl:text-2xl font-bold text-white/90">
               Installing {config.branding.name}…
             </h2>
 
             {/* Progress bar */}
-            <div className="mt-6 mx-auto max-w-md space-y-2">
-              <div className="h-3 w-full overflow-hidden rounded-full bg-white/10">
+            <div className="mt-6 mx-auto max-w-md lg:max-w-lg space-y-2">
+              <div className="h-3 lg:h-4 w-full overflow-hidden rounded-full bg-white/10">
                 <motion.div
                   className="h-full rounded-full"
                   style={{ background: config.branding.accent }}

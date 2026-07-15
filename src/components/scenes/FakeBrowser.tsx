@@ -129,7 +129,7 @@ export default function FakeBrowser({
         : dp.url.replace(/^https?:\/\//, "");
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
       {/* Browser window */}
       <div className="overflow-hidden rounded-xl bg-[#202124] shadow-2xl ring-1 ring-white/10">
         {/* Tab strip */}
@@ -187,7 +187,7 @@ export default function FakeBrowser({
         </div>
 
         {/* Body */}
-        <div className="relative h-[460px] overflow-hidden bg-white text-[#202124]">
+        <div className="relative h-[460px] lg:h-[560px] xl:h-[640px] overflow-hidden bg-white text-[#202124]">
           {phase === "address" && (
             <div
               className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"

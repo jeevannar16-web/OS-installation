@@ -13,7 +13,7 @@ export default function FileManager({
   const [over, setOver] = useState(false);
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
       <div className="overflow-hidden rounded-xl bg-[#1e1e1e] shadow-2xl ring-1 ring-white/10">
         {/* Title bar */}
         <div className="flex items-center gap-2 bg-[#323234] px-3 py-2">
@@ -27,7 +27,7 @@ export default function FileManager({
           </div>
         </div>
 
-        <div className="flex h-[460px]">
+        <div className="flex h-[460px] lg:h-[560px] xl:h-[640px]">
           {/* Sidebar */}
           <div className="w-44 shrink-0 border-r border-white/10 bg-[#2a2a2b] p-3 text-sm">
             {[

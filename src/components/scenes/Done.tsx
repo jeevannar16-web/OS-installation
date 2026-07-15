@@ -811,7 +811,7 @@ export default function Done({
   ];
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 space-y-8">
+    <div className="mx-auto w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl px-4 sm:px-6 space-y-8">
       {/* ── Hero: 3D scene + headline ── */}
       <div className="text-center space-y-6">
         <motion.div
@@ -831,7 +831,7 @@ export default function Done({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="text-xl sm:text-2xl md:text-3xl font-bold"
+          className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold"
         >
           <span className="bg-gradient-to-r from-accent-soft to-accent bg-clip-text text-transparent">
             {config.completion.headline}
@@ -841,7 +841,7 @@ export default function Done({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="text-sm sm:text-base text-white/50 max-w-md mx-auto"
+          className="text-sm sm:text-base lg:text-lg text-white/50 max-w-md mx-auto"
         >
           {config.completion.sub}
         </motion.p>
@@ -1013,7 +1013,7 @@ export default function Done({
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-lg bg-white/5 border border-white/10 px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+              className="rounded-lg bg-white/5 border border-white/10 px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 lg:py-2.5 text-xs sm:text-sm lg:text-base text-white/60 hover:bg-white/10 hover:text-white transition-colors"
             >
               {link.name} →
             </a>
@@ -1028,13 +1028,13 @@ export default function Done({
         transition={{ delay: 1.2 }}
         className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3"
       >
-        <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">
+        <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 sm:px-5 lg:px-6 py-2 sm:py-2.5 lg:py-3 text-xs sm:text-sm lg:text-base font-semibold text-white/70 hover:bg-white/10 transition-colors">
           ⭐ Star on GitHub
         </a>
-        <a href={`${REPO_URL}/fork`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">
+        <a href={`${REPO_URL}/fork`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 sm:px-5 lg:px-6 py-2 sm:py-2.5 lg:py-3 text-xs sm:text-sm lg:text-base font-semibold text-white/70 hover:bg-white/10 transition-colors">
           🍴 Fork
         </a>
-        <a href="https://github.com/jeevannar16-web" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">
+        <a href="https://github.com/jeevannar16-web" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 sm:px-5 lg:px-6 py-2 sm:py-2.5 lg:py-3 text-xs sm:text-sm lg:text-base font-semibold text-white/70 hover:bg-white/10 transition-colors">
           👤 Follow
         </a>
       </motion.div>

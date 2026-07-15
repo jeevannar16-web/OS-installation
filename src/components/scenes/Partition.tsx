@@ -48,11 +48,11 @@ export default function Partition({
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6">
+    <div className="mx-auto w-full max-w-3xl lg:max-w-4xl space-y-6">
       <div className="text-center">
-        <div className="text-sm uppercase tracking-widest text-white/40">Disk Partitioning</div>
-        <h2 className="mt-1 text-xl font-bold text-white">Allocate disk space</h2>
-        <p className="mt-2 text-sm text-white/50">
+        <div className="text-sm sm:text-base uppercase tracking-widest text-white/40">Disk Partitioning</div>
+        <h2 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold text-white">Allocate disk space</h2>
+        <p className="mt-2 text-sm sm:text-base text-white/50">
           Drag the divider to allocate space for the new OS installation.
         </p>
         <Tooltip text="Click and drag left/right to resize the partition">
@@ -69,7 +69,7 @@ export default function Partition({
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          className="relative h-12 w-full cursor-col-resize select-none overflow-hidden rounded-lg ring-1 ring-white/10"
+          className="relative h-12 lg:h-16 w-full cursor-col-resize select-none overflow-hidden rounded-lg ring-1 ring-white/10"
         >
           {/* Existing OS portion */}
           <div

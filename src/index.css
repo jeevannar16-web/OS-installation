@@ -288,11 +288,32 @@ body {
 }
 
 /* ── Responsive ─────────────────────────────────────────────── */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+.perspective-800 { perspective: 800px; }
+.preserve-3d { transform-style: preserve-3d; }
+
+/* ── Touch-friendly: minimum 44px tap targets ─────────────── */
+@media (hover: none) and (pointer: coarse) {
+  [draggable="true"] { cursor: grab !important; }
+  [draggable="true"]:active { cursor: grabbing !important; }
+  .btn { min-height: 44px; }
+  .btn-primary { min-height: 44px; }
+}
+
+/* ── Tiny screens (< 376px) ────────────────────────────────── */
 @media (max-width: 375px) {
   body { font-size: 13px; }
   .btn { @apply px-3 py-2 text-[11px] rounded-lg; }
   .btn-primary { @apply px-3 py-2 text-[11px] rounded-lg; }
 }
+/* ── Small screens (< 640px) ───────────────────────────────── */
 @media (max-width: 640px) {
   .btn { @apply px-4 py-2.5 text-xs; }
   .btn-primary { @apply px-4 py-2.5 text-xs; }
@@ -303,17 +324,43 @@ body {
   .aurora-blob:nth-child(2) { width: 350px; height: 350px; }
   .aurora-blob:nth-child(3) { width: 300px; height: 300px; }
 }
+/* ── Medium screens (< 768px) ──────────────────────────────── */
 @media (max-width: 768px) {
   .btn { @apply px-4 py-2.5 text-xs; }
   .btn-primary { @apply px-4 py-2.5 text-xs; }
 }
+/* ── Large screens (≥ 1280px) ──────────────────────────────── */
 @media (min-width: 1280px) {
-  body { font-size: 16px; }
+  html { font-size: 16px; }
 }
-@media (hover: none) and (pointer: coarse) {
-  [draggable="true"] { cursor: grab !important; }
-  [draggable="true"]:active { cursor: grabbing !important; }
+/* ── XL screens (≥ 1536px) — presentation/kiosk mode ──────── */
+@media (min-width: 1536px) {
+  html { font-size: 18px; }
+  .btn { @apply px-6 py-3; min-height: 48px; }
+  .btn-primary { @apply px-6 py-3; min-height: 48px; }
+  .glass { @apply p-6; }
+  .aurora-blob:nth-child(1) { width: 900px; height: 900px; }
+  .aurora-blob:nth-child(2) { width: 800px; height: 800px; }
+  .aurora-blob:nth-child(3) { width: 700px; height: 700px; }
 }
+/* ── 2XL screens (≥ 1920px) — large whiteboard ─────────────── */
+@media (min-width: 1920px) {
+  html { font-size: 20px; }
+  .btn { @apply px-8 py-4; min-height: 56px; border-radius: 0.875rem; }
+  .btn-primary { @apply px-8 py-4; min-height: 56px; border-radius: 0.875rem; }
+  .glass { @apply p-8; }
+}
+/* ── 3XL screens (≥ 2560px) — giant whiteboard/touchscreen ── */
+@media (min-width: 2560px) {
+  html { font-size: 24px; }
+  .btn { @apply px-10 py-5; min-height: 64px; border-radius: 1rem; }
+  .btn-primary { @apply px-10 py-5; min-height: 64px; border-radius: 1rem; }
+  .glass { @apply p-10; }
+  .aurora-blob:nth-child(1) { width: 1400px; height: 1400px; }
+  .aurora-blob:nth-child(2) { width: 1200px; height: 1200px; }
+  .aurora-blob:nth-child(3) { width: 1000px; height: 1000px; }
+}
+/* ── Reduced motion ────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   [draggable="true"] { transition: none !important; }
   * {
@@ -324,14 +371,3 @@ body {
   .aurora-blob { animation: none !important; opacity: 0.5 !important; }
   .float-icon { animation: none !important; opacity: 0.12 !important; }
 }
-@supports (padding: env(safe-area-inset-top)) {
-  body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-}
-
-.perspective-800 { perspective: 800px; }
-.preserve-3d { transform-style: preserve-3d; }

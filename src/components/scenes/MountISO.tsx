@@ -33,7 +33,7 @@ export default function MountISO({
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4">
+    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl space-y-4">
       {/* Settings dialog */}
       <div className="overflow-hidden rounded-xl bg-[#2a2a2b] shadow-2xl ring-1 ring-white/10">
         {/* Title bar */}
@@ -48,7 +48,7 @@ export default function MountISO({
           </span>
         </div>
 
-        <div className="flex h-[420px]">
+        <div className="flex h-[420px] lg:h-[520px] xl:h-[600px]">
           {/* Sidebar tabs */}
           <div className="w-44 shrink-0 border-r border-white/10 bg-[#1e1e1e] p-2">
             <div className="mb-2 text-xs uppercase tracking-wide text-white/40 px-2 pt-1">

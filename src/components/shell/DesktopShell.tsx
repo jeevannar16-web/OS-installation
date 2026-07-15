@@ -21,7 +21,7 @@ export default function DesktopShell({
   const clock = useClock();
 
   return (
-    <div className="relative h-[680px] overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
+    <div className="relative min-h-[60vh] md:min-h-[70vh] lg:min-h-[75vh] overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
       {/* Wallpaper */}
       <div
         className="absolute inset-0"
@@ -40,13 +40,13 @@ export default function DesktopShell({
       />
 
       {/* Window area */}
-      <div className="relative z-10 flex h-full justify-center overflow-y-auto px-4 pt-6 pb-20">
+      <div className="relative z-10 flex min-h-[60vh] md:min-h-[70vh] lg:min-h-[75vh] justify-center overflow-y-auto px-3 sm:px-4 md:px-6 pt-4 md:pt-6 pb-16 md:pb-20">
         {children}
       </div>
 
       {/* Taskbar */}
-      <div className="absolute inset-x-0 bottom-0 z-20 flex h-12 items-center gap-3 border-t border-white/10 bg-black/60 px-4 backdrop-blur">
-        <div className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1 text-sm text-white/90">
+      <div className="absolute inset-x-0 bottom-0 z-20 flex h-10 sm:h-12 items-center gap-3 border-t border-white/10 bg-black/60 px-3 sm:px-4 backdrop-blur">
+        <div className="flex items-center gap-2 rounded-lg bg-white/10 px-2.5 sm:px-3 py-1 text-xs sm:text-sm text-white/90">
           <span>{activeApp.icon}</span>
           <span>{activeApp.name}</span>
         </div>

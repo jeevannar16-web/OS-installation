@@ -95,13 +95,13 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
 
   if (phase === "inserted") {
     return (
-      <div className="mx-auto w-full max-w-4xl">
-        <div className="relative overflow-hidden rounded-2xl">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#2a2218] via-[#1e1812] to-[#151010] rounded-2xl" />
-          <div className="relative z-10 flex flex-col items-center gap-4 py-16">
-            <div className="text-5xl">✓</div>
-            <div className="text-lg font-bold text-emerald-400">USB drive connected to target PC</div>
-            <div className="text-sm text-white/50">The system is ready to reboot into the installer.</div>
+    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
+      <div className="relative overflow-hidden rounded-2xl">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#2a2218] via-[#1e1812] to-[#151010] rounded-2xl" />
+        <div className="relative z-10 flex flex-col items-center gap-4 py-16 lg:py-20">
+          <div className="text-5xl lg:text-6xl xl:text-7xl">✓</div>
+          <div className="text-lg lg:text-xl xl:text-2xl font-bold text-emerald-400">USB drive connected to target PC</div>
+          <div className="text-sm lg:text-base text-white/50">The system is ready to reboot into the installer.</div>
             <PulseHint>
               <button
                 onClick={() => { playClick(); onComplete(); }}
@@ -117,7 +117,7 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
       <div className="relative overflow-hidden rounded-2xl">
         <div className="absolute inset-0 bg-gradient-to-b from-[#2a2218] via-[#1e1812] to-[#151010] rounded-2xl" />
         <div className="absolute inset-0 opacity-[0.04]"
@@ -126,13 +126,13 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
           }}
         />
 
-        <div className="relative z-10 p-8">
+        <div className="relative z-10 p-8 lg:p-10">
           <div className="text-center mb-8">
-            <div className="text-xs uppercase tracking-widest text-amber-300/40 font-medium">Physical Setup</div>
-            <h2 className="mt-2 text-xl font-bold text-white">
+            <div className="text-xs lg:text-sm uppercase tracking-widest text-amber-300/40 font-medium">Physical Setup</div>
+            <h2 className="mt-2 text-xl lg:text-2xl xl:text-3xl font-bold text-white">
               Insert the USB into the target PC
             </h2>
-            <p className="mt-2 text-sm text-white/40">
+            <p className="mt-2 text-sm lg:text-base text-white/40">
               The USB was safely ejected. Now plug it into the machine you're installing on.
             </p>
           </div>

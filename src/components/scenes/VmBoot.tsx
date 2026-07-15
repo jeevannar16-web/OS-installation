@@ -93,7 +93,7 @@ export default function VmBoot({
   }, [phase, selectedIdx, onComplete, bootOptions.length]);
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
       {/* VM Window */}
       <div className="overflow-hidden rounded-xl border border-white/10 shadow-2xl">
         {/* Title bar */}
@@ -112,7 +112,7 @@ export default function VmBoot({
 
         {/* Screen */}
         <div
-          className="relative flex h-[420px] items-center justify-center overflow-hidden"
+          className="relative flex h-[420px] lg:h-[520px] xl:h-[600px] items-center justify-center overflow-hidden"
           style={{
             background:
               phase === "off"

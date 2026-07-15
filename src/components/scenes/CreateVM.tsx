@@ -41,7 +41,7 @@ export default function CreateVM({
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4">
+    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl space-y-4">
       {/* VirtualBox Manager chrome */}
       <div className="overflow-hidden rounded-xl bg-[#2a2a2b] shadow-2xl ring-1 ring-white/10">
         {/* Title bar */}
@@ -72,7 +72,7 @@ export default function CreateVM({
         </div>
 
         {/* Wizard body */}
-        <div className="flex h-[420px]">
+        <div className="flex h-[420px] lg:h-[520px] xl:h-[600px]">
           {/* Left panel — list of VMs */}
           <div className="w-52 shrink-0 border-r border-white/10 bg-[#1e1e1e] p-3">
             <div className="mb-2 text-xs uppercase tracking-wide text-white/40">Tools</div>

@@ -111,12 +111,12 @@ export default function Reboot({
 
       {phase === "post" && (
         <div className="flex flex-col items-center gap-4">
-          <div className="text-3xl sm:text-5xl">{bios.logo}</div>
-          <div className="text-xs sm:text-sm font-bold tracking-widest text-white/70">
+          <div className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl">{bios.logo}</div>
+          <div className="text-xs sm:text-sm lg:text-base font-bold tracking-widest text-white/70">
             {bios.name}
           </div>
-          <div className="text-[10px] sm:text-xs text-white/40">{bios.memLabel}</div>
-          <div className="mt-2 text-xs text-white/30">Initializing hardware…</div>
+          <div className="text-[10px] sm:text-xs lg:text-sm text-white/40">{bios.memLabel}</div>
+          <div className="mt-2 text-xs sm:text-sm text-white/30">Initializing hardware…</div>
         </div>
       )}
 
@@ -134,13 +134,13 @@ export default function Reboot({
 
       {phase === "prompt" && (
         <div className="flex flex-col items-center gap-6">
-          <div className="text-3xl sm:text-5xl">{bios.logo}</div>
+          <div className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl">{bios.logo}</div>
           <div className="font-mono text-center space-y-1">
-            <div className="text-sm text-white/70">
+            <div className="text-sm sm:text-base lg:text-lg text-white/70">
               Press <span className="font-bold text-white">F2</span> to enter Setup,{" "}
               <span className="font-bold text-white">F12</span> for Boot Menu
             </div>
-            <div className="text-xs text-white/40">
+            <div className="text-xs sm:text-sm lg:text-base text-white/40">
               {countdown}s remaining
             </div>
           </div>
@@ -165,9 +165,9 @@ export default function Reboot({
       {phase === "missed" && (
         <div className="flex flex-col items-center gap-6">
           <div className="text-center">
-            <div className="text-3xl sm:text-4xl mb-3">🪟</div>
-            <div className="text-sm text-white/60">Booting to Windows Boot Manager…</div>
-            <div className="mt-2 text-xs text-white/40">
+            <div className="text-3xl sm:text-4xl lg:text-5xl mb-3">🪟</div>
+            <div className="text-sm sm:text-base lg:text-lg text-white/60">Booting to Windows Boot Manager…</div>
+            <div className="mt-2 text-xs sm:text-sm lg:text-base text-white/40">
               (Wrong boot device — you need to catch F12!)
             </div>
           </div>

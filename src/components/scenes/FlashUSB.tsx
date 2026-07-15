@@ -81,13 +81,13 @@ function RufusTool({ config, speed, onComplete }: { config: OSConfig; speed: "no
 
   return (
     <div className="rounded-xl bg-[#f0f0f0] ring-1 ring-black/10 overflow-hidden">
-      <div className="flex items-center gap-2 bg-[#4a8c5c] px-3 py-2 text-xs text-white">
-        <span className="font-bold text-sm">Rufus</span>
+      <div className="flex items-center gap-2 bg-[#4a8c5c] px-3 lg:px-4 py-2 lg:py-3 text-xs lg:text-sm text-white">
+        <span className="font-bold text-sm lg:text-base">Rufus</span>
         <span className="text-white/70">v4.5.2180</span>
       </div>
-      <div className="bg-[#f5f5f5] p-4 space-y-3">
+      <div className="bg-[#f5f5f5] p-4 lg:p-6 space-y-3">
         <div className="flex items-center gap-3">
-          <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">Device</label>
+          <label className="w-20 sm:w-28 text-xs lg:text-sm font-semibold text-gray-600">Device</label>
           <select value={device} onChange={(e) => { playClick(); setDevice(e.target.value); }}
             className="flex-1 rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800">
             {USB_DEVICES.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
@@ -144,7 +144,7 @@ function RufusTool({ config, speed, onComplete }: { config: OSConfig; speed: "no
           </div>
         )}
         {rufusPhase === "flashing" && (
-          <div ref={logRef} className="h-36 overflow-y-auto rounded border border-gray-200 bg-black p-2 font-mono text-[10px] leading-relaxed">
+          <div ref={logRef} className="h-36 lg:h-48 overflow-y-auto rounded border border-gray-200 bg-black p-2 font-mono text-[10px] lg:text-xs leading-relaxed">
             {logLines.filter(Boolean).map((l, i) => (
               <div key={i} className={l.startsWith("ERROR") ? "text-red-400" : (l.includes("✓") || l.includes("Done")) ? "text-emerald-400" : "text-white/70"}>{l}</div>
             ))}
@@ -343,15 +343,15 @@ export default function FlashUSB({ config, speed, onComplete }: { config: OSConf
   }, [toast]);
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4">
+    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl space-y-4">
       {/* ═══ PHASE 1: Plug in USB ═══ */}
       {tool === "plug_in" && (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#2a2218] via-[#1e1812] to-[#151010]">
-          <div className="relative z-10 p-8">
+          <div className="relative z-10 p-8 lg:p-10">
             <div className="text-center mb-6">
-              <div className="text-xs uppercase tracking-widest text-amber-300/40 font-medium">Step 1</div>
-              <h2 className="mt-2 text-xl font-bold text-white">Plug in your USB drive</h2>
-              <p className="mt-2 text-sm text-white/40">Drag the USB stick onto the computer port.</p>
+              <div className="text-xs lg:text-sm uppercase tracking-widest text-amber-300/40 font-medium">Step 1</div>
+              <h2 className="mt-2 text-xl lg:text-2xl xl:text-3xl font-bold text-white">Plug in your USB drive</h2>
+              <p className="mt-2 text-sm lg:text-base text-white/40">Drag the USB stick onto the computer port.</p>
             </div>
             <div className="relative flex flex-col sm:flex-row items-center justify-center gap-12 sm:gap-24 py-8">
               <motion.div draggable onDragStart={() => {}} onDragEnd={() => {}}
@@ -403,18 +403,18 @@ export default function FlashUSB({ config, speed, onComplete }: { config: OSConf
       {tool === "select" && (
         <div className="space-y-4">
           <div className="text-center mb-4">
-            <div className="text-sm uppercase tracking-widest text-white/40">Step 2</div>
-            <h2 className="mt-1 text-xl font-bold text-white">Choose your flashing tool</h2>
+            <div className="text-sm lg:text-base uppercase tracking-widest text-white/40">Step 2</div>
+            <h2 className="mt-1 text-xl lg:text-2xl xl:text-3xl font-bold text-white">Choose your flashing tool</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
             {config.flashers.map((t) => {
               const ok = SUPPORTED_TOOLS.has(t.id);
               return (
                 <button key={t.id} onClick={() => { playClick(); setTool(ok ? (t.id as typeof tool) : "unsupported"); }}
-                  className="rounded-xl border border-white/10 bg-white/5 p-4 text-center transition-all hover:bg-white/10">
-                  <div className="text-2xl mb-2">{t.id === "rufus" ? "🟢" : t.id === "ventoy" ? "📦" : t.id === "balena" ? "⚗️" : "🔧"}</div>
-                  <div className="text-sm font-bold text-white/90">{t.name}</div>
-                  <div className="mt-1 text-xs text-white/50">{t.note}</div>
+                  className="rounded-xl border border-white/10 bg-white/5 p-4 lg:p-6 text-center transition-all hover:bg-white/10">
+                  <div className="text-2xl lg:text-4xl mb-2">{t.id === "rufus" ? "🟢" : t.id === "ventoy" ? "📦" : t.id === "balena" ? "⚗️" : "🔧"}</div>
+                  <div className="text-sm lg:text-base font-bold text-white/90">{t.name}</div>
+                  <div className="mt-1 text-xs lg:text-sm text-white/50">{t.note}</div>
                   {!ok && <div className="mt-2 text-[10px] text-amber-400/80 font-medium">Coming soon</div>}
                 </button>
               );

@@ -343,7 +343,7 @@ export default function ArchInstall({
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="mx-auto w-full max-w-3xl lg:max-w-4xl">
       {/* Progress bar */}
       <div className="mb-3 flex items-center gap-3">
         <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -388,7 +388,7 @@ export default function ArchInstall({
         {/* Terminal body */}
         <div
           ref={terminalRef}
-          className="h-80 overflow-y-auto p-4 font-mono text-sm leading-relaxed"
+          className="h-80 lg:h-96 xl:h-[500px] overflow-y-auto p-4 font-mono text-sm lg:text-base leading-relaxed"
         >
           <AnimatePresence>
             {lines.map((line, i) => (
