@@ -52,7 +52,7 @@ function LanguageStep({
     <div className="space-y-3">
       <h3 className="text-lg font-bold text-white/90">{step.title}</h3>
       <div className="space-y-1">
-        {step.options.map((opt) => (
+        {step.options.filter(Boolean).map((opt) => (
           <button
             key={opt}
             onClick={() => { playClick(); onChange(opt); }}
@@ -222,7 +222,7 @@ function NetworkStep({
     <div className="space-y-3">
       <h3 className="text-lg font-bold text-white/90">{step.title}</h3>
       <div className="space-y-1">
-        {step.interfaces.map((iface) => (
+        {step.interfaces.filter(Boolean).map((iface) => (
           <button
             key={iface.id}
             onClick={() => { playClick(); onChange(iface.id); }}
@@ -232,7 +232,7 @@ function NetworkStep({
                 : "text-white/70 hover:bg-white/5"
             }`}
           >
-            <span className="text-lg">{iface.id.startsWith("wifi") ? "📶" : "🔌"}</span>
+            <span className="text-lg">{iface.id?.startsWith?.("wifi") ? "📶" : "🔌"}</span>
             <span className="flex-1">{iface.label}</span>
             {iface.signal && signalBars(iface.signal)}
           </button>
