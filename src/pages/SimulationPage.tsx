@@ -264,7 +264,12 @@ export default function SimulationPage() {
           />
         );
       default:
-        return null;
+        return (
+          <div className="flex flex-col items-center justify-center py-20 text-white/40">
+            <div className="text-3xl mb-3">⏳</div>
+            <div className="text-sm">Loading next step…</div>
+          </div>
+        );
     }
   }
 
