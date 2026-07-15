@@ -188,128 +188,109 @@ export default function FakeBrowser({
 
         {/* Body */}
         <div className="relative h-[460px] overflow-hidden bg-white text-[#202124]">
-          <AnimatePresence mode="wait">
-            {phase === "address" && (
-              <motion.div
-                key="address"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"
-              >
-                <div className="text-6xl">{config.branding.logo}</div>
-                <div className="text-lg text-white/60">New Tab</div>
-                <p className="text-sm text-[#5f6368]">
-                  Try searching for what you'd actually type.
-                </p>
-              </motion.div>
-            )}
+          {phase === "address" && (
+            <div
+              className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"
+            >
+              <div className="text-6xl">{config.branding.logo}</div>
+              <div className="text-lg text-white/60">New Tab</div>
+              <p className="text-sm text-[#5f6368]">
+                Try searching for what you'd actually type.
+              </p>
+            </div>
+          )}
 
-            {phase === "search" && (
-              <motion.div
-                key="search"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="h-full overflow-y-auto px-8 py-6"
-              >
-                {!relevant && (
-                  <button
-                    onClick={() => {
-                      setQuery(didYouMean);
-                      setNudge(null);
-                    }}
-                    className="mb-4 rounded-lg border border-accent/40 bg-accent/5 px-4 py-2 text-left text-sm text-accent hover:bg-accent/10"
-                  >
-                    Did you mean: <span className="font-semibold">{didYouMean}</span>?
-                  </button>
-                )}
-                <div className="mb-4 text-sm text-[#5f6368]">
-                  About {results.length * 840_000 + 1200} results
-                </div>
-                <div className="space-y-5">
-                  {results.map((r) => (
-                    <button
-                      key={r.url}
-                      onClick={() => {
-                        if (r.official) {
-                          setNudge(null);
-                          setPhase("download");
-                        } else if (r.related) {
-                          setNudge("Hmm, let's stick with the official source for safety.");
-                        }
-                        // Irrelevant results do nothing — they're just noise.
-                      }}
-                      className={`block w-full text-left ${r.official ? "rounded-lg ring-2 ring-accent/60 bg-accent/5 p-2" : ""}`}
-                    >
-                      <div className="text-xs text-[#5f6368]">{r.url}</div>
-                      <div
-                        className={`text-lg ${r.official ? "text-accent" : "text-[#1a0dab]"} hover:underline`}
-                      >
-                        {r.title}
-                      </div>
-                      <div className="text-sm text-[#4d5156]">{r.snippet}</div>
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {phase === "download" && (
-              <motion.div
-                key="download"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex h-full flex-col items-center justify-center gap-6 px-6 text-center"
-                style={{ background: `linear-gradient(180deg, ${config.branding.surface}, #0b0b0f)` }}
-              >
-                <div className="text-7xl drop-shadow-[0_0_24px_rgba(255,255,255,0.25)]">
-                  {config.branding.logo}
-                </div>
-                <h1 className="text-3xl font-bold text-white">{dp.title}</h1>
-                {dp.versions && (
-                  <div className="flex flex-col items-center gap-1">
-                    <label className="text-xs uppercase tracking-wide text-white/50">
-                      {dp.selectorLabel}
-                    </label>
-                    <select
-                      value={version}
-                      onChange={(e) => setVersion(e.target.value)}
-                      className="rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white outline-none"
-                    >
-                      {dp.versions.map((v) => (
-                        <option key={v} className="text-black">
-                          {v}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+          {phase === "search" && (
+            <div
+              className="h-full overflow-y-auto px-8 py-6"
+            >
+              {!relevant && (
                 <button
-                  onClick={() => setPhase("downloading")}
-                  className="rounded-xl px-8 py-3 text-base font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
-                  style={{ background: config.branding.accent }}
+                  onClick={() => {
+                    setQuery(didYouMean);
+                    setNudge(null);
+                  }}
+                  className="mb-4 rounded-lg border border-accent/40 bg-accent/5 px-4 py-2 text-left text-sm text-accent hover:bg-accent/10"
                 >
-                  {dp.cta}
+                  Did you mean: <span className="font-semibold">{didYouMean}</span>?
                 </button>
-                <p className="max-w-md text-sm text-white/60">{dp.blurb}</p>
-              </motion.div>
-            )}
+              )}
+              <div className="mb-4 text-sm text-[#5f6368]">
+                About {results.length * 840_000 + 1200} results
+              </div>
+              <div className="space-y-5">
+                {results.map((r) => (
+                  <button
+                    key={r.url}
+                    onClick={() => {
+                      if (r.official) {
+                        setNudge(null);
+                        setPhase("download");
+                      } else if (r.related) {
+                        setNudge("Hmm, let's stick with the official source for safety.");
+                      }
+                    }}
+                    className={`block w-full text-left ${r.official ? "rounded-lg ring-2 ring-accent/60 bg-accent/5 p-2" : ""}`}
+                  >
+                    <div className="text-xs text-[#5f6368]">{r.url}</div>
+                    <div
+                      className={`text-lg ${r.official ? "text-accent" : "text-[#1a0dab]"} hover:underline`}
+                    >
+                      {r.title}
+                    </div>
+                    <div className="text-sm text-[#4d5156]">{r.snippet}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-            {phase === "downloading" && (
-              <motion.div
-                key="downloading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex h-full items-center justify-center"
-                style={{ background: `linear-gradient(180deg, ${config.branding.surface}, #0b0b0f)` }}
+          {phase === "download" && (
+            <div
+              className="flex h-full flex-col items-center justify-center gap-6 px-6 text-center"
+              style={{ background: `linear-gradient(180deg, ${config.branding.surface}, #0b0b0f)` }}
+            >
+              <div className="text-7xl drop-shadow-[0_0_24px_rgba(255,255,255,0.25)]">
+                {config.branding.logo}
+              </div>
+              <h1 className="text-3xl font-bold text-white">{dp.title}</h1>
+              {dp.versions && (
+                <div className="flex flex-col items-center gap-1">
+                  <label className="text-xs uppercase tracking-wide text-white/50">
+                    {dp.selectorLabel}
+                  </label>
+                  <select
+                    value={version}
+                    onChange={(e) => setVersion(e.target.value)}
+                    className="rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white outline-none"
+                  >
+                    {dp.versions.map((v) => (
+                      <option key={v} className="text-black">
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <button
+                onClick={() => setPhase("downloading")}
+                className="rounded-xl px-8 py-3 text-base font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
+                style={{ background: config.branding.accent }}
               >
-                <div className="text-center text-white/70">Preparing your download…</div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {dp.cta}
+              </button>
+              <p className="max-w-md text-sm text-white/60">{dp.blurb}</p>
+            </div>
+          )}
+
+          {phase === "downloading" && (
+            <div
+              className="flex h-full items-center justify-center"
+              style={{ background: `linear-gradient(180deg, ${config.branding.surface}, #0b0b0f)` }}
+            >
+              <div className="text-center text-white/70">Preparing your download…</div>
+            </div>
+          )}
 
           {/* Browser download chip (bottom-left) */}
           <AnimatePresence>

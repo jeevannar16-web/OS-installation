@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 type FileEntry = { name: string; icon: string; size?: string };
 
@@ -15,23 +15,19 @@ export default function FilePickerModal({
   onSelect: (name: string) => void;
   onClose: () => void;
 }) {
+  if (!open) return null;
+
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#1a1a2e] shadow-2xl"
-          >
+    <div
+      className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#1a1a2e] shadow-2xl"
+      >
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
               <h3 className="text-sm font-semibold text-white/90">{title}</h3>
               <button
@@ -66,9 +62,7 @@ export default function FilePickerModal({
                 </div>
               )}
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      </motion.div>
+    </div>
   );
 }

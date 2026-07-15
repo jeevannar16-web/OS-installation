@@ -157,7 +157,7 @@ function RufusTool({ config, speed, onComplete }: { config: OSConfig; speed: "no
           </button>
         )}
         {rufusPhase === "done" && (
-          <button onClick={() => { playClick(); onComplete(); }}
+          <button onClick={() => { console.log("[FlashUSB] Rufus onComplete clicked"); playClick(); onComplete(); }}
             className="w-full rounded-lg bg-[#4a8c5c] py-3 text-sm font-bold text-white hover:bg-[#3d7a4e] transition-colors shadow-lg shadow-[#4a8c5c]/20">
             ✓ Flash Complete — Continue →
           </button>
@@ -237,7 +237,7 @@ function VentoyTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
         </div>
       )}
       {phase === "done" && (
-        <button onClick={() => { playClick(); onComplete(); }}
+        <button onClick={() => { console.log("[FlashUSB] Ventoy onComplete clicked"); playClick(); onComplete(); }}
           className="w-full rounded-lg bg-emerald-500 py-3 text-sm font-bold text-white hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">
           ✓ ISO copied — Continue →
         </button>
@@ -315,7 +315,7 @@ function EtcherTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
         </div>
       )}
       {etcherPhase === "done" && (
-        <button onClick={() => { playClick(); onComplete(); }}
+        <button onClick={() => { console.log("[FlashUSB] Etcher onComplete clicked"); playClick(); onComplete(); }}
           className="w-full rounded-lg bg-emerald-500 py-3 text-sm font-bold text-white hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">
           ✓ Flash Complete — Continue →
         </button>

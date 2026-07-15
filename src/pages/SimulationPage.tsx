@@ -150,10 +150,28 @@ export default function SimulationPage() {
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
         send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" });
       }
+      if (e.key === "Enter") {
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "BUTTON")) return;
+        const s = String(state.value);
+        console.log("[SimPage] Enter pressed in state:", s);
+        if (s === "searching") send({ type: "SEARCH_DONE" });
+        else if (s === "downloading") send({ type: "DOWNLOAD_DONE" });
+        else if (s === "flashing_usb") send({ type: "FLASH_DONE" });
+        else if (s === "usb_reinsert") send({ type: "USB_INSERTED" });
+        else if (s === "rebooting") send({ type: "REBOOT_DONE" });
+        else if (s === "partitioning") send({ type: "PARTITION_DONE" });
+        else if (s === "live_welcome") send({ type: "LIVE_INSTALL" });
+        else if (s === "live_desktop") send({ type: "LIVE_INSTALL" });
+        else if (s === "create_vm") send({ type: "VM_CREATED" });
+        else if (s === "mount_iso") send({ type: "ISO_MOUNTED" });
+        else if (s === "vm_boot") send({ type: "VM_POWERED_ON" });
+        else if (s === "vm_close") send({ type: "VM_CLOSED" });
+      }
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [speed, send]);
+  }, [speed, send, state.value]);
 
   useEffect(() => {
     if (config && path && state.matches("idle")) {
@@ -192,11 +210,12 @@ export default function SimulationPage() {
         return <FileManager config={cfg} onComplete={() => send({ type: "DOWNLOAD_DONE" })} />;
       case "flashing_usb":
         return (
-          <FlashUSB config={cfg} speed={speed} onComplete={() => send({ type: "FLASH_DONE" })} />
+          <FlashUSB config={cfg} speed={speed} onComplete={() => { console.log("[SimPage] FLASH_DONE send"); send({ type: "FLASH_DONE" }); }} />
         );
       case "usb_reinsert":
+        console.log("[SimPage] Rendering usb_reinsert scene");
         return (
-          <UsbReinsert onComplete={() => send({ type: "USB_INSERTED" })} />
+          <UsbReinsert onComplete={() => { console.log("[SimPage] USB_INSERTED send"); send({ type: "USB_INSERTED" }); }} />
         );
       case "rebooting":
         return (
@@ -321,7 +340,7 @@ export default function SimulationPage() {
                   <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">?</kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/50">Continue / Next step</span>
+                  <span className="text-white/50">Continue / Skip scene</span>
                   <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">Enter ↵</kbd>
                 </div>
                 <div className="flex justify-between">
