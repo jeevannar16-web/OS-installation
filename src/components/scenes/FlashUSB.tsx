@@ -263,6 +263,20 @@ function RufusTool({
               </button>
             </div>
           )}
+
+          {/* Flash complete banner — replaces START button */}
+          {rufusPhase === "done" && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-lg bg-emerald-50 border border-emerald-300 p-3 text-center"
+            >
+              <div className="text-sm font-bold text-emerald-700">✓ Flash Complete</div>
+              <div className="text-xs text-emerald-600 mt-1">
+                {config.iso.filename} has been written to the USB drive successfully.
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 
@@ -429,8 +443,9 @@ function VentoyTool({
       )}
 
       {ventoyPhase === "done" && (
-        <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium">
-          <span>✓</span> ISO copied to Ventoy USB — ready to boot!
+        <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-4 text-center space-y-2">
+          <div className="text-emerald-400 text-sm font-bold">✓ ISO copied to Ventoy USB</div>
+          <div className="text-xs text-white/40">Your bootable USB is ready to go.</div>
         </div>
       )}
     </div>
@@ -863,31 +878,43 @@ export default function FlashUSB({
 
             {/* Safely Eject — only show after flashing is complete */}
             {flashComplete && (
-              <div className="flex justify-center pt-4">
-                {ejected ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-sm text-emerald-400 font-medium"
-                  >
-                    ✓ Safe to Remove Hardware
-                  </motion.div>
-                ) : (
-                  <PulseHint>
-                  <button
-                    onClick={() => {
-                      playClick();
-                      setEjected(true);
-                      toast("Safe to Remove Hardware", "✅");
-                      setTimeout(() => onComplete(), 1200);
-                    }}
-                    className="rounded-xl bg-white/10 border border-white/10 px-6 py-3 text-sm font-semibold text-white hover:bg-white/15 transition-colors"
-                  >
-                    ⏏️ Safely Eject
-                  </button>
-                  </PulseHint>
-                )}
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4"
+              >
+                <div className="rounded-xl border border-accent/30 bg-accent/5 p-5 text-center space-y-3">
+                  <div className="text-sm font-semibold text-white/80">
+                    ✅ USB drive is ready — one last step
+                  </div>
+                  <p className="text-xs text-white/40">
+                    Safely eject the USB drive before plugging it into the target machine.
+                  </p>
+                  {ejected ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-sm text-emerald-400 font-medium"
+                    >
+                      ✓ Safe to Remove Hardware
+                    </motion.div>
+                  ) : (
+                    <PulseHint>
+                      <button
+                        onClick={() => {
+                          playClick();
+                          setEjected(true);
+                          toast("Safe to Remove Hardware", "✅");
+                          setTimeout(() => onComplete(), 1200);
+                        }}
+                        className="rounded-xl bg-accent px-8 py-3 text-sm font-bold text-white hover:bg-accent-soft transition-colors shadow-lg shadow-accent/20"
+                      >
+                        ⏏️ Safely Eject USB
+                      </button>
+                    </PulseHint>
+                  )}
+                </div>
+              </motion.div>
             )}
           </motion.div>
         )}
