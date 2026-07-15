@@ -199,6 +199,8 @@ export default function SimulationPage() {
   function renderScene() {
     console.log(`[SimPage] renderScene called — state="${current}", path="${path}"`);
     switch (current) {
+      case "idle":
+        return null;
       case "searching":
         return (
           <FakeBrowser

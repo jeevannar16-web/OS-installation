@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { GITHUB_REPO, GITHUB_URL, GITHUB_API } from "../data/repo";
+import { GITHUB_REPO, GITHUB_URL } from "../data/repo";
 
 function GitHubIcon() {
   return (
@@ -11,23 +10,6 @@ function GitHubIcon() {
 }
 
 export default function Footer() {
-  const [stars, setStars] = useState<number | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    fetch(GITHUB_API)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (alive && d && typeof d.stargazers_count === "number") {
-          setStars(d.stargazers_count);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, []);
-
   return (
     <footer className="mt-24 px-6 pb-10 text-center text-sm">
       {/* Gradient divider */}
@@ -44,11 +26,6 @@ export default function Footer() {
       >
         <GitHubIcon />
         <span className="font-medium text-sm">{GITHUB_REPO}</span>
-        {stars !== null && (
-          <span className="flex items-center gap-1 rounded-full bg-white/[0.06] border border-white/[0.06] px-2 py-0.5 text-xs text-yellow-400/80">
-            ★ {stars.toLocaleString()}
-          </span>
-        )}
       </motion.a>
 
       <p className="mt-4 text-white/30 text-xs leading-relaxed max-w-md mx-auto">
