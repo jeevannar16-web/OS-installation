@@ -7,6 +7,7 @@
  */
 
 export type InstallPath = "vm" | "dual-boot" | "live-usb";
+export type HostOS = "windows" | "macos" | "linux";
 
 export const ALL_PATHS: InstallPath[] = ["vm", "dual-boot", "live-usb"];
 

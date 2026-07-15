@@ -1,5 +1,5 @@
 import { setup, assign } from "xstate";
-import type { InstallPath } from "../data/types";
+import type { InstallPath, HostOS } from "../data/types";
 
 /**
  * OS simulation state machine — two distinct flows:
@@ -14,6 +14,7 @@ import type { InstallPath } from "../data/types";
 
 export type SimEvent =
   | { type: "START"; osId: string; path: InstallPath }
+  | { type: "SET_HOST_OS"; hostOS: HostOS }
   | { type: "SEARCH_DONE" }
   | { type: "DOWNLOAD_DONE" }
   | { type: "FLASH_DONE" }
@@ -34,6 +35,7 @@ export type SimEvent =
 export type SimContext = {
   osId: string | null;
   path: InstallPath | null;
+  hostOS: HostOS | null;
   speed: "normal" | "fast";
 };
 
@@ -55,16 +57,22 @@ export const simulationMachine = setup({
       }
       return {};
     }),
+    setHostOS: assign(({ event }) => {
+      if (event.type === "SET_HOST_OS") {
+        return { hostOS: event.hostOS };
+      }
+      return {};
+    }),
     setSpeed: assign(({ event }) => {
       if (event.type === "SET_SPEED") return { speed: event.speed };
       return {};
     }),
-    clear: assign(() => ({ osId: null, path: null, speed: "normal" })),
+    clear: assign(() => ({ osId: null, path: null, hostOS: null, speed: "normal" })),
   },
 }).createMachine({
   id: "simulation",
   initial: "idle",
-  context: { osId: null, path: null, speed: "normal" },
+  context: { osId: null, path: null, hostOS: null, speed: "normal" },
   on: {
     SET_SPEED: { actions: "setSpeed" },
     RESET: { target: ".idle", actions: "clear" },
@@ -72,9 +80,24 @@ export const simulationMachine = setup({
   states: {
     idle: {
       on: {
-        START: {
+        START: [
+          {
+            target: "select_host_os",
+            actions: "setMeta",
+            guard: "isVm",
+          },
+          {
+            target: "searching",
+            actions: "setMeta",
+          },
+        ],
+      },
+    },
+    select_host_os: {
+      on: {
+        SET_HOST_OS: {
           target: "searching",
-          actions: "setMeta",
+          actions: "setHostOS",
         },
       },
     },
@@ -166,6 +189,7 @@ export const simulationMachine = setup({
 /** Ordered list of ALL possible scenes — filtered per-path in the UI. */
 export const SIM_SCENES = [
   "idle",
+  "select_host_os",
   "searching",
   "downloading",
   "flashing_usb",

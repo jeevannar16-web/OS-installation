@@ -25,10 +25,12 @@ import MountISO from "../components/scenes/MountISO";
 import VmBoot from "../components/scenes/VmBoot";
 import VmClose from "../components/scenes/VmClose";
 import Done from "../components/scenes/Done";
+import SelectHostOS from "../components/scenes/SelectHostOS";
 import { toggleMute, isMuted } from "../components/shared/sounds";
 
 const SCENE_LABELS: Record<string, string> = {
   idle: "Start",
+  select_host_os: "Host OS",
   searching: "Search & Download",
   downloading: "Locate ISO",
   flashing_usb: "Flash USB",
@@ -47,6 +49,7 @@ const SCENE_LABELS: Record<string, string> = {
 };
 
 const ACTIVE_APP: Record<string, AppInfo> = {
+  select_host_os: { name: "Setup", icon: "⚙️" },
   searching: { name: "Browser", icon: "🌐" },
   downloading: { name: "Files", icon: "📁" },
   flashing_usb: { name: "USB Tool", icon: "🔌" },
@@ -67,6 +70,7 @@ const ACTIVE_APP: Record<string, AppInfo> = {
 const FULLSCREEN_SCENES = new Set(["rebooting", "boot_menu", "live_welcome", "live_desktop"]);
 
 const STATUS_TEXT: Record<string, string> = {
+  select_host_os: "Select your host operating system…",
   searching: "Searching for the official download page…",
   downloading: "Locating the ISO file in your Downloads folder…",
   flashing_usb: "Flashing the ISO image to your USB drive…",
@@ -84,7 +88,7 @@ const STATUS_TEXT: Record<string, string> = {
   complete: "Installation complete!",
 };
 
-const VM_ONLY = new Set(["create_vm", "mount_iso", "vm_boot"]);
+const VM_ONLY = new Set(["select_host_os", "create_vm", "mount_iso", "vm_boot"]);
 const PHYSICAL_ONLY = new Set(["flashing_usb", "usb_reinsert", "rebooting", "boot_menu"]);
 
 const SCENE_CONTEXT: Record<string, string> = {
@@ -280,6 +284,15 @@ export default function SimulationPage() {
     switch (current) {
       case "idle":
         return null;
+      case "select_host_os":
+        return (
+          <SelectHostOS
+            onSelect={(hostOS) => {
+              console.log("[SimPage] SET_HOST_OS", hostOS);
+              send({ type: "SET_HOST_OS", hostOS });
+            }}
+          />
+        );
       case "searching":
         return (
           <FakeBrowser
