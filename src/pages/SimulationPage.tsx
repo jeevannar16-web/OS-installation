@@ -82,8 +82,6 @@ const STATUS_TEXT: Record<string, string> = {
   complete: "Installation complete!",
 };
 
-const REPO_URL = "https://github.com/jeevannar16-web/OS-installation";
-
 const VM_ONLY = new Set(["create_vm", "mount_iso", "vm_boot"]);
 const PHYSICAL_ONLY = new Set(["flashing_usb", "usb_reinsert", "rebooting", "boot_menu"]);
 
@@ -475,28 +473,8 @@ export default function SimulationPage() {
           </main>
         )}
 
-        <div className="px-6 pb-2 text-center text-[11px] text-white/30">
+        <div className="px-6 pb-4 text-center text-[11px] text-white/30">
           Simulation only — no files are downloaded or executed.
-        </div>
-
-        <div className="flex justify-center gap-2 pb-4">
-          <a
-            href={REPO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-white/20 hover:text-white/40 transition-colors"
-          >
-            ⭐ Star on GitHub
-          </a>
-          <span className="text-white/10">·</span>
-          <a
-            href="https://github.com/jeevannar16-web"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-white/20 hover:text-white/40 transition-colors"
-          >
-            Follow @jeevannar16-web
-          </a>
         </div>
 
         <Footer />
