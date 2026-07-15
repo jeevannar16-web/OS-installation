@@ -1,8 +1,8 @@
 {
   "name": "os-install-simulator",
-  "private": true,
   "version": "1.0.0",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
