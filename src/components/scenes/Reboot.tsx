@@ -29,7 +29,6 @@ export default function Reboot({
   const bios = useMemo(() => getRandomBios(), []);
   const [phase, setPhase] = useState<RebootPhase>("flicker");
   const [memCount, setMemCount] = useState(0);
-  const [countdown, setCountdown] = useState(3);
   const [activeTab, setActiveTab] = useState<BiosTab>("main");
   const [selectedRow, setSelectedRow] = useState(0);
 
@@ -64,70 +63,13 @@ export default function Reboot({
   }, [phase, secureBoot, vtEnabled, bootOrderUSB]);
 
   const flickerDur = 200;
-  const fadeDur = speed === "fast" ? 300 : 600;
-  const postDur = speed === "fast" ? 400 : bios.postDelay;
   const memDur = speed === "fast" ? 400 : 1000;
 
-  useEffect(() => {
-    const t = setTimeout(() => setPhase("fade_out"), flickerDur);
-    return () => clearTimeout(t);
-  }, []);
+  // User must click/press key to advance each POST step
+  // No auto-advance!
 
-  useEffect(() => {
-    if (phase !== "fade_out") return;
-    const t = setTimeout(() => {
-      setPhase("post");
-      playPostBeep();
-    }, fadeDur);
-    return () => clearTimeout(t);
-  }, [phase, fadeDur]);
-
-  useEffect(() => {
-    if (phase !== "post") return;
-    const t = setTimeout(() => setPhase("memory"), postDur);
-    return () => clearTimeout(t);
-  }, [phase, postDur]);
-
-  useEffect(() => {
-    if (phase !== "memory") return;
-    const target = 16384;
-    const step = target / (memDur / 30);
-    const interval = setInterval(() => {
-      setMemCount((prev) => {
-        const next = prev + step;
-        if (next >= target) {
-          clearInterval(interval);
-          setTimeout(() => setPhase("prompt"), 200);
-          return target;
-        }
-        return next;
-      });
-    }, 30);
-    return () => clearInterval(interval);
-  }, [phase, memDur]);
-
-  // Prompt countdown
-  useEffect(() => {
-    if (phase !== "prompt") return;
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          if (bootOrderUSB) {
-            // USB is ranked first, auto boots to USB installer!
-            setPhase("done");
-            playSuccess();
-            onComplete();
-          } else {
-            setTimeout(() => setPhase("missed"), 300);
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [phase, bootOrderUSB, onComplete]);
+  // No auto-countdown—user takes all the time they need!
+  // Removed auto-countdown useEffect
 
   // Move item in boot list
   const moveBootOrder = (index: number, direction: "up" | "down") => {
@@ -185,13 +127,11 @@ export default function Reboot({
               setSecureBoot(localSecureBoot);
               setVtEnabled(localVtEnabled);
               setBootOrderUSB(localBootOrder[0].includes("USB Key"));
-              setCountdown(3);
               setMemCount(0);
               setPhase("post");
               playPostBeep();
             } else {
               // Discard and Exit
-              setCountdown(3);
               setMemCount(0);
               setPhase("post");
               playPostBeep();
@@ -222,16 +162,24 @@ export default function Reboot({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
       {phase === "flicker" && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          animate={{ opacity: [1, 0.2, 0.8, 0.1, 0.9, 0] }}
-          transition={{ duration: flickerDur / 1000 }}
-          className="absolute inset-0 bg-white"
-        />
-      )}
-
-      {phase === "fade_out" && (
-        <div className="absolute inset-0 bg-black opacity-0" />
+        <div className="flex flex-col items-center gap-4">
+          <motion.div
+            initial={{ opacity: 1 }}
+            animate={{ opacity: [1, 0.2, 0.8, 0.1, 0.9] }}
+            transition={{ duration: flickerDur / 1000 }}
+            className="absolute inset-0 bg-white pointer-events-none"
+          />
+          <button
+            onClick={() => {
+              playClick();
+              setPhase("post");
+              playPostBeep();
+            }}
+            className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            Continue to POST →
+          </button>
+        </div>
       )}
 
       {phase === "post" && (
@@ -242,17 +190,61 @@ export default function Reboot({
           </div>
           <div className="text-[10px] sm:text-xs lg:text-sm text-white/40">{bios.memLabel}</div>
           <div className="mt-2 text-xs sm:text-sm text-white/30">Initializing hardware…</div>
+          <button
+            onClick={() => {
+              playClick();
+              setPhase("memory");
+            }}
+            className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            Start Memory Test →
+          </button>
         </div>
       )}
 
       {phase === "memory" && (
-        <div className="font-mono text-sm text-white/70">
-          <div>Memory Test: {Math.floor(memCount)} MB OK</div>
-          <div className="mt-2 h-1 w-48 overflow-hidden rounded bg-white/10">
-            <div
-              className="h-full bg-emerald-500 transition-[width] duration-30"
-              style={{ width: `${(memCount / 16384) * 100}%` }}
-            />
+        <div className="flex flex-col items-center gap-4">
+          <div className="font-mono text-sm text-white/70">
+            <div>Memory Test: {Math.floor(memCount)} MB OK</div>
+            <div className="mt-2 h-1 w-48 overflow-hidden rounded bg-white/10">
+              <div
+                className="h-full bg-emerald-500 transition-[width] duration-30"
+                style={{ width: `${(memCount / 16384) * 100}%` }}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                playClick();
+                // Run memory test animation
+                const target = 16384;
+                const step = target / (memDur / 30);
+                let current = memCount;
+                const interval = setInterval(() => {
+                  current += step;
+                  setMemCount(current);
+                  if (current >= target) {
+                    clearInterval(interval);
+                    setMemCount(target);
+                  }
+                }, 30);
+              }}
+              className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              Run Memory Test →
+            </button>
+            {memCount >= 16384 && (
+              <button
+                onClick={() => {
+                  playClick();
+                  setPhase("prompt");
+                }}
+                className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                Continue to Boot Prompt →
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -265,37 +257,51 @@ export default function Reboot({
               Press <span className="font-bold text-white">F2</span> to enter Setup,{" "}
               <span className="font-bold text-white">F12</span> for Boot Menu
             </div>
-            <div className="text-xs sm:text-sm lg:text-base text-white/40">
-              {countdown}s remaining
-            </div>
           </div>
           
-          <div className="flex gap-4">
-            <button
-              onClick={() => {
-                playClick();
-                setPhase("bios");
-              }}
-              className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors"
-            >
-              Press F2 (BIOS Setup)
-            </button>
-            <PulseHint>
-              <Tooltip text="Press F12 key or click to enter boot device selection menu directly.">
-                <button
-                  onClick={() => {
-                    playKeyClick();
-                    setPhase("done");
-                    playSuccess();
-                    onComplete();
-                  }}
-                  className="rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-xs text-white hover:bg-white/15 transition-colors"
-                >
-                  Press F12 (Boot Menu)
-                </button>
-              </Tooltip>
-            </PulseHint>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  playClick();
+                  setPhase("bios");
+                }}
+                className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                Press F2 (BIOS Setup)
+              </button>
+              <PulseHint>
+                <Tooltip text="Press F12 key or click to enter boot device selection menu directly.">
+                  <button
+                    onClick={() => {
+                      playKeyClick();
+                      setPhase("done");
+                      playSuccess();
+                      onComplete();
+                    }}
+                    className="rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-xs text-white hover:bg-white/15 transition-colors"
+                  >
+                    Press F12 (Boot Menu)
+                  </button>
+                </Tooltip>
+              </PulseHint>
+            </div>
           </div>
+        </div>
+      )}
+
+      {phase === "missed" && (
+        <div className="flex flex-col items-center gap-4">
+          <div className="text-sm text-white/70">You missed the boot menu prompt!</div>
+          <button
+            onClick={() => {
+              playClick();
+              setPhase("post");
+            }}
+            className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            Restart POST →
+          </button>
         </div>
       )}
 
@@ -432,7 +438,6 @@ export default function Reboot({
                       setSecureBoot(localSecureBoot);
                       setVtEnabled(localVtEnabled);
                       setBootOrderUSB(localBootOrder[0].includes("USB Key"));
-                      setCountdown(3);
                       setMemCount(0);
                       setPhase("post");
                       playPostBeep();
@@ -447,7 +452,6 @@ export default function Reboot({
                     onClick={() => {
                       playClick();
                       // Discard and Exit
-                      setCountdown(3);
                       setMemCount(0);
                       setPhase("post");
                       playPostBeep();
@@ -498,7 +502,6 @@ export default function Reboot({
           </div>
           <button
             onClick={() => {
-              setCountdown(3);
               setMemCount(0);
               setPhase("post");
               playPostBeep();
