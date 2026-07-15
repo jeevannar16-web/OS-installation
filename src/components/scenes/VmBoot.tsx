@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
-import { playClick } from "../shared/sounds";
+import { playClick, playError } from "../shared/sounds";
 
-type Phase = "off" | "bios" | "loading" | "menu";
+type Phase = "off" | "bios" | "loading" | "menu" | "vt_error";
 
 const BIOS_LINES = [
   "VirtualBox BIOS Version 7.0",
@@ -12,10 +12,10 @@ const BIOS_LINES = [
   "Intel(R) Core(TM) i7 CPU @ 3.40GHz",
   "Memory Test: 2048 MB OK",
   "",
-  `Detecting Primary Master... ${"{CD-ROM}"}`,
-  `  VirtualBox CD-ROM`,
+  "Detecting Primary Master... {CD-ROM}",
+  "  VirtualBox CD-ROM",
   "Detecting Primary Master... VBOX HARDDISK",
-  `  ${"{25 GB}"}`,
+  "  {25 GB}",
   "",
   "Press F12 to select boot device.",
 ];
@@ -24,10 +24,14 @@ export default function VmBoot({
   config,
   speed,
   onComplete,
+  vtEnabled,
+  onHostReboot,
 }: {
   config: OSConfig;
   speed: "normal" | "fast";
   onComplete: () => void;
+  vtEnabled: boolean;
+  onHostReboot?: () => void;
 }) {
   const [phase, setPhase] = useState<Phase>("off");
   const [biosLine, setBiosLine] = useState(0);
@@ -54,10 +58,18 @@ export default function VmBoot({
       const t = setTimeout(() => setBiosLine(biosLine + 1), delay);
       return () => clearTimeout(t);
     } else {
+      // Check for VT-x Virtualization before loading boot menu
+      if (!vtEnabled) {
+        const t = setTimeout(() => {
+          playError();
+          setPhase("vt_error");
+        }, 500);
+        return () => clearTimeout(t);
+      }
       const t = setTimeout(() => setPhase("loading"), speed === "fast" ? 300 : 800);
       return () => clearTimeout(t);
     }
-  }, [phase, biosLine, speed]);
+  }, [phase, biosLine, speed, vtEnabled]);
 
   // Loading spinner → menu
   useEffect(() => {
@@ -97,7 +109,7 @@ export default function VmBoot({
       {/* VM Window */}
       <div className="overflow-hidden rounded-xl border border-white/10 shadow-2xl">
         {/* Title bar */}
-        <div className="flex items-center gap-2 bg-[#323234] px-3 py-2">
+        <div className="flex items-center gap-2 bg-[#323234] px-3 py-2 select-none">
           <div className="flex gap-1.5">
             <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
             <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
@@ -115,7 +127,7 @@ export default function VmBoot({
           className="relative flex h-[420px] lg:h-[520px] xl:h-[600px] items-center justify-center overflow-hidden"
           style={{
             background:
-              phase === "off"
+              phase === "off" || phase === "vt_error"
                 ? "#000"
                 : phase === "menu"
                   ? `linear-gradient(180deg, ${config.branding.surface} 0%, #0a0a1a 100%)`
@@ -207,8 +219,46 @@ export default function VmBoot({
                     </button>
                   ))}
                 </div>
-                <div className="mt-4 text-center text-xs lg:text-sm text-white/30">
+                <div className="mt-4 text-center text-xs lg:text-sm text-white/30 select-none">
                   ↑↓ Navigate &nbsp;│&nbsp; Enter Select &nbsp;│&nbsp; F12 Boot Menu
+                </div>
+              </motion.div>
+            )}
+
+            {phase === "vt_error" && (
+              <motion.div
+                key="vt_error"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="absolute inset-0 flex items-center justify-center bg-black/60 p-4 select-none"
+              >
+                <div className="w-full max-w-md rounded-lg border border-red-500/30 bg-[#2b2b2e] p-5 shadow-2xl space-y-4">
+                  <div className="flex items-center gap-2 text-red-400 font-bold border-b border-white/10 pb-2">
+                    <span>⚠️</span>
+                    <span>VirtualBox - Critical Error</span>
+                  </div>
+                  <div className="space-y-2 text-xs sm:text-sm leading-relaxed text-white/80">
+                    <p className="font-semibold text-white">
+                      VT-x/AMD-V hardware acceleration is not available on your system.
+                    </p>
+                    <p className="text-white/60">
+                      Your guest operating system will fail to boot because Virtualization is disabled in your host's firmware.
+                    </p>
+                    <p className="text-accent-soft text-[11px] font-mono leading-tight bg-black/30 p-2 rounded">
+                      Fix: Restart your computer, enter your motherboard BIOS/UEFI Setup (F2/Del), go to CPU settings, and enable "Intel Virtualization Technology" (VT-x) or "SVM Mode".
+                    </p>
+                  </div>
+                  <div className="flex justify-end pt-2">
+                    <button
+                      onClick={() => {
+                        playClick();
+                        onHostReboot?.();
+                      }}
+                      className="rounded bg-red-600 hover:bg-red-700 px-4 py-2 text-xs font-bold text-white shadow-lg transition-colors"
+                    >
+                      🔌 Shut Down & Reboot Host to BIOS
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}

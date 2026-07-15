@@ -26,6 +26,7 @@ import VmBoot from "../components/scenes/VmBoot";
 import VmClose from "../components/scenes/VmClose";
 import Done from "../components/scenes/Done";
 import SelectHostOS from "../components/scenes/SelectHostOS";
+import DiskManagement from "../components/scenes/DiskManagement";
 import { toggleMute, isMuted } from "../components/shared/sounds";
 
 const SCENE_LABELS: Record<string, string> = {
@@ -35,6 +36,7 @@ const SCENE_LABELS: Record<string, string> = {
   downloading: "Locate ISO",
   flashing_usb: "Flash USB",
   usb_reinsert: "Insert USB",
+  disk_prep: "Disk Prep",
   rebooting: "Reboot",
   boot_menu: "Boot Menu",
   partitioning: "Partition",
@@ -54,6 +56,7 @@ const ACTIVE_APP: Record<string, AppInfo> = {
   downloading: { name: "Files", icon: "📁" },
   flashing_usb: { name: "USB Tool", icon: "🔌" },
   usb_reinsert: { name: "Setup", icon: "🔌" },
+  disk_prep: { name: "Disk Management", icon: "💾" },
   rebooting: { name: "System", icon: "⏻" },
   boot_menu: { name: "Boot Menu", icon: "💻" },
   live_welcome: { name: "Installer", icon: "💿" },
@@ -75,6 +78,7 @@ const STATUS_TEXT: Record<string, string> = {
   downloading: "Locating the ISO file in your Downloads folder…",
   flashing_usb: "Flashing the ISO image to your USB drive…",
   usb_reinsert: "Insert the USB into the target machine…",
+  disk_prep: "Shrink Windows partition to create space…",
   rebooting: "Restarting and entering BIOS…",
   boot_menu: "Select a boot device from the menu…",
   live_welcome: "Choose between trying or installing…",
@@ -89,13 +93,14 @@ const STATUS_TEXT: Record<string, string> = {
 };
 
 const VM_ONLY = new Set(["select_host_os", "create_vm", "mount_iso", "vm_boot"]);
-const PHYSICAL_ONLY = new Set(["flashing_usb", "usb_reinsert", "rebooting", "boot_menu"]);
+const PHYSICAL_ONLY = new Set(["flashing_usb", "usb_reinsert", "disk_prep", "rebooting", "boot_menu"]);
 
 const SCENE_CONTEXT: Record<string, string> = {
   searching: "Use the browser to find the official download page for your OS.",
   downloading: "Locate the ISO file you just downloaded in your file manager.",
   flashing_usb: "Write the ISO image to a USB drive using a flashing tool.",
   usb_reinsert: "Remove the USB, then plug it back into the target machine.",
+  disk_prep: "Open Disk Management in Windows to shrink your partition.",
   rebooting: "Restart the computer and enter the BIOS/UEFI setup.",
   boot_menu: "Select the USB drive from the boot device menu to start the installer.",
   live_welcome: "Choose whether to try the OS live or install it directly.",
@@ -123,6 +128,12 @@ export default function SimulationPage() {
   const [sceneLabelKey, setSceneLabelKey] = useState(0);
   const [sceneLabelVisible, setSceneLabelVisible] = useState(false);
   const autoAdvanceRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [diskShrunk, setDiskShrunk] = useState(false);
+  const [secureBoot, setSecureBoot] = useState(true);
+  const [vtEnabled, setVtEnabled] = useState(false);
+  const [bootOrderUSB, setBootOrderUSB] = useState(false);
+  const setRufusPartitionScheme = () => {};
 
   const current = String(state.value);
   const speed = state.context.speed;
@@ -305,16 +316,37 @@ export default function SimulationPage() {
         return <FileManager config={cfg} onComplete={() => { console.log("[SimPage] DOWNLOAD_DONE"); send({ type: "DOWNLOAD_DONE" }); }} />;
       case "flashing_usb":
         return (
-          <FlashUSB config={cfg} speed={speed} onComplete={() => { console.log("[SimPage] FLASH_DONE send"); send({ type: "FLASH_DONE" }); }} />
+          <FlashUSB
+            config={cfg}
+            speed={speed}
+            onComplete={() => { console.log("[SimPage] FLASH_DONE send"); send({ type: "FLASH_DONE" }); }}
+            setRufusPartitionScheme={setRufusPartitionScheme}
+          />
         );
       case "usb_reinsert":
         console.log("[SimPage] Rendering usb_reinsert scene");
         return (
           <UsbReinsert onComplete={() => { console.log("[SimPage] USB_INSERTED send"); send({ type: "USB_INSERTED" }); }} />
         );
+      case "disk_prep":
+        return (
+          <DiskManagement
+            onComplete={() => { console.log("[SimPage] DISK_PREPPED send"); send({ type: "DISK_PREPPED" }); }}
+            setDiskShrunk={setDiskShrunk}
+          />
+        );
       case "rebooting":
         return (
-          <Reboot speed={speed} onComplete={() => send({ type: "REBOOT_DONE" })} />
+          <Reboot
+            speed={speed}
+            onComplete={() => send({ type: "REBOOT_DONE" })}
+            secureBoot={secureBoot}
+            setSecureBoot={setSecureBoot}
+            vtEnabled={vtEnabled}
+            setVtEnabled={setVtEnabled}
+            bootOrderUSB={bootOrderUSB}
+            setBootOrderUSB={setBootOrderUSB}
+          />
         );
       case "boot_menu":
         return (
@@ -339,7 +371,11 @@ export default function SimulationPage() {
         );
       case "partitioning":
         return (
-          <Partition onComplete={() => send({ type: "PARTITION_DONE" })} />
+          <Partition
+            onComplete={() => send({ type: "PARTITION_DONE" })}
+            diskShrunk={diskShrunk}
+            onRebootWindows={() => send({ type: "RESET" })}
+          />
         );
       case "create_vm":
         return (
@@ -355,6 +391,7 @@ export default function SimulationPage() {
             config={cfg}
             speed={speed}
             onComplete={() => send({ type: "VM_POWERED_ON" })}
+            vtEnabled={vtEnabled}
           />
         );
       case "installing":
@@ -404,6 +441,7 @@ export default function SimulationPage() {
     }
     if (VM_ONLY.has(s)) return false;
     if (s === "vm_close") return false;
+    if (s === "disk_prep" && path !== "dual-boot") return false;
     if (s === "partitioning" && path !== "dual-boot") return false;
     if (s === "live_welcome" && path !== "live-usb") return false;
     if (s === "live_desktop" && path !== "live-usb") return false;

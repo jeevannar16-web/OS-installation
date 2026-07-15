@@ -19,7 +19,17 @@ function parseSizeGB(s: string) {
 }
 
 /* ─── Rufus ─── */
-function RufusTool({ config, speed, onComplete }: { config: OSConfig; speed: "normal" | "fast"; onComplete: () => void }) {
+function RufusTool({
+  config,
+  speed,
+  onComplete,
+  setRufusPartitionScheme,
+}: {
+  config: OSConfig;
+  speed: "normal" | "fast";
+  onComplete: () => void;
+  setRufusPartitionScheme: (v: "GPT" | "MBR") => void;
+}) {
   const [device, setDevice] = useState(USB_DEVICES[0].id);
   const [isoFile, setIsoFile] = useState<string | null>(null);
   const [rufusPhase, setRufusPhase] = useState<"idle" | "flashing" | "done">("idle");
@@ -27,6 +37,7 @@ function RufusTool({ config, speed, onComplete }: { config: OSConfig; speed: "no
   const [logLines, setLogLines] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [partitionScheme, setPartitionScheme] = useState<"GPT" | "MBR">("GPT");
   const logRef = useRef<HTMLDivElement>(null);
   const dur = speed === "fast" ? 1800 : 6000;
 
@@ -114,8 +125,18 @@ function RufusTool({ config, speed, onComplete }: { config: OSConfig; speed: "no
           <div className="space-y-2 rounded border border-gray-200 bg-white/50 p-3">
             <div className="flex items-center gap-3">
               <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">Partition scheme</label>
-              <select className="flex-1 rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800">
-                <option>GPT — UEFI</option><option>MBR — BIOS</option>
+              <select
+                value={partitionScheme}
+                onChange={(e) => {
+                  playClick();
+                  const val = e.target.value as "GPT" | "MBR";
+                  setPartitionScheme(val);
+                  setRufusPartitionScheme(val);
+                }}
+                className="flex-1 rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800"
+              >
+                <option value="GPT">GPT — UEFI</option>
+                <option value="MBR">MBR — BIOS (Legacy)</option>
               </select>
             </div>
             <div className="flex items-center gap-3">
@@ -330,7 +351,17 @@ function EtcherTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
 }
 
 /* ─── Main FlashUSB Component ─── */
-export default function FlashUSB({ config, speed, onComplete }: { config: OSConfig; speed: "normal" | "fast"; onComplete: () => void }) {
+export default function FlashUSB({
+  config,
+  speed,
+  onComplete,
+  setRufusPartitionScheme,
+}: {
+  config: OSConfig;
+  speed: "normal" | "fast";
+  onComplete: () => void;
+  setRufusPartitionScheme: (v: "GPT" | "MBR") => void;
+}) {
   const [tool, setTool] = useState<"plug_in" | "select" | "rufus" | "ventoy" | "balena" | "unsupported">("plug_in");
   const [overPort, setOverPort] = useState(false);
   const toast = useToast();
@@ -427,7 +458,7 @@ export default function FlashUSB({ config, speed, onComplete }: { config: OSConf
       {tool === "rufus" && (
         <div className="space-y-4">
           <button onClick={() => { playClick(); setTool("select"); }} className="text-sm text-white/50 hover:text-white">← Back to tools</button>
-          <RufusTool config={config} speed={speed} onComplete={onComplete} />
+          <RufusTool config={config} speed={speed} onComplete={onComplete} setRufusPartitionScheme={setRufusPartitionScheme} />
         </div>
       )}
       {tool === "ventoy" && (

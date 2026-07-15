@@ -1,15 +1,20 @@
 import { useCallback, useRef, useState } from "react";
 import { Tooltip } from "../shared/InteractiveEffects";
+import { playClick } from "../shared/sounds";
 
 const TOTAL_GB = 500;
 const MIN_NEW_GB = 20;
 
 export default function Partition({
   onComplete,
+  diskShrunk,
+  onRebootWindows,
 }: {
   onComplete: () => void;
+  diskShrunk: boolean;
+  onRebootWindows: () => void;
 }) {
-  const [newGB, setNewGB] = useState(80);
+  const [newGB, setNewGB] = useState(diskShrunk ? 30 : 80);
   const existingGB = TOTAL_GB - newGB;
   const barRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -19,23 +24,26 @@ export default function Partition({
 
   const handleMove = useCallback(
     (clientX: number) => {
-      if (!barRef.current || !dragging.current) return;
+      if (!barRef.current || !dragging.current || !diskShrunk) return;
       const rect = barRef.current.getBoundingClientRect();
       const x = clientX - rect.left;
       const ratio = Math.max(0, Math.min(1, x / rect.width));
       const gb = Math.round(ratio * TOTAL_GB);
-      setNewGB(Math.max(0, Math.min(TOTAL_GB - 10, gb)));
+      // Limit to max 30 GB if they only shrunk 30 GB in Disk Management
+      const maxAlloc = 30;
+      setNewGB(Math.max(0, Math.min(maxAlloc, gb)));
     },
-    []
+    [diskShrunk]
   );
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
+      if (!diskShrunk) return;
       dragging.current = true;
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
       handleMove(e.clientX);
     },
-    [handleMove]
+    [handleMove, diskShrunk]
   );
 
   const onPointerMove = useCallback(
@@ -47,17 +55,40 @@ export default function Partition({
     dragging.current = false;
   }, []);
 
+  if (!diskShrunk) {
+    return (
+      <div className="mx-auto w-full max-w-xl border border-red-500/20 bg-red-500/5 p-6 rounded-2xl text-center space-y-4 shadow-xl">
+        <div className="text-4xl">⚠️</div>
+        <h2 className="text-xl font-bold text-red-400">No Unallocated Space Found</h2>
+        <p className="text-sm text-white/70 leading-relaxed">
+          The Linux installer cannot find any free space to partition. You must shrink your primary Windows partition (C: drive) in Disk Management *before* launching the installer.
+        </p>
+        <div className="pt-2">
+          <button
+            onClick={() => {
+              playClick();
+              onRebootWindows();
+            }}
+            className="rounded-lg bg-red-600 hover:bg-red-700 px-6 py-2.5 text-xs font-bold text-white transition-colors"
+          >
+            🔌 Reboot into Windows (Reset Simulator)
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-3xl lg:max-w-4xl space-y-6">
       <div className="text-center">
         <div className="text-sm sm:text-base uppercase tracking-widest text-white/40">Disk Partitioning</div>
         <h2 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold text-white">Allocate disk space</h2>
         <p className="mt-2 text-sm sm:text-base text-white/50">
-          Drag the divider to allocate space for the new OS installation.
+          Detected <span className="font-semibold text-emerald-400">30.00 GB of Unallocated Space</span> created in Windows Disk Management!
         </p>
-        <Tooltip text="Click and drag left/right to resize the partition">
-          <span className="mt-1 inline-block text-xs text-accent/60 cursor-help border-b border-dashed border-accent/30">
-            💡 Drag the bar below
+        <Tooltip text="Click and drag left/right to adjust how much of the unallocated space to use">
+          <span className="mt-1 inline-block text-xs text-accent/80 cursor-help border-b border-dashed border-accent/30 font-semibold">
+            💡 Adjust partition allocation below
           </span>
         </Tooltip>
       </div>
@@ -69,14 +100,14 @@ export default function Partition({
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          className="relative h-12 lg:h-16 w-full cursor-col-resize select-none overflow-hidden rounded-lg ring-1 ring-white/10"
+          className="relative h-12 lg:h-16 w-full cursor-col-resize select-none overflow-hidden rounded-lg ring-1 ring-white/10 bg-[#141416]"
         >
           {/* Existing OS portion */}
           <div
-            className="absolute inset-y-0 left-0 flex items-center justify-center bg-[#3b82f6]/40 text-xs font-medium text-white/80"
+            className="absolute inset-y-0 left-0 flex items-center justify-center bg-[#3b82f6]/30 text-xs font-medium text-white/80"
             style={{ width: `${100 - pct}%` }}
           >
-            {existingGB > 40 && `Windows — ${existingGB} GB`}
+            {existingGB > 40 && `Windows Partition — ${existingGB} GB`}
           </div>
 
           {/* New OS portion */}
@@ -84,10 +115,10 @@ export default function Partition({
             className="absolute inset-y-0 right-0 flex items-center justify-center text-xs font-medium text-white/80"
             style={{
               width: `${pct}%`,
-              background: `linear-gradient(90deg, rgba(124, 92, 255, 0.5), rgba(124, 92, 255, 0.3))`,
+              background: `linear-gradient(90deg, rgba(12, 175, 96, 0.4), rgba(16, 185, 129, 0.2))`,
             }}
           >
-            {newGB > 30 && `New Install — ${newGB} GB`}
+            {newGB > 10 && `New Install — ${newGB} GB`}
           </div>
 
           {/* Divider handle */}
@@ -101,8 +132,8 @@ export default function Partition({
 
         {/* Labels */}
         <div className="flex justify-between text-xs text-white/50">
-          <span>Existing OS: {existingGB} GB</span>
-          <span>New Install: {newGB} GB</span>
+          <span>Windows: {existingGB} GB</span>
+          <span>New Install: {newGB} GB (Max 30 GB unallocated)</span>
         </div>
       </div>
 

@@ -29,6 +29,7 @@ export type SimEvent =
   | { type: "VM_POWERED_ON" }
   | { type: "INSTALL_DONE" }
   | { type: "VM_CLOSED" }
+  | { type: "DISK_PREPPED" }
   | { type: "SET_SPEED"; speed: "normal" | "fast" }
   | { type: "RESET" };
 
@@ -121,7 +122,16 @@ export const simulationMachine = setup({
     },
 
     usb_reinsert: {
-      on: { USB_INSERTED: "rebooting" },
+      on: {
+        USB_INSERTED: [
+          { guard: "isDualBoot", target: "disk_prep" },
+          { target: "rebooting" },
+        ],
+      },
+    },
+
+    disk_prep: {
+      on: { DISK_PREPPED: "rebooting" },
     },
 
     rebooting: {
@@ -194,6 +204,7 @@ export const SIM_SCENES = [
   "downloading",
   "flashing_usb",
   "usb_reinsert",
+  "disk_prep",
   "rebooting",
   "boot_menu",
   "partitioning",
