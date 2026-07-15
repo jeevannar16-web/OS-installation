@@ -4,7 +4,7 @@ import type { OSConfig } from "../../data/types";
 import { useToast } from "../shared/Toast";
 import FilePickerModal from "../shared/FilePickerModal";
 import { playUsbConnect, playSuccess, playClick } from "../shared/sounds";
-import { PulseHint } from "../shared/InteractiveEffects";
+
 
 const SUPPORTED_TOOLS = new Set(["rufus", "ventoy", "balena"]);
 
@@ -19,7 +19,7 @@ function parseSizeGB(s: string) {
 }
 
 /* ─── Rufus ─── */
-function RufusTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "normal" | "fast"; onFlashDone: () => void }) {
+function RufusTool({ config, speed, onComplete }: { config: OSConfig; speed: "normal" | "fast"; onComplete: () => void }) {
   const [device, setDevice] = useState(USB_DEVICES[0].id);
   const [isoFile, setIsoFile] = useState<string | null>(null);
   const [rufusPhase, setRufusPhase] = useState<"idle" | "flashing" | "done">("idle");
@@ -59,11 +59,12 @@ function RufusTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "n
     const tick = (now: number) => {
       const pct = Math.min(100, ((now - start) / dur) * 100);
       setProgress(pct);
-      if (pct < 100) raf = requestAnimationFrame(tick);
-      else {
+      if (pct < 100) {
+        raf = requestAnimationFrame(tick);
+      } else {
         clearInterval(iv);
         playSuccess();
-        setTimeout(() => { setRufusPhase("done"); onFlashDone(); }, 400);
+        setRufusPhase("done");
       }
     };
     raf = requestAnimationFrame(tick);
@@ -156,10 +157,10 @@ function RufusTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "n
           </button>
         )}
         {rufusPhase === "done" && (
-          <div className="rounded-lg bg-emerald-50 border border-emerald-300 p-3 text-center">
-            <div className="text-sm font-bold text-emerald-700">✓ Flash Complete</div>
-            <div className="text-xs text-emerald-600 mt-1">{config.iso.filename} written successfully.</div>
-          </div>
+          <button onClick={() => { playClick(); onComplete(); }}
+            className="w-full rounded-lg bg-[#4a8c5c] py-3 text-sm font-bold text-white hover:bg-[#3d7a4e] transition-colors shadow-lg shadow-[#4a8c5c]/20">
+            ✓ Flash Complete — Continue →
+          </button>
         )}
       </div>
       <FilePickerModal open={pickerOpen} title="Select ISO image"
@@ -171,7 +172,7 @@ function RufusTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "n
 }
 
 /* ─── Ventoy ─── */
-function VentoyTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "normal" | "fast"; onFlashDone: () => void }) {
+function VentoyTool({ config, speed, onComplete }: { config: OSConfig; speed: "normal" | "fast"; onComplete: () => void }) {
   const [phase, setPhase] = useState<"idle" | "installing" | "copying" | "done">("idle");
   const [progress, setProgress] = useState(0);
   const [over, setOver] = useState(false);
@@ -190,7 +191,8 @@ function VentoyTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "
       if (pct < 100) raf = requestAnimationFrame(tick);
       else {
         playSuccess();
-        setTimeout(() => { if (phase === "installing") setPhase("copying"); else { setPhase("done"); onFlashDone(); } }, 300);
+        if (phase === "installing") setPhase("copying");
+        else setPhase("done");
       }
     };
     raf = requestAnimationFrame(tick);
@@ -222,7 +224,7 @@ function VentoyTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "
               <div className="w-24 break-words text-center text-[10px] text-white/70">{config.iso.filename}</div>
             </div>
             <div onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
-              onDrop={(e) => { e.preventDefault(); setOver(false); setProgress(0); playUsbConnect(); setPhase("copying"); setTimeout(() => { playSuccess(); setPhase("done"); }, copyDur); }}
+              onDrop={(e) => { e.preventDefault(); setOver(false); setProgress(0); playUsbConnect(); setPhase("copying"); }}
               className={`flex h-24 w-40 items-center justify-center rounded-xl border-2 border-dashed transition-colors ${over ? "border-accent bg-accent/20" : "border-white/20 bg-white/5"}`}>
               <div className="text-center"><div className="text-2xl">🔌</div><div className="text-[10px] text-white/50 mt-1">{over ? "Release to copy" : "Drop ISO here"}</div></div>
             </div>
@@ -235,17 +237,17 @@ function VentoyTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "
         </div>
       )}
       {phase === "done" && (
-        <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-4 text-center space-y-2">
-          <div className="text-emerald-400 text-sm font-bold">✓ ISO copied to Ventoy USB</div>
-          <div className="text-xs text-white/40">Your bootable USB is ready.</div>
-        </div>
+        <button onClick={() => { playClick(); onComplete(); }}
+          className="w-full rounded-lg bg-emerald-500 py-3 text-sm font-bold text-white hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">
+          ✓ ISO copied — Continue →
+        </button>
       )}
     </div>
   );
 }
 
 /* ─── BalenaEtcher ─── */
-function EtcherTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "normal" | "fast"; onFlashDone: () => void }) {
+function EtcherTool({ config, speed, onComplete }: { config: OSConfig; speed: "normal" | "fast"; onComplete: () => void }) {
   const [etcherPhase, setEtcherPhase] = useState<"pick_file" | "pick_target" | "flashing" | "done">("pick_file");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
@@ -262,7 +264,7 @@ function EtcherTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "
       const pct = Math.min(100, ((now - start) / flashDur) * 100);
       setProgress(pct);
       if (pct < 100) raf = requestAnimationFrame(tick);
-      else { playSuccess(); setTimeout(() => { setEtcherPhase("done"); onFlashDone(); }, 400); }
+      else { playSuccess(); setEtcherPhase("done"); }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -313,10 +315,10 @@ function EtcherTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "
         </div>
       )}
       {etcherPhase === "done" && (
-        <div className="flex items-center gap-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-xl text-white">✓</div>
-          <div><div className="text-sm font-bold text-emerald-400">Flash Complete!</div><div className="text-xs text-white/50">Your USB is ready.</div></div>
-        </div>
+        <button onClick={() => { playClick(); onComplete(); }}
+          className="w-full rounded-lg bg-emerald-500 py-3 text-sm font-bold text-white hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">
+          ✓ Flash Complete — Continue →
+        </button>
       )}
       <FilePickerModal open={pickerOpen} title="Select image to flash"
         files={[{ name: config.iso.filename, icon: "💿", size: config.iso.size }]}
@@ -329,8 +331,6 @@ function EtcherTool({ config, speed, onFlashDone }: { config: OSConfig; speed: "
 /* ─── Main FlashUSB Component ─── */
 export default function FlashUSB({ config, speed, onComplete }: { config: OSConfig; speed: "normal" | "fast"; onComplete: () => void }) {
   const [tool, setTool] = useState<"plug_in" | "select" | "rufus" | "ventoy" | "balena" | "unsupported">("plug_in");
-  const [flashDone, setFlashDone] = useState(false);
-  const [ejected, setEjected] = useState(false);
   const [overPort, setOverPort] = useState(false);
   const toast = useToast();
 
@@ -340,12 +340,6 @@ export default function FlashUSB({ config, speed, onComplete }: { config: OSConf
     toast("USB Drive (E:) connected", "🔌");
     setTimeout(() => setTool("select"), 600);
   }, [toast]);
-
-  const handleEject = useCallback(() => {
-    setEjected(true);
-    toast("Safe to Remove Hardware", "✅");
-    setTimeout(() => onComplete(), 1000);
-  }, [onComplete, toast]);
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4">
@@ -432,22 +426,19 @@ export default function FlashUSB({ config, speed, onComplete }: { config: OSConf
       {tool === "rufus" && (
         <div className="space-y-4">
           <button onClick={() => { playClick(); setTool("select"); }} className="text-sm text-white/50 hover:text-white">← Back to tools</button>
-          <RufusTool config={config} speed={speed} onFlashDone={() => setFlashDone(true)} />
-          {flashDone && <EjectSection ejected={ejected} onEject={handleEject} />}
+          <RufusTool config={config} speed={speed} onComplete={onComplete} />
         </div>
       )}
       {tool === "ventoy" && (
         <div className="space-y-4">
           <button onClick={() => { playClick(); setTool("select"); }} className="text-sm text-white/50 hover:text-white">← Back to tools</button>
-          <VentoyTool config={config} speed={speed} onFlashDone={() => setFlashDone(true)} />
-          {flashDone && <EjectSection ejected={ejected} onEject={handleEject} />}
+          <VentoyTool config={config} speed={speed} onComplete={onComplete} />
         </div>
       )}
       {tool === "balena" && (
         <div className="space-y-4">
           <button onClick={() => { playClick(); setTool("select"); }} className="text-sm text-white/50 hover:text-white">← Back to tools</button>
-          <EtcherTool config={config} speed={speed} onFlashDone={() => setFlashDone(true)} />
-          {flashDone && <EjectSection ejected={ejected} onEject={handleEject} />}
+          <EtcherTool config={config} speed={speed} onComplete={onComplete} />
         </div>
       )}
       {tool === "unsupported" && (
@@ -457,26 +448,6 @@ export default function FlashUSB({ config, speed, onComplete }: { config: OSConf
           <p className="mt-2 text-sm text-white/50">Please use <strong>Rufus</strong>, <strong>Ventoy</strong>, or <strong>BalenaEtcher</strong>.</p>
           <button onClick={() => { playClick(); setTool("select"); }} className="mt-4 rounded-lg bg-white/10 px-5 py-2 text-sm font-medium text-white hover:bg-white/15">← Choose a different tool</button>
         </div>
-      )}
-    </div>
-  );
-}
-
-/* ─── Eject Section ─── */
-function EjectSection({ ejected, onEject }: { ejected: boolean; onEject: () => void }) {
-  return (
-    <div className="rounded-xl border border-accent/30 bg-accent/5 p-5 text-center space-y-3">
-      <div className="text-sm font-semibold text-white/80">✅ USB drive is ready — one last step</div>
-      <p className="text-xs text-white/40">Safely eject the USB drive before plugging it into the target machine.</p>
-      {ejected ? (
-        <div className="text-sm text-emerald-400 font-medium">✓ Safe to Remove Hardware</div>
-      ) : (
-        <PulseHint>
-          <button onClick={() => { playClick(); onEject(); }}
-            className="rounded-xl bg-accent px-8 py-3 text-sm font-bold text-white hover:bg-accent-soft transition-colors shadow-lg shadow-accent/20">
-            ⏏️ Safely Eject USB
-          </button>
-        </PulseHint>
       )}
     </div>
   );
