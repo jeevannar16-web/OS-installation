@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useMachine } from "@xstate/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,6 +25,7 @@ import MountISO from "../components/scenes/MountISO";
 import VmBoot from "../components/scenes/VmBoot";
 import VmClose from "../components/scenes/VmClose";
 import Done from "../components/scenes/Done";
+import { toggleMute, isMuted } from "../components/shared/sounds";
 
 const SCENE_LABELS: Record<string, string> = {
   idle: "Start",
@@ -86,6 +87,24 @@ const STATUS_TEXT: Record<string, string> = {
 const VM_ONLY = new Set(["create_vm", "mount_iso", "vm_boot"]);
 const PHYSICAL_ONLY = new Set(["flashing_usb", "usb_reinsert", "rebooting", "boot_menu"]);
 
+const SCENE_CONTEXT: Record<string, string> = {
+  searching: "Use the browser to find the official download page for your OS.",
+  downloading: "Locate the ISO file you just downloaded in your file manager.",
+  flashing_usb: "Write the ISO image to a USB drive using a flashing tool.",
+  usb_reinsert: "Remove the USB, then plug it back into the target machine.",
+  rebooting: "Restart the computer and enter the BIOS/UEFI setup.",
+  boot_menu: "Select the USB drive from the boot device menu to start the installer.",
+  live_welcome: "Choose whether to try the OS live or install it directly.",
+  live_desktop: "Explore the live desktop — everything runs from the USB.",
+  partitioning: "Resize your existing partition and allocate space for the new OS.",
+  create_vm: "Configure a new virtual machine with the right settings.",
+  mount_iso: "Attach the downloaded ISO as a virtual CD/DVD drive.",
+  vm_boot: "Power on the VM and boot from the attached ISO.",
+  installing: "Follow the installer wizard to set up your new operating system.",
+  vm_close: "Shut down the VM now that installation is complete.",
+  complete: "Congratulations — your new OS is ready to use!",
+};
+
 export default function SimulationPage() {
   const { os, path } = useParams();
   const config = getOS(os);
@@ -95,6 +114,11 @@ export default function SimulationPage() {
     return !sessionStorage.getItem("showcase_seen");
   });
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [muted, setMuted] = useState(() => isMuted());
+  const [presentationMode, setPresentationMode] = useState(false);
+  const [sceneLabelKey, setSceneLabelKey] = useState(0);
+  const [sceneLabelVisible, setSceneLabelVisible] = useState(false);
+  const autoAdvanceRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const current = String(state.value);
   const speed = state.context.speed;
@@ -178,6 +202,55 @@ export default function SimulationPage() {
       send({ type: "START", osId: config.id, path: path as never });
     }
   }, [config, path]);
+
+  // Show scene context label when scene changes
+  useEffect(() => {
+    if (current === "idle" || current === "complete") {
+      setSceneLabelVisible(false);
+      return;
+    }
+    setSceneLabelKey((k) => k + 1);
+    setSceneLabelVisible(true);
+    const t = setTimeout(() => setSceneLabelVisible(false), 3500);
+    return () => clearTimeout(t);
+  }, [current]);
+
+  // Presentation mode: auto-advance every 8 seconds
+  useEffect(() => {
+    if (presentationMode && current !== "idle" && current !== "complete") {
+      autoAdvanceRef.current = setInterval(() => {
+        const s = String(state.value);
+        if (s === "searching") send({ type: "SEARCH_DONE" });
+        else if (s === "downloading") send({ type: "DOWNLOAD_DONE" });
+        else if (s === "flashing_usb") send({ type: "FLASH_DONE" });
+        else if (s === "usb_reinsert") send({ type: "USB_INSERTED" });
+        else if (s === "rebooting") send({ type: "REBOOT_DONE" });
+        else if (s === "partitioning") send({ type: "PARTITION_DONE" });
+        else if (s === "live_welcome") send({ type: "LIVE_INSTALL" });
+        else if (s === "live_desktop") send({ type: "LIVE_INSTALL" });
+        else if (s === "create_vm") send({ type: "VM_CREATED" });
+        else if (s === "mount_iso") send({ type: "ISO_MOUNTED" });
+        else if (s === "vm_boot") send({ type: "VM_POWERED_ON" });
+        else if (s === "vm_close") send({ type: "VM_CLOSED" });
+      }, 8000);
+    }
+    return () => {
+      if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
+    };
+  }, [presentationMode, state.value, send, current]);
+
+  // Exit presentation mode on Escape
+  useEffect(() => {
+    if (!presentationMode) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setPresentationMode(false);
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [presentationMode]);
 
   if (!config) {
     return (
@@ -405,6 +478,41 @@ export default function SimulationPage() {
             </Link>
             <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
               <button
+                onClick={() => {
+                  const now = toggleMute();
+                  setMuted(now);
+                }}
+                className={`rounded-full border px-2.5 sm:px-3 py-1 text-xs sm:text-sm transition-colors ${
+                  muted
+                    ? "border-amber-500/40 bg-amber-500/20 text-amber-300"
+                    : "border-white/10 text-white/50 hover:text-white"
+                }`}
+                title={muted ? "Unmute sounds (M)" : "Mute sounds (M)"}
+              >
+                {muted ? "🔇" : "🔊"}
+              </button>
+              <button
+                onClick={() => {
+                  setPresentationMode((p) => {
+                    const next = !p;
+                    if (next) {
+                      document.documentElement.requestFullscreen?.().catch(() => {});
+                    } else {
+                      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+                    }
+                    return next;
+                  });
+                }}
+                className={`rounded-full border px-2.5 sm:px-3 py-1 text-xs sm:text-sm transition-colors ${
+                  presentationMode
+                    ? "border-accent bg-accent/20 text-white"
+                    : "border-white/10 text-white/50 hover:text-white"
+                }`}
+                title="Presentation mode (fullscreen + auto-advance)"
+              >
+                🎬 present
+              </button>
+              <button
                 onClick={() =>
                   send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" })
                 }
@@ -487,6 +595,24 @@ export default function SimulationPage() {
         <div className="px-4 sm:px-6 pb-3 sm:pb-4 text-center text-xs sm:text-sm text-white/30">
           Simulation only — no files are downloaded or executed.
         </div>
+
+        {/* Scene context label */}
+        <AnimatePresence>
+          {sceneLabelVisible && (
+            <motion.div
+              key={sceneLabelKey}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="fixed top-20 left-1/2 -translate-x-1/2 z-40 max-w-lg w-11/12"
+            >
+              <div className="glass rounded-xl p-4 text-center border border-white/10 shadow-lg shadow-black/20">
+                <p className="text-sm text-white/80">{SCENE_CONTEXT[current]}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <Footer />
       </div>

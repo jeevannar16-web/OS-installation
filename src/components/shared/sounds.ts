@@ -1,4 +1,9 @@
 let ctx: AudioContext | null = null;
+let _muted = false;
+
+export function isMuted(): boolean { return _muted; }
+export function setMuted(v: boolean): void { _muted = v; }
+export function toggleMute(): boolean { _muted = !_muted; return _muted; }
 
 function getCtx(): AudioContext {
   if (!ctx) ctx = new AudioContext();
@@ -6,6 +11,7 @@ function getCtx(): AudioContext {
 }
 
 function play(freq: number, duration: number, type: OscillatorType = "sine", volume = 0.15) {
+  if (_muted) return;
   try {
     const c = getCtx();
     const osc = c.createOscillator();

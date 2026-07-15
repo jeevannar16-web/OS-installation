@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { PATHS, OS_LIST } from "../data";
@@ -6,6 +6,55 @@ import type { InstallPath } from "../data/types";
 import Footer from "../components/Footer";
 import MiniDemo from "../components/MiniDemo";
 import BootSequence from "../components/BootSequence";
+
+const TYPING_TEXTS = [
+  "before you actually do it",
+  "without risking your PC",
+  "and build confidence",
+  "step-by-step",
+];
+
+function TypingEffect() {
+  const [textIndex, setTextIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    const currentText = TYPING_TEXTS[textIndex];
+
+    const typeSpeed = isDeleting ? 30 : 50;
+    const pauseSpeed = 2000;
+
+    const timer = setTimeout(() => {
+      if (!isDeleting) {
+        if (charIndex < currentText.length) {
+          setText(currentText.slice(0, charIndex + 1));
+          setCharIndex((prev) => prev + 1);
+        } else {
+          setTimeout(() => setIsDeleting(true), pauseSpeed);
+        }
+      } else {
+        if (charIndex > 0) {
+          setText(currentText.slice(0, charIndex - 1));
+          setCharIndex((prev) => prev - 1);
+        } else {
+          setIsDeleting(false);
+          setTextIndex((prev) => (prev + 1) % TYPING_TEXTS.length);
+        }
+      }
+    }, typeSpeed);
+
+    return () => clearTimeout(timer);
+  }, [textIndex, charIndex, isDeleting]);
+
+  return (
+    <span className="gradient-text-animated font-extrabold inline-block min-w-[200px]">
+      {text}
+      <span className="inline-block w-1 h-[1em] bg-gradient-to-r from-[#7c5cff] via-[#06b6d4] to-[#a855f7] ml-1 align-middle animate-pulse" />
+    </span>
+  );
+}
 
 /* ── Staggered entrance variants ─────────────────────────────── */
 const container = {
@@ -144,27 +193,38 @@ function OSCard({
     <motion.button
       variants={item}
       onClick={() => !disabled && onClick()}
-      whileHover={!disabled ? { y: -4, scale: 1.02 } : {}}
+      whileHover={!disabled ? { y: -6, scale: 1.03 } : {}}
       whileTap={!disabled ? { scale: 0.97 } : {}}
-      className={`glass rounded-2xl p-5 flex flex-col items-center text-center transition-all relative overflow-hidden ${
+      className={`glass rounded-2xl p-6 flex flex-col items-center text-center transition-all relative overflow-hidden ${
         disabled
           ? "opacity-50 cursor-not-allowed grayscale-[0.3]"
-          : `hover:border-white/[0.14] ${active ? "ring-2 ring-accent bg-accent/[0.06]" : ""}`
+          : `hover:border-white/[0.14] ${active ? "ring-2 ring-accent bg-accent/[0.08]" : ""}`
       }`}
     >
       <motion.div
-        className="text-4xl"
+        className="text-5xl"
         style={{
           filter: disabled
             ? "grayscale(1) opacity(0.4)"
-            : `drop-shadow(0 0 12px ${o.branding.accent}66)`,
+            : `drop-shadow(0 0 20px ${o.branding.accent}88)`,
         }}
-        animate={!disabled && active ? { scale: [1, 1.08, 1] } : {}}
-        transition={{ duration: 0.4 }}
+        animate={
+          !disabled
+            ? {
+                y: active ? [0, -4, 0] : [0, -2, 0],
+                rotate: active ? [0, -2, 2, -2, 0] : 0,
+              }
+            : {}
+        }
+        transition={{
+          duration: active ? 1.2 : 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
       >
         {o.branding.logo}
       </motion.div>
-      <div className="mt-3 font-semibold text-sm">{o.branding.name}</div>
+      <div className="mt-4 font-semibold text-sm">{o.branding.name}</div>
 
       {/* Coming soon ribbon */}
       {disabled && (
@@ -177,11 +237,11 @@ function OSCard({
       <AnimatePresence>
         {active && (
           <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
+            initial={{ scale: 0, opacity: 0, rotate: -90 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            exit={{ scale: 0, opacity: 0, rotate: 90 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="absolute top-2 right-2 h-5 w-5 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold shadow-lg shadow-accent/30"
+            className="absolute top-3 right-3 h-6 w-6 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-accent/30"
           >
             ✓
           </motion.div>
@@ -355,9 +415,7 @@ export default function LandingPage() {
               >
                 Practice installing an OS
                 <br />
-                <span className="gradient-text-animated font-extrabold">
-                  before you actually do it
-                </span>
+                <TypingEffect />
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 14 }}
