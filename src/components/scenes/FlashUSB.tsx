@@ -52,8 +52,9 @@ function RufusTool({ config, speed, onComplete }: { config: OSConfig; speed: "no
     let idx = 0;
     const iv = setInterval(() => {
       if (idx < logs.length) {
-        setLogLines((p) => [...p, logs[idx]]);
+        const entry = logs[idx];
         idx++;
+        setLogLines((p) => [...p, entry]);
       }
     }, dur / logs.length);
     const tick = (now: number) => {
@@ -144,7 +145,7 @@ function RufusTool({ config, speed, onComplete }: { config: OSConfig; speed: "no
         )}
         {rufusPhase === "flashing" && (
           <div ref={logRef} className="h-36 overflow-y-auto rounded border border-gray-200 bg-black p-2 font-mono text-[10px] leading-relaxed">
-            {logLines.map((l, i) => (
+            {logLines.filter(Boolean).map((l, i) => (
               <div key={i} className={l.startsWith("ERROR") ? "text-red-400" : (l.includes("✓") || l.includes("Done")) ? "text-emerald-400" : "text-white/70"}>{l}</div>
             ))}
             <span className="animate-pulse text-[#4a8c5c]">▌</span>
