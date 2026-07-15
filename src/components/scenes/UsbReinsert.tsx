@@ -1,8 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "../shared/Toast";
 import { playUsbConnect, playClick } from "../shared/sounds";
 import { PulseHint } from "../shared/InteractiveEffects";
+import GhostCursor from "../shared/GhostCursor";
 
 function UsbStickSvg({ className = "" }: { className?: string }) {
   return (
@@ -85,6 +86,10 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
   const [phase, setPhase] = useState<Phase>("drag");
   const [overPort, setOverPort] = useState(false);
   const toast = useToast();
+  const [showDemo, setShowDemo] = useState(false);
+  const [demoSeen, setDemoSeen] = useState(false);
+  const [demoReplayCount, setDemoReplayCount] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleDrop = useCallback(() => {
     setOverPort(false);
@@ -93,9 +98,43 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
     setPhase("inserted");
   }, [toast]);
 
+  // Trigger ghost cursor demo on first visit
+  useEffect(() => {
+    if (demoSeen || phase === "inserted") return;
+    const timer = setTimeout(() => {
+      setShowDemo(true);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [demoSeen, phase]);
+
+  // Replay demo once if no action after 8s
+  useEffect(() => {
+    if (!showDemo && demoSeen && demoReplayCount < 1 && phase === "drag") {
+      const timer = setTimeout(() => {
+        setDemoReplayCount((prev) => prev + 1);
+        setShowDemo(true);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [showDemo, demoSeen, demoReplayCount, phase]);
+
+  const demoSteps: Array<{
+    type: "move" | "click" | "drag";
+    x: number;
+    y: number;
+    delay?: number;
+    duration?: number;
+    dragEndX?: number;
+    dragEndY?: number;
+    label?: string;
+  }> = [
+    { type: "move", x: 250, y: 350, delay: 0, duration: 500 },
+    { type: "drag", x: 250, y: 350, delay: 300, duration: 600, dragEndX: 550, dragEndY: 350 },
+  ];
+
   if (phase === "inserted") {
     return (
-    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
+    <div ref={containerRef} className="mx-auto w-full max-w-4xl lg:max-w-5xl relative">
       <div className="relative overflow-hidden rounded-2xl">
         <div className="absolute inset-0 bg-gradient-to-b from-[#2a2218] via-[#1e1812] to-[#151010] rounded-2xl" />
         <div className="relative z-10 flex flex-col items-center gap-4 py-16 lg:py-20">
@@ -117,7 +156,24 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
+    <div ref={containerRef} className="mx-auto w-full max-w-4xl lg:max-w-5xl relative">
+      <GhostCursor
+        isVisible={showDemo}
+        steps={demoSteps}
+        onComplete={() => {
+          setShowDemo(false);
+          setDemoSeen(true);
+        }}
+      />
+      <button
+        onClick={() => {
+          setShowDemo(true);
+          setDemoSeen(false);
+        }}
+        className="absolute top-4 right-4 z-10 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-white/70 hover:bg-white/20 transition-colors"
+      >
+        Show me again
+      </button>
       <div className="relative overflow-hidden rounded-2xl">
         <div className="absolute inset-0 bg-gradient-to-b from-[#2a2218] via-[#1e1812] to-[#151010] rounded-2xl" />
         <div className="absolute inset-0 opacity-[0.04]"
