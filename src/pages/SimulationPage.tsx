@@ -437,19 +437,8 @@ export default function SimulationPage() {
             })}
           </div>
 
-          <div className="mt-2 min-h-[1.25rem]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={current}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.2 }}
-                className="text-xs text-white/40"
-              >
-                {STATUS_TEXT[current] ?? ""}
-              </motion.div>
-            </AnimatePresence>
+          <div className="mt-2 min-h-[1.25rem] text-xs text-white/40" key={`status-${current}`}>
+            {STATUS_TEXT[current] ?? ""}
           </div>
         </header>
 

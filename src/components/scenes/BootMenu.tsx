@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { playKeyClick } from "../shared/sounds";
 
 const ENTRIES = [
@@ -58,24 +57,15 @@ export default function BootMenu({
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0a1a] font-mono">
       {/* Fake-out overlay */}
       {wrongFakeout && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0a0a1a]"
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0a0a1a]">
+          <div className="text-center">
             <div className="text-3xl mb-3">🪟</div>
             <div className="text-sm text-white/60">Loading normal Windows…</div>
             <div className="mt-2 text-xs text-white/30">
               (Wrong selection — returning to menu)
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
 
       {/* Title */}
