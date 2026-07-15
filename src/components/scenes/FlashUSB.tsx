@@ -6,7 +6,9 @@ import FilePickerModal from "../shared/FilePickerModal";
 import { playUsbConnect, playSuccess, playClick } from "../shared/sounds";
 import { SparkleBurst, Tooltip, PulseHint } from "../shared/InteractiveEffects";
 
-type Phase = "plug_in" | "tool_select" | "rufus" | "ventoy" | "balena";
+type Phase = "plug_in" | "tool_select" | "rufus" | "ventoy" | "balena" | "unsupported";
+
+const SUPPORTED_TOOLS = new Set(["rufus", "ventoy", "balena"]);
 
 type RufusPhase = "idle" | "selecting_iso" | "ready" | "flashing" | "done";
 type VentoyPhase = "idle" | "installing" | "copying" | "done";
@@ -791,33 +793,39 @@ export default function FlashUSB({
               <h2 className="mt-1 text-xl font-bold text-white">Choose your flashing tool</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {tools.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    playClick();
-                    setSelectedTool(t.id);
-                    setPhase(t.id as Phase);
-                  }}
-                  className={`rounded-xl border p-4 text-center transition-all hover:bg-white/10 ${
-                    selectedTool === t.id
-                      ? "border-accent bg-accent/10"
-                      : "border-white/10 bg-white/5"
-                  }`}
-                >
-                  <div className="text-2xl mb-2">
-                    {t.id === "rufus" ? "🟢" : t.id === "ventoy" ? "📦" : "⚗️"}
-                  </div>
-                  <div className="text-sm font-bold text-white/90">{t.name}</div>
-                  <div className="mt-1 text-xs text-white/50">{t.note}</div>
-                </button>
-              ))}
+              {tools.map((t) => {
+                const supported = SUPPORTED_TOOLS.has(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      playClick();
+                      setSelectedTool(t.id);
+                      setPhase(supported ? (t.id as Phase) : "unsupported");
+                    }}
+                    className={`rounded-xl border p-4 text-center transition-all hover:bg-white/10 ${
+                      selectedTool === t.id
+                        ? "border-accent bg-accent/10"
+                        : "border-white/10 bg-white/5"
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">
+                      {t.id === "rufus" ? "🟢" : t.id === "ventoy" ? "📦" : t.id === "balena" ? "⚗️" : "🔧"}
+                    </div>
+                    <div className="text-sm font-bold text-white/90">{t.name}</div>
+                    <div className="mt-1 text-xs text-white/50">{t.note}</div>
+                    {!supported && (
+                      <div className="mt-2 text-[10px] text-amber-400/80 font-medium">Coming soon</div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </motion.div>
         )}
 
         {/* PHASE 3: Tool UIs */}
-        {(phase === "rufus" || phase === "ventoy" || phase === "balena") && (
+        {(phase === "rufus" || phase === "ventoy" || phase === "balena" || phase === "unsupported") && (
           <motion.div
             key={phase}
             initial={{ opacity: 0, y: 8 }}
@@ -835,6 +843,23 @@ export default function FlashUSB({
             {phase === "rufus" && <RufusTool config={config} speed={speed} onFlashDone={() => setFlashComplete(true)} />}
             {phase === "ventoy" && <VentoyTool config={config} speed={speed} onFlashDone={() => setFlashComplete(true)} />}
             {phase === "balena" && <EtcherTool config={config} speed={speed} onFlashDone={() => setFlashComplete(true)} />}
+            {phase === "unsupported" && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6 text-center">
+                <div className="text-3xl mb-3">⚠️</div>
+                <div className="text-lg font-semibold text-amber-300">Tool not yet supported</div>
+                <p className="mt-2 text-sm text-white/50 max-w-md mx-auto">
+                  <strong>{selectedTool && tools.find((t) => t.id === selectedTool)?.name}</strong> isn't
+                  implemented in this simulator yet. Please use <strong>Rufus</strong>,{' '}
+                  <strong>Ventoy</strong>, or <strong>BalenaEtcher</strong> to continue.
+                </p>
+                <button
+                  onClick={() => { playClick(); setPhase("tool_select"); setSelectedTool(null); }}
+                  className="mt-4 rounded-lg bg-white/10 px-5 py-2 text-sm font-medium text-white hover:bg-white/15 transition-colors"
+                >
+                  ← Choose a different tool
+                </button>
+              </div>
+            )}
 
             {/* Safely Eject — only show after flashing is complete */}
             {flashComplete && (
