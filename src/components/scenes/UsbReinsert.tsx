@@ -115,13 +115,11 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
 
   return (
     <div className="mx-auto w-full max-w-4xl">
-      <AnimatePresence mode="wait">
         {phase !== "done" ? (
           <motion.div
             key="insert"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             className="relative overflow-hidden rounded-2xl"
           >
             {/* Physical desk backdrop */}
@@ -244,7 +242,6 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
             <div className="text-sm text-white/50">Ready to reboot into the installer.</div>
           </motion.div>
         )}
-      </AnimatePresence>
     </div>
   );
 }

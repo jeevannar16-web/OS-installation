@@ -636,14 +636,13 @@ export default function FlashUSB({
   return (
     <div className="mx-auto w-full max-w-4xl">
       <SparkleBurst trigger={showSparkle} />
-      <AnimatePresence mode="wait">
+      {/* No AnimatePresence mode="wait" here — it causes a blank gap between phases */}
         {/* PHASE 1: USB Plug-in — realistic desk scene */}
         {phase === "plug_in" && (
           <motion.div
             key="plug_in"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             className="relative overflow-hidden rounded-2xl"
           >
             {/* Physical desk backdrop */}
@@ -800,7 +799,6 @@ export default function FlashUSB({
             key="tool_select"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             className="space-y-4"
           >
             <div className="text-center mb-6">
@@ -845,7 +843,6 @@ export default function FlashUSB({
             key={phase}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
             className="space-y-4"
           >
             <button
@@ -918,7 +915,6 @@ export default function FlashUSB({
             )}
           </motion.div>
         )}
-      </AnimatePresence>
     </div>
   );
 }
