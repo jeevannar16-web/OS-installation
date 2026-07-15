@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useCallback, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "../shared/Toast";
 import { playUsbConnect, playClick } from "../shared/sounds";
@@ -87,8 +87,6 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
   const [overPort, setOverPort] = useState(false);
   const toast = useToast();
   const [showDemo, setShowDemo] = useState(false);
-  const [demoSeen, setDemoSeen] = useState(false);
-  const [demoReplayCount, setDemoReplayCount] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleDrop = useCallback(() => {
@@ -98,25 +96,8 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
     setPhase("inserted");
   }, [toast]);
 
-  // Trigger ghost cursor demo on first visit
-  useEffect(() => {
-    if (demoSeen || phase === "inserted") return;
-    const timer = setTimeout(() => {
-      setShowDemo(true);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [demoSeen, phase]);
-
-  // Replay demo once if no action after 8s
-  useEffect(() => {
-    if (!showDemo && demoSeen && demoReplayCount < 1 && phase === "drag") {
-      const timer = setTimeout(() => {
-        setDemoReplayCount((prev) => prev + 1);
-        setShowDemo(true);
-      }, 8000);
-      return () => clearTimeout(timer);
-    }
-  }, [showDemo, demoSeen, demoReplayCount, phase]);
+  // No auto-triggering: user must click "Show me again" manually
+  // Removed auto-trigger useEffect
 
   const demoSteps: Array<{
     type: "move" | "click" | "drag";
@@ -162,17 +143,15 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
         steps={demoSteps}
         onComplete={() => {
           setShowDemo(false);
-          setDemoSeen(true);
         }}
       />
       <button
         onClick={() => {
           setShowDemo(true);
-          setDemoSeen(false);
         }}
-        className="absolute top-4 right-4 z-10 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-white/70 hover:bg-white/20 transition-colors"
+        className="absolute top-4 right-4 z-10 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
       >
-        Show me again
+        Show guide
       </button>
       <div className="relative overflow-hidden rounded-2xl">
         <div className="absolute inset-0 bg-gradient-to-b from-[#2a2218] via-[#1e1812] to-[#151010] rounded-2xl" />

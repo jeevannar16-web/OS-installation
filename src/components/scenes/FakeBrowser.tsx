@@ -93,8 +93,6 @@ export default function FakeBrowser({
   const [version, setVersion] = useState(dp.versions?.[0] ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
   const [showDemo, setShowDemo] = useState(false);
-  const [demoSeen, setDemoSeen] = useState(false);
-  const [demoReplayCount, setDemoReplayCount] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const relevant = isRelevant(query, config.searchKeywords);
@@ -121,25 +119,8 @@ export default function FakeBrowser({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, speed]);
 
-  // Trigger ghost cursor demo on first visit
-  useEffect(() => {
-    if (demoSeen) return;
-    const timer = setTimeout(() => {
-      setShowDemo(true);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [demoSeen]);
-
-  // Replay demo once if no action after 8s
-  useEffect(() => {
-    if (!showDemo && demoSeen && demoReplayCount < 1 && phase === "address") {
-      const timer = setTimeout(() => {
-        setDemoReplayCount((prev) => prev + 1);
-        setShowDemo(true);
-      }, 8000);
-      return () => clearTimeout(timer);
-    }
-  }, [showDemo, demoSeen, demoReplayCount, phase]);
+  // No auto-triggering: user must click "Show me again" manually
+  // Removed auto-trigger useEffect
 
   const demoSteps: Array<{
     type: "move" | "click" | "drag";
@@ -175,17 +156,15 @@ export default function FakeBrowser({
         steps={demoSteps}
         onComplete={() => {
           setShowDemo(false);
-          setDemoSeen(true);
         }}
       />
       <button
         onClick={() => {
           setShowDemo(true);
-          setDemoSeen(false);
         }}
-        className="absolute top-4 right-4 z-10 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-white/70 hover:bg-white/20 transition-colors"
+        className="absolute top-4 right-4 z-10 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
       >
-        Show me again
+        Show guide
       </button>
       {/* Browser window */}
       <div className="overflow-hidden rounded-xl bg-[#202124] shadow-2xl ring-1 ring-white/10">
