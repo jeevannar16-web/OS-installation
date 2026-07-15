@@ -76,4 +76,11 @@ export const windows: OSConfig = {
     headline: "You just simulated installing Windows 11! 🎉",
     sub: "Same flow you'll see on real hardware. Go make that bootable USB for real.",
   },
+  vmConfig: {
+    osType: "Microsoft Windows",
+    osVersion: "Windows 11 (64-bit)",
+    defaultMemoryMB: 8192,
+    defaultDiskGB: 64,
+    hasEFIRequirement: true,
+  },
 };

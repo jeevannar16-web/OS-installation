@@ -55,4 +55,10 @@ export const debian: OSConfig = {
     headline: "Debian flow is stubbed — coming soon!",
     sub: "Reusing the same components; data only needs filling in.",
   },
+  vmConfig: {
+    osType: "Linux",
+    osVersion: "Debian (64-bit)",
+    defaultMemoryMB: 2048,
+    defaultDiskGB: 20,
+  },
 };

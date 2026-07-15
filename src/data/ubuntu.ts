@@ -89,4 +89,10 @@ export const ubuntu: OSConfig = {
     headline: "You just simulated installing Ubuntu! 🎉",
     sub: "That was the full dual-boot flow. You're ready to try it on real hardware.",
   },
+  vmConfig: {
+    osType: "Linux",
+    osVersion: "Ubuntu (64-bit)",
+    defaultMemoryMB: 4096,
+    defaultDiskGB: 25,
+  },
 };

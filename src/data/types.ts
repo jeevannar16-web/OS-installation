@@ -53,6 +53,15 @@ export type WizardStep =
   | { kind: "account"; title: string; prompts: { label: string; placeholder: string; secret?: boolean }[] }
   | { kind: "confirm"; title: string; body: string };
 
+export type VMConfig = {
+  osType: string; // e.g. "Linux" or "Microsoft Windows";
+  osVersion: string; // e.g. "Ubuntu (64-bit)" or "Windows 11 (64-bit)";
+  defaultMemoryMB: number;
+  defaultDiskGB: number;
+  hasEFIRequirement?: boolean; // For Windows 11
+  hasNoGUIInstall?: boolean; // For Arch
+};
+
 export type OSConfig = {
   id: string;
   branding: Branding;
@@ -85,6 +94,7 @@ export type OSConfig = {
   searchKeywords: string[];
   /** Final completion card copy. */
   completion: { headline: string; sub: string };
+  vmConfig: VMConfig;
 };
 
 export type OSData = Record<string, OSConfig>;

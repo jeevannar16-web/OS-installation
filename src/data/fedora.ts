@@ -55,4 +55,10 @@ export const fedora: OSConfig = {
     headline: "Fedora flow is stubbed — coming soon!",
     sub: "Reusing the same components; data only needs filling in.",
   },
+  vmConfig: {
+    osType: "Linux",
+    osVersion: "Fedora (64-bit)",
+    defaultMemoryMB: 4096,
+    defaultDiskGB: 25,
+  },
 };

@@ -37,4 +37,11 @@ export const arch: OSConfig = {
     headline: "You just installed Arch Linux — the hard way! 🏹",
     sub: "You used the terminal for everything. That's the Arch way.",
   },
+  vmConfig: {
+    osType: "Linux",
+    osVersion: "Arch Linux (64-bit)",
+    defaultMemoryMB: 2048,
+    defaultDiskGB: 20,
+    hasNoGUIInstall: true,
+  },
 };

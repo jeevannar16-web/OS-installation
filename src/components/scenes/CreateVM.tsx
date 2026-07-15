@@ -3,14 +3,20 @@ import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
 
-type Step = "name" | "memory" | "disk" | "summary";
+type Step = "name" | "memory" | "efi" | "disk" | "summary";
 
-const STEPS: { key: Step; label: string }[] = [
-  { key: "name", label: "Name and Operating System" },
-  { key: "memory", label: "Memory Size" },
-  { key: "disk", label: "Hard Disk" },
-  { key: "summary", label: "Summary" },
-];
+function getSteps(config: OSConfig): { key: Step; label: string }[] {
+  const steps: { key: Step; label: string }[] = [
+    { key: "name", label: "Name and Operating System" },
+    { key: "memory", label: "Memory Size" },
+  ];
+  if (config.vmConfig.hasEFIRequirement) {
+    steps.push({ key: "efi", label: "System Settings" });
+  }
+  steps.push({ key: "disk", label: "Hard Disk" });
+  steps.push({ key: "summary", label: "Summary" });
+  return steps;
+}
 
 export default function CreateVM({
   config,
@@ -19,10 +25,12 @@ export default function CreateVM({
   config: OSConfig;
   onComplete: () => void;
 }) {
+  const STEPS = getSteps(config);
   const [step, setStep] = useState(0);
   const [vmName, setVmName] = useState(`${config.branding.shortName} VM`);
-  const [memory, setMemory] = useState(2048);
-  const [diskSize, setDiskSize] = useState(25);
+  const [memory, setMemory] = useState(config.vmConfig.defaultMemoryMB);
+  const [diskSize, setDiskSize] = useState(config.vmConfig.defaultDiskGB);
+  const [efiEnabled, setEfiEnabled] = useState(true);
 
   const current = STEPS[step];
 
@@ -131,20 +139,46 @@ export default function CreateVM({
                     <div>
                       <label className="mb-1 block text-xs text-white/50">Type:</label>
                       <select className="w-full rounded-lg border border-white/20 bg-[#1e1e1e] px-3 py-2 text-sm text-white outline-none">
-                        <option>Linux</option>
+                        <option>{config.vmConfig.osType}</option>
                       </select>
                     </div>
                     <div>
                       <label className="mb-1 block text-xs text-white/50">Version:</label>
                       <select className="w-full rounded-lg border border-white/20 bg-[#1e1e1e] px-3 py-2 text-sm text-white outline-none">
-                        <option>{config.branding.name} (64-bit)</option>
-                        <option>Other Linux (64-bit)</option>
+                        <option>{config.vmConfig.osVersion}</option>
                       </select>
                     </div>
                   </div>
                   <div className="rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs text-accent-soft">
                     💡 VirtualBox will auto-detect optimal settings for {config.branding.name}.
                   </div>
+                </div>
+              )}
+
+              {current.key === "efi" && (
+                <div className="space-y-4">
+                  <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 text-xs text-amber-300">
+                    ⚠️ {config.branding.name} requires TPM 2.0 and Secure Boot to install correctly.
+                    Enable EFI below to emulate this.
+                  </div>
+                  <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white/90 transition-colors hover:bg-white/10 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={efiEnabled}
+                      onChange={(e) => setEfiEnabled(e.target.checked)}
+                      className="accent-accent"
+                    />
+                    Enable EFI (special OSes only)
+                  </label>
+                  <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white/90 transition-colors hover:bg-white/10 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={true}
+                      readOnly
+                      className="accent-accent"
+                    />
+                    Enable Secure Boot
+                  </label>
                 </div>
               )}
 
@@ -246,11 +280,19 @@ export default function CreateVM({
                       <div className="text-white/50">Name:</div>
                       <div className="text-white/90">{vmName}</div>
                       <div className="text-white/50">OS Type:</div>
-                      <div className="text-white/90">Linux / {config.branding.name} (64-bit)</div>
+                      <div className="text-white/90">
+                        {config.vmConfig.osType} / {config.vmConfig.osVersion}
+                      </div>
                       <div className="text-white/50">Memory:</div>
                       <div className="text-white/90">{memory} MB ({(memory / 1024).toFixed(1)} GB)</div>
                       <div className="text-white/50">Hard Disk:</div>
                       <div className="text-white/90">Create {diskSize} GB VDI</div>
+                      {config.vmConfig.hasEFIRequirement && (
+                        <>
+                          <div className="text-white/50">EFI:</div>
+                          <div className="text-white/90">{efiEnabled ? "Enabled" : "Disabled"}</div>
+                        </>
+                      )}
                       <div className="text-white/50">Graphics:</div>
                       <div className="text-white/90">VMSVGA with 128 MB VRAM</div>
                       <div className="text-white/50">Network:</div>
