@@ -247,7 +247,7 @@ export default function MountISO({
                 💿
               </motion.div>
               <div className="mt-2 text-xs text-white/50">Browsing Downloads…</div>
-              <div className="mt-1 text-[10px] text-white/30 font-mono">{config.iso.filename}</div>
+              <div className="mt-1 text-[10px] sm:text-xs text-white/30 font-mono">{config.iso.filename}</div>
             </div>
           </motion.div>
         </motion.div>

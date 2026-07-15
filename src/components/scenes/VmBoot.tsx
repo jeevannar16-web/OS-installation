@@ -207,7 +207,7 @@ export default function VmBoot({
                     </button>
                   ))}
                 </div>
-                <div className="mt-4 text-center text-[10px] text-white/30">
+                <div className="mt-4 text-center text-xs lg:text-sm text-white/30">
                   ↑↓ Navigate &nbsp;│&nbsp; Enter Select &nbsp;│&nbsp; F12 Boot Menu
                 </div>
               </motion.div>

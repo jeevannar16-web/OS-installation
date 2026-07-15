@@ -70,19 +70,19 @@ export default function LiveDesktop({
             className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors"
           >
             <div className="text-3xl">💻</div>
-            <div className="text-[10px] text-white/70">Terminal</div>
+            <div className="text-[10px] sm:text-xs text-white/70">Terminal</div>
           </button>
           <div className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors cursor-pointer">
             <div className="text-3xl">📁</div>
-            <div className="text-[10px] text-white/70">Files</div>
+            <div className="text-[10px] sm:text-xs text-white/70">Files</div>
           </div>
           <div className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors cursor-pointer">
             <div className="text-3xl">🌐</div>
-            <div className="text-[10px] text-white/70">Browser</div>
+            <div className="text-[10px] sm:text-xs text-white/70">Browser</div>
           </div>
           <div className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors cursor-pointer">
             <div className="text-3xl">⚙️</div>
-            <div className="text-[10px] text-white/70">Settings</div>
+            <div className="text-[10px] sm:text-xs text-white/70">Settings</div>
           </div>
         </div>
 
@@ -92,7 +92,7 @@ export default function LiveDesktop({
           className="absolute bottom-20 left-6 flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors"
         >
           <div className="text-3xl">💿</div>
-          <div className="text-[10px] text-white/70">Install {name}</div>
+          <div className="text-[10px] sm:text-xs text-white/70">Install {name}</div>
         </button>
       </div>
 

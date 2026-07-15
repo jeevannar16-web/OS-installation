@@ -149,7 +149,7 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
                 className="cursor-grab active:cursor-grabbing select-none"
               >
                 <UsbStickSvg className="w-16 h-28 drop-shadow-lg" />
-                <div className="text-center mt-2 text-[10px] text-amber-200/40">drag me →</div>
+                <div className="text-center mt-2 text-xs lg:text-sm text-amber-200/40">drag me →</div>
               </motion.div>
             )}
 

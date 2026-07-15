@@ -408,7 +408,7 @@ export default function SimulationPage() {
                 onClick={() =>
                   send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" })
                 }
-                className={`rounded-full border px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs transition-colors ${
+                className={`rounded-full border px-2.5 sm:px-3 py-1 text-xs sm:text-sm transition-colors ${
                   speed === "fast"
                     ? "border-accent bg-accent/20 text-white"
                     : "border-white/10 text-white/50 hover:text-white"
@@ -419,7 +419,7 @@ export default function SimulationPage() {
               </button>
               <button
                 onClick={() => setShowShortcuts(true)}
-                className="rounded-full border border-white/10 px-2 sm:px-2.5 py-1 text-[10px] sm:text-xs text-white/40 hover:text-white/70 transition-colors"
+                className="rounded-full border border-white/10 px-2 sm:px-2.5 py-1 text-xs sm:text-sm text-white/40 hover:text-white/70 transition-colors"
                 title="Keyboard shortcuts (?)"
               >
                 ?
@@ -441,7 +441,7 @@ export default function SimulationPage() {
               return (
                 <div key={s} className="flex items-center gap-1">
                   <div
-                    className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs ${
+                    className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm ${
                       active
                         ? "bg-accent text-white"
                         : done
@@ -461,7 +461,7 @@ export default function SimulationPage() {
             })}
           </div>
 
-          <div className="mt-1.5 sm:mt-2 min-h-[1rem] sm:min-h-[1.25rem] text-[10px] sm:text-xs text-white/40" key={`status-${current}`}>
+          <div className="mt-1.5 sm:mt-2 min-h-[1rem] sm:min-h-[1.25rem] text-xs sm:text-sm text-white/40" key={`status-${current}`}>
             {STATUS_TEXT[current] ?? ""}
           </div>
         </header>
@@ -484,7 +484,7 @@ export default function SimulationPage() {
           </main>
         )}
 
-        <div className="px-4 sm:px-6 pb-3 sm:pb-4 text-center text-[10px] sm:text-[11px] text-white/30">
+        <div className="px-4 sm:px-6 pb-3 sm:pb-4 text-center text-xs sm:text-sm text-white/30">
           Simulation only — no files are downloaded or executed.
         </div>
 

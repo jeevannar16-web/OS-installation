@@ -137,14 +137,14 @@ function RufusTool({ config, speed, onComplete }: { config: OSConfig; speed: "no
             <div className="h-2 w-full overflow-hidden rounded bg-gray-200">
               <div className="h-full rounded bg-[#4a8c5c] transition-all duration-100" style={{ width: `${progress}%` }} />
             </div>
-            <div className="flex justify-between text-[10px] text-gray-500">
+            <div className="flex justify-between text-xs lg:text-sm text-gray-500">
               <span>{rufusPhase === "done" ? "✓ Complete" : `${Math.floor(progress)}%`}</span>
               <span>{config.iso.size}</span>
             </div>
           </div>
         )}
         {rufusPhase === "flashing" && (
-          <div ref={logRef} className="h-36 lg:h-48 overflow-y-auto rounded border border-gray-200 bg-black p-2 font-mono text-[10px] lg:text-xs leading-relaxed">
+          <div ref={logRef} className="h-36 lg:h-48 overflow-y-auto rounded border border-gray-200 bg-black p-2 font-mono text-xs lg:text-sm leading-relaxed">
             {logLines.filter(Boolean).map((l, i) => (
               <div key={i} className={l.startsWith("ERROR") ? "text-red-400" : (l.includes("✓") || l.includes("Done")) ? "text-emerald-400" : "text-white/70"}>{l}</div>
             ))}
@@ -222,12 +222,12 @@ function VentoyTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
           <div className="flex flex-col sm:flex-row gap-6 items-start">
             <div className="flex w-24 flex-col items-center gap-1">
               <div className="flex h-16 w-16 items-center justify-center rounded-lg text-3xl shadow-lg" style={{ background: `${config.branding.accent}22`, border: `1px solid ${config.branding.accent}55` }}>💿</div>
-              <div className="w-24 break-words text-center text-[10px] text-white/70">{config.iso.filename}</div>
+              <div className="w-24 break-words text-center text-xs lg:text-sm text-white/70">{config.iso.filename}</div>
             </div>
             <div onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
               onDrop={(e) => { e.preventDefault(); setOver(false); setProgress(0); playUsbConnect(); setPhase("copying"); }}
               className={`flex h-24 w-40 items-center justify-center rounded-xl border-2 border-dashed transition-colors ${over ? "border-accent bg-accent/20" : "border-white/20 bg-white/5"}`}>
-              <div className="text-center"><div className="text-2xl">🔌</div><div className="text-[10px] text-white/50 mt-1">{over ? "Release to copy" : "Drop ISO here"}</div></div>
+              <div className="text-center"><div className="text-2xl">🔌</div><div className="text-xs lg:text-sm text-white/50 mt-1">{over ? "Release to copy" : "Drop ISO here"}</div></div>
             </div>
           </div>
           {phase === "copying" && (
@@ -310,7 +310,7 @@ function EtcherTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
                 strokeDashoffset={`${2 * Math.PI * 20 * (1 - progress / 100)}`}
                 strokeLinecap="round" />
             </svg>
-            <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">{Math.floor(progress)}%</div>
+            <div className="absolute inset-0 flex items-center justify-center text-xs lg:text-sm font-bold text-white">{Math.floor(progress)}%</div>
           </div>
           <div><div className="text-sm text-white/80">Flashing…</div><div className="text-xs text-white/40">{config.iso.filename}</div></div>
         </div>
@@ -370,7 +370,7 @@ export default function FlashUSB({ config, speed, onComplete }: { config: OSConf
                   <rect x="14" y="55" width="32" height="16" rx="2" fill="rgba(0,0,0,0.2)" />
                   <text x="30" y="65" textAnchor="middle" fontSize="6" fontWeight="bold" fill="rgba(255,255,255,0.3)">USB</text>
                 </svg>
-                <div className="text-center mt-2 text-[10px] text-amber-200/40">drag me →</div>
+                <div className="text-center mt-2 text-xs lg:text-sm text-amber-200/40">drag me →</div>
               </motion.div>
 
               <div onDragOver={(e) => { e.preventDefault(); setOverPort(true); }}
@@ -415,7 +415,7 @@ export default function FlashUSB({ config, speed, onComplete }: { config: OSConf
                   <div className="text-2xl lg:text-4xl mb-2">{t.id === "rufus" ? "🟢" : t.id === "ventoy" ? "📦" : t.id === "balena" ? "⚗️" : "🔧"}</div>
                   <div className="text-sm lg:text-base font-bold text-white/90">{t.name}</div>
                   <div className="mt-1 text-xs lg:text-sm text-white/50">{t.note}</div>
-                  {!ok && <div className="mt-2 text-[10px] text-amber-400/80 font-medium">Coming soon</div>}
+                  {!ok && <div className="mt-2 text-xs lg:text-sm text-amber-400/80 font-medium">Coming soon</div>}
                 </button>
               );
             })}

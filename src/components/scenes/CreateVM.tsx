@@ -82,7 +82,7 @@ export default function CreateVM({
             <div className="mt-4 mb-2 text-xs uppercase tracking-wide text-white/40">Preview</div>
             <div className="rounded border border-white/10 bg-[#2a2a2b] p-2 text-center">
               <div className="text-3xl">{config.branding.logo}</div>
-              <div className="mt-1 text-[10px] text-white/40">No preview</div>
+              <div className="mt-1 text-[10px] sm:text-xs text-white/40">No preview</div>
             </div>
           </div>
 
@@ -100,7 +100,7 @@ export default function CreateVM({
                 {STEPS.map((s, i) => (
                   <div key={s.key} className="flex items-center gap-2">
                     <span
-                      className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                      className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] sm:text-xs font-bold ${
                         i === step
                           ? "bg-accent text-white"
                           : i < step
@@ -163,7 +163,7 @@ export default function CreateVM({
                       onChange={(e) => setMemory(Number(e.target.value))}
                       className="w-full accent-accent"
                     />
-                    <div className="flex justify-between text-[10px] text-white/30 mt-1">
+                    <div className="flex justify-between text-xs sm:text-sm text-white/30 mt-1">
                       <span>512 MB</span>
                       <span className={`font-semibold ${memory >= 2048 ? "text-emerald-400" : "text-amber-400"}`}>
                         {memory >= 2048 ? "✓ Recommended" : "⚠ Below minimum"}
@@ -228,7 +228,7 @@ export default function CreateVM({
                       onChange={(e) => setDiskSize(Number(e.target.value))}
                       className="w-full accent-accent"
                     />
-                    <div className="flex justify-between text-[10px] text-white/30 mt-1">
+                    <div className="flex justify-between text-xs sm:text-sm text-white/30 mt-1">
                       <span>10 GB</span>
                       <span className={diskSize >= 25 ? "text-emerald-400" : "text-amber-400"}>
                         {diskSize >= 25 ? "✓ Good for most installs" : "⚠ Might be tight"}

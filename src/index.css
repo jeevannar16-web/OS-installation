@@ -329,15 +329,17 @@ body {
   .btn { @apply px-4 py-2.5 text-xs; }
   .btn-primary { @apply px-4 py-2.5 text-xs; }
 }
-/* ── Large screens (≥ 1280px) ──────────────────────────────── */
+/* ── Large screens (≥ 1280px) — school whiteboard / projector ── */
 @media (min-width: 1280px) {
-  html { font-size: 16px; }
-}
-/* ── XL screens (≥ 1536px) — presentation/kiosk mode ──────── */
-@media (min-width: 1536px) {
   html { font-size: 18px; }
-  .btn { @apply px-6 py-3; min-height: 48px; }
-  .btn-primary { @apply px-6 py-3; min-height: 48px; }
+  .btn { @apply px-5 py-3; min-height: 48px; }
+  .btn-primary { @apply px-5 py-3; min-height: 48px; }
+}
+/* ── XL screens (≥ 1536px) — large display ────────────────── */
+@media (min-width: 1536px) {
+  html { font-size: 20px; }
+  .btn { @apply px-6 py-3; min-height: 52px; }
+  .btn-primary { @apply px-6 py-3; min-height: 52px; }
   .glass { @apply p-6; }
   .aurora-blob:nth-child(1) { width: 900px; height: 900px; }
   .aurora-blob:nth-child(2) { width: 800px; height: 800px; }
@@ -345,14 +347,14 @@ body {
 }
 /* ── 2XL screens (≥ 1920px) — large whiteboard ─────────────── */
 @media (min-width: 1920px) {
-  html { font-size: 20px; }
-  .btn { @apply px-8 py-4; min-height: 56px; border-radius: 0.875rem; }
-  .btn-primary { @apply px-8 py-4; min-height: 56px; border-radius: 0.875rem; }
+  html { font-size: 22px; }
+  .btn { @apply px-8 py-4; min-height: 56px; }
+  .btn-primary { @apply px-8 py-4; min-height: 56px; }
   .glass { @apply p-8; }
 }
-/* ── 3XL screens (≥ 2560px) — giant whiteboard/touchscreen ── */
+/* ── 3XL screens (≥ 2560px) — giant touchscreen ──────────── */
 @media (min-width: 2560px) {
-  html { font-size: 24px; }
+  html { font-size: 26px; }
   .btn { @apply px-10 py-5; min-height: 64px; border-radius: 1rem; }
   .btn-primary { @apply px-10 py-5; min-height: 64px; border-radius: 1rem; }
   .glass { @apply p-10; }

@@ -86,7 +86,7 @@ export default function FileManager({
                     <div className="w-24 break-words text-center text-xs text-white/80">
                       {config.iso.filename}
                     </div>
-                    <div className="text-[10px] text-white/40">{config.iso.size}</div>
+                    <div className="text-[10px] sm:text-xs text-white/40">{config.iso.size}</div>
                   </motion.div>
                 </div>
 

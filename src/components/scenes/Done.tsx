@@ -715,7 +715,7 @@ function AchievementBadge({
       className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 sm:px-4 sm:py-2 cursor-default"
     >
       <span className="text-base sm:text-lg">{icon}</span>
-      <span className="text-[10px] sm:text-xs text-white/60">{label}</span>
+      <span className="text-xs sm:text-sm text-white/60">{label}</span>
     </motion.div>
   );
 }
@@ -737,7 +737,7 @@ function StepChecklist({ path }: { path: string }) {
 
   return (
     <div className="space-y-1.5">
-      <div className="text-[10px] sm:text-xs uppercase tracking-widest text-white/30 mb-2">
+      <div className="text-xs sm:text-sm uppercase tracking-widest text-white/30 mb-2">
         What you completed
       </div>
       {steps.map((s, i) => (
@@ -748,7 +748,7 @@ function StepChecklist({ path }: { path: string }) {
           transition={{ delay: 0.3 + i * 0.1 }}
           className="flex items-center gap-2 text-xs sm:text-sm"
         >
-          <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] text-emerald-400 shrink-0">
+          <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/20 text-xs text-emerald-400 shrink-0">
             ✓
           </div>
           <span className="text-white/60">{s.label}</span>
@@ -864,7 +864,7 @@ export default function Done({
           transition={{ delay: 0.6 }}
           className="rounded-xl border border-white/10 bg-white/5 p-4 sm:p-5"
         >
-          <div className="text-[10px] sm:text-xs uppercase tracking-widest text-white/30 mb-3">
+          <div className="text-xs sm:text-sm uppercase tracking-widest text-white/30 mb-3">
             Achievements unlocked
           </div>
           <div className="flex flex-wrap gap-2">
@@ -907,7 +907,7 @@ export default function Done({
                   className="flex flex-col items-center gap-1 rounded-lg p-2 sm:p-3 text-center hover:bg-white/10 transition-colors"
                 >
                   <span className="text-2xl sm:text-3xl">{d.icon}</span>
-                  <span className="text-[8px] sm:text-[10px] text-white/60">{d.label}</span>
+                  <span className="text-[8px] sm:text-[10px] lg:text-xs text-white/60">{d.label}</span>
                 </motion.button>
               ))}
             </div>
@@ -989,8 +989,8 @@ export default function Done({
 
             {/* Taskbar */}
             <div className="absolute bottom-0 inset-x-0 h-7 sm:h-8 bg-black/60 border-t border-white/10 flex items-center px-3 sm:px-4 justify-between backdrop-blur">
-              <span className="text-[9px] sm:text-[10px] text-white/60 font-semibold">{config.branding.logo} {config.branding.shortName}</span>
-              <span className="text-[8px] sm:text-[9px] text-white/40 font-mono">{clock}</span>
+              <span className="text-[9px] sm:text-[10px] lg:text-xs text-white/60 font-semibold">{config.branding.logo} {config.branding.shortName}</span>
+              <span className="text-[8px] sm:text-[9px] lg:text-xs text-white/40 font-mono">{clock}</span>
             </div>
           </div>
         </motion.div>
@@ -1003,7 +1003,7 @@ export default function Done({
         transition={{ delay: 1 }}
         className="space-y-3"
       >
-        <div className="text-center text-[10px] sm:text-xs uppercase tracking-widest text-white/30">
+        <div className="text-center text-xs sm:text-sm uppercase tracking-widest text-white/30">
           Try it for real
         </div>
         <div className="flex flex-wrap justify-center gap-2">
