@@ -169,6 +169,12 @@ export default function SimulationPage() {
       if (e.key === "Escape") {
         setShowShortcuts(false);
       }
+      if (e.key === "m" || e.key === "M") {
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+        const now = toggleMute();
+        setMuted(now);
+      }
       if (e.key === "s" || e.key === "S") {
         const active = document.activeElement;
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
@@ -411,7 +417,7 @@ export default function SimulationPage() {
               onClick={(e) => e.stopPropagation()}
               className="rounded-2xl border border-white/10 bg-[#12121a] p-6 shadow-2xl max-w-sm w-full"
             >
-              <h3 className="text-lg font-bold text-white/90 mb-4">⌨ Keyboard Shortcuts</h3>
+              <h3 className="text-lg font-bold text-white/90 mb-4">⌨ Keyboard shortcuts</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-white/50">Show this overlay</span>
@@ -424,6 +430,10 @@ export default function SimulationPage() {
                 <div className="flex justify-between">
                   <span className="text-white/50">Toggle speed run</span>
                   <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">S</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">Toggle sound (mute/unmute)</span>
+                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">M</kbd>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white/50">Close overlay</span>
