@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { simulationMachine, SIM_SCENES } from "../machines/simulationMachine";
 import { getOS } from "../data";
 import { ToastProvider } from "../components/shared/Toast";
+import ErrorBoundary from "../components/shared/ErrorBoundary";
 import Showcase from "../components/shared/Showcase";
 import Footer from "../components/Footer";
 import DesktopShell, { type AppInfo } from "../components/shell/DesktopShell";
@@ -116,6 +117,7 @@ export default function SimulationPage() {
 
   useEffect(() => {
     const current = String(state.value);
+    console.log(`[SimPage] STATE → ${current}`);
     if (current !== "idle") {
       localStorage.setItem(
         STORAGE_KEY,
@@ -195,17 +197,18 @@ export default function SimulationPage() {
   const isVm = path === "vm";
 
   function renderScene() {
+    console.log(`[SimPage] renderScene called — state="${current}", path="${path}"`);
     switch (current) {
       case "searching":
         return (
           <FakeBrowser
             config={cfg}
             speed={speed}
-            onComplete={() => send({ type: "SEARCH_DONE" })}
+            onComplete={() => { console.log("[SimPage] SEARCH_DONE"); send({ type: "SEARCH_DONE" }); }}
           />
         );
       case "downloading":
-        return <FileManager config={cfg} onComplete={() => send({ type: "DOWNLOAD_DONE" })} />;
+        return <FileManager config={cfg} onComplete={() => { console.log("[SimPage] DOWNLOAD_DONE"); send({ type: "DOWNLOAD_DONE" }); }} />;
       case "flashing_usb":
         return (
           <FlashUSB config={cfg} speed={speed} onComplete={() => { console.log("[SimPage] FLASH_DONE send"); send({ type: "FLASH_DONE" }); }} />
@@ -281,10 +284,12 @@ export default function SimulationPage() {
           />
         );
       default:
+        console.warn(`[SimPage] UNKNOWN state: "${current}" — no scene to render`);
         return (
           <div className="flex flex-col items-center justify-center py-20 text-white/40">
-            <div className="text-3xl mb-3">⏳</div>
-            <div className="text-sm">Loading next step…</div>
+            <div className="text-3xl mb-3">⚠️</div>
+            <div className="text-sm">Unknown state: {current}</div>
+            <div className="text-xs mt-1 text-white/20">Check console for details</div>
           </div>
         );
     }
@@ -461,13 +466,17 @@ export default function SimulationPage() {
 
         {isFullscreen ? (
           <div className="flex-1" key={current}>
-            {renderScene()}
+            <ErrorBoundary label={current}>
+              {renderScene()}
+            </ErrorBoundary>
           </div>
         ) : (
           <main className="mx-auto w-full max-w-5xl flex-1 px-6 pb-8">
             <DesktopShell activeApp={activeApp}>
               <div className="w-full max-w-4xl" key={current}>
-                {renderScene()}
+                <ErrorBoundary label={current}>
+                  {renderScene()}
+                </ErrorBoundary>
               </div>
             </DesktopShell>
           </main>
