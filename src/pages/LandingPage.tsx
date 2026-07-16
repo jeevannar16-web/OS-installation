@@ -387,9 +387,9 @@ export default function LandingPage() {
       <div className="relative z-0">
         {/* Header */}
         <header className="mx-auto w-full max-w-6xl px-6 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 font-semibold">
-            <span className="text-xl">💿</span>
-            <span className="text-white/90">OS Install Simulator</span>
+          <div className="flex items-center gap-3 font-semibold">
+            <img src="/logo.svg" alt="OS Install Simulator" className="w-9 h-9 drop-shadow-[0_0_12px_rgba(124,92,255,0.4)]" />
+            <span className="text-white/90 tracking-tight text-lg">OS Install Simulator</span>
           </div>
           <div className="flex items-center gap-3">
             <ThemePicker />
@@ -404,14 +404,22 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Text */}
             <div className="flex-1 text-center lg:text-left">
-              <motion.img
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                src="/logo.svg"
-                alt="OS Install Simulator logo"
-                className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 mx-auto lg:mx-0 mb-6 drop-shadow-[0_0_30px_rgba(124,92,255,0.3)]"
-              />
+                className="flex items-center gap-4 mx-auto lg:mx-0 mb-6 w-fit"
+              >
+                <img src="/logo.svg" alt="" className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-[0_0_40px_rgba(124,92,255,0.35)]" />
+                <div className="flex flex-col items-start">
+                  <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-white/90 to-white/70 bg-clip-text text-transparent">
+                    OS Install
+                  </span>
+                  <span className="text-xs sm:text-sm tracking-[0.3em] uppercase text-[#7c5cff] font-semibold">
+                    Simulator
+                  </span>
+                </div>
+              </motion.div>
               <motion.span
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
