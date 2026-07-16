@@ -200,9 +200,7 @@ export const simulationMachine = setup({
       on: { VM_CLOSED: "complete" },
     },
 
-    complete: {
-      type: "final",
-    },
+    complete: {},
   },
 });
 

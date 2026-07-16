@@ -620,6 +620,11 @@ function SimulationPageInner() {
           <Done
             config={cfg}
             path={path ?? ""}
+            onBack={() => {
+              historyRef.current.pop();
+              const prev = historyRef.current[historyRef.current.length - 1];
+              if (prev) jumpToScene(prev);
+            }}
           />
         );
       default:
@@ -966,32 +971,59 @@ function SimulationPageInner() {
         </div>
 
         {/* ── Floating step navigation bar (touch-friendly for smartboards) ── */}
-        {current !== "idle" && current !== "complete" && (
+        {current !== "idle" && (
           <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-4 pb-4 px-4 pointer-events-none">
-            <button
-              onClick={goBack}
-              disabled={!canGoBack}
-              className={`pointer-events-auto rounded-2xl border px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold transition-all shadow-lg ${
-                canGoBack
-                  ? "border-white/20 bg-[#14142a]/95 text-white hover:bg-white/10 active:scale-95 backdrop-blur-xl"
-                  : "border-white/5 bg-[#14142a]/60 text-white/20 cursor-not-allowed"
-              }`}
-            >
-              ← Previous
-            </button>
-            <div className="pointer-events-auto rounded-full bg-[#14142a]/95 border border-white/10 px-4 py-2 text-xs sm:text-sm text-white/50 font-mono backdrop-blur-xl">
-              {SCENE_LABELS[current] ?? current}
-            </div>
-            <button
-              onClick={() => {
-                if (sceneAdvance) sceneAdvance();
-                else advanceScene();
-              }}
-              disabled={current === "complete"}
-              className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
-            >
-              Next →
-            </button>
+            {current === "complete" ? (
+              <>
+                <button
+                  onClick={() => {
+                    historyRef.current.pop();
+                    const prev = historyRef.current[historyRef.current.length - 1];
+                    if (prev) jumpToScene(prev);
+                  }}
+                  disabled={!canGoBack}
+                  className={`pointer-events-auto rounded-2xl border px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold transition-all shadow-lg ${
+                    canGoBack
+                      ? "border-white/20 bg-[#14142a]/95 text-white hover:bg-white/10 active:scale-95 backdrop-blur-xl"
+                      : "border-white/5 bg-[#14142a]/60 text-white/20 cursor-not-allowed"
+                  }`}
+                >
+                  ← Back to previous scene
+                </button>
+                <button
+                  onClick={() => { send({ type: "RESET" }); }}
+                  className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
+                >
+                  🔄 Start Over
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={goBack}
+                  disabled={!canGoBack}
+                  className={`pointer-events-auto rounded-2xl border px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold transition-all shadow-lg ${
+                    canGoBack
+                      ? "border-white/20 bg-[#14142a]/95 text-white hover:bg-white/10 active:scale-95 backdrop-blur-xl"
+                      : "border-white/5 bg-[#14142a]/60 text-white/20 cursor-not-allowed"
+                  }`}
+                >
+                  ← Previous
+                </button>
+                <div className="pointer-events-auto rounded-full bg-[#14142a]/95 border border-white/10 px-4 py-2 text-xs sm:text-sm text-white/50 font-mono backdrop-blur-xl">
+                  {SCENE_LABELS[current] ?? current}
+                </div>
+                <button
+                  onClick={() => {
+                    if (sceneAdvance) sceneAdvance();
+                    else advanceScene();
+                  }}
+                  className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
+                >
+                  Next →
+                </button>
+              </>
+            )}
           </div>
         )}
 

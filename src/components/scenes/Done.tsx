@@ -762,9 +762,11 @@ function StepChecklist({ path }: { path: string }) {
 export default function Done({
   config,
   path,
+  onBack,
 }: {
   config: OSConfig;
   path: string;
+  onBack?: () => void;
 }) {
   const navigate = useNavigate();
   const [showDesktop, setShowDesktop] = useState(false);
@@ -1040,7 +1042,20 @@ export default function Done({
       </motion.div>
 
       {/* ── Start Over ── */}
-      <div className="flex justify-center pb-4">
+      <div className="flex justify-center gap-3 pb-4">
+        {onBack && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.4 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => { playClick(); onBack(); }}
+            className="rounded-xl border border-white/10 bg-white/5 px-6 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors"
+          >
+            ← Back to previous scene
+          </motion.button>
+        )}
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
