@@ -423,6 +423,29 @@ export default function SimulationPage() {
     if (prev) jumpToScene(prev);
   }
 
+  function advanceScene() {
+    const s = String(state.value);
+    const transitions: Record<string, string> = {
+      searching: "SEARCH_DONE",
+      downloading: "DOWNLOAD_DONE",
+      flashing_usb: "FLASH_DONE",
+      usb_reinsert: "USB_INSERTED",
+      disk_prep: "DISK_PREPPED",
+      rebooting: "REBOOT_DONE",
+      boot_menu: "BOOT_SELECTED",
+      partitioning: "PARTITION_DONE",
+      live_welcome: "LIVE_INSTALL",
+      live_desktop: "LIVE_INSTALL",
+      create_vm: "VM_CREATED",
+      mount_iso: "ISO_MOUNTED",
+      vm_boot: "VM_POWERED_ON",
+      installing: "INSTALL_DONE",
+      vm_close: "VM_CLOSED",
+    };
+    const evt = transitions[s];
+    if (evt) send({ type: evt as never });
+  }
+
   const canGoBack = historyRef.current.length >= 2;
 
   const SPEAKER_NOTES: Record<string, string> = {
@@ -908,6 +931,33 @@ export default function SimulationPage() {
         <div className="px-4 sm:px-6 pb-3 sm:pb-4 text-center text-xs sm:text-sm text-white/30">
           Simulation only — no files are downloaded or executed.
         </div>
+
+        {/* ── Floating step navigation bar (touch-friendly for smartboards) ── */}
+        {current !== "idle" && current !== "complete" && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-4 pb-4 px-4 pointer-events-none">
+            <button
+              onClick={goBack}
+              disabled={!canGoBack}
+              className={`pointer-events-auto rounded-2xl border px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold transition-all shadow-lg ${
+                canGoBack
+                  ? "border-white/20 bg-[#14142a]/95 text-white hover:bg-white/10 active:scale-95 backdrop-blur-xl"
+                  : "border-white/5 bg-[#14142a]/60 text-white/20 cursor-not-allowed"
+              }`}
+            >
+              ← Previous
+            </button>
+            <div className="pointer-events-auto rounded-full bg-[#14142a]/95 border border-white/10 px-4 py-2 text-xs sm:text-sm text-white/50 font-mono backdrop-blur-xl">
+              {SCENE_LABELS[current] ?? current}
+            </div>
+            <button
+              onClick={advanceScene}
+              disabled={current === "complete"}
+              className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
+            >
+              Next →
+            </button>
+          </div>
+        )}
 
         {/* Scene context label */}
         <AnimatePresence>
