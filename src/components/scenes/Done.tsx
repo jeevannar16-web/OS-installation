@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick, playUsbConnect, playSuccess } from "../shared/sounds";
 
-type OpenApp = "files" | "editor" | "settings" | "browser" | null;
+type OpenApp = "files" | "editor" | "settings" | "browser" | "terminal" | null;
 
 const REPO_URL = "https://github.com/jeevannar16-web/OS-installation";
 
@@ -783,6 +783,7 @@ export default function Done({
     { id: "browser" as const, icon: "🌐", label: "Browser" },
     { id: "settings" as const, icon: "⚙️", label: "Settings" },
     { id: "editor" as const, icon: "📄", label: "Editor" },
+    { id: "terminal" as const, icon: "💻", label: "Terminal" },
   ];
 
   const hardwareScene = (() => {
@@ -896,7 +897,7 @@ export default function Done({
             }} />
 
             {/* Desktop icons */}
-            <div className="absolute inset-4 sm:inset-6 grid grid-cols-4 gap-3 sm:gap-4 content-start max-w-xs">
+            <div className="absolute inset-4 sm:inset-6 grid grid-cols-5 gap-2 sm:gap-3 content-start max-w-sm">
               {desktopIcons.map((d, i) => (
                 <motion.button
                   key={d.id}
@@ -983,6 +984,22 @@ export default function Done({
                     <div className="text-white/60"># Welcome to {config.branding.name}!</div>
                     <div className="mt-0.5">Installation complete.</div>
                     <div className="mt-0.5 animate-pulse text-accent">▌</div>
+                  </div>
+                  <button onClick={() => setOpenApp(null)} className="w-full border-t border-white/10 py-1 text-[8px] text-white/30 hover:text-white/50">Close</button>
+                </motion.div>
+              )}
+              {openApp === "terminal" && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="absolute left-4 sm:left-6 top-4 sm:top-6 z-30 w-64 sm:w-80 rounded-xl bg-[#1a1a2e] shadow-2xl ring-1 ring-white/10 overflow-hidden"
+                >
+                  <div className="bg-[#252536] px-3 py-1.5 text-[8px] sm:text-[9px] text-white/40">Terminal — {config.branding.shortName}</div>
+                  <div className="p-2 font-mono text-[7px] sm:text-[8px] leading-relaxed">
+                    <div className="text-emerald-400">user@{config.branding.shortName.toLowerCase()}:~$ <span className="text-white/70">neofetch</span></div>
+                    <pre className="text-white/60 mt-1 whitespace-pre">{`${config.branding.name} Linux\n-------------\nOS: ${config.branding.name} 24.04 LTS\nKernel: 6.8.0-41-generic\nUptime: 2 hours, 14 mins\nShell: bash 5.2.21\nDE: GNOME 46\nCPU: Intel i7-12700K (12) @ 3.6GHz\nGPU: NVIDIA RTX 3060\nMemory: 2.1GiB / 16GiB\nDisk: 14G / 256G (6%)`}</pre>
+                    <div className="text-emerald-400 mt-1">user@{config.branding.shortName.toLowerCase()}:~$ <span className="animate-pulse">▌</span></div>
                   </div>
                   <button onClick={() => setOpenApp(null)} className="w-full border-t border-white/10 py-1 text-[8px] text-white/30 hover:text-white/50">Close</button>
                 </motion.div>

@@ -145,6 +145,47 @@ export default function Partition({
         </div>
       </div>
 
+      {/* Partition table preview */}
+      <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+        <div className="bg-white/10 px-4 py-2 text-xs font-bold text-white/70 uppercase tracking-wider">
+          Proposed Partition Layout — /dev/sda
+        </div>
+        <div className="divide-y divide-white/5">
+          {/* EFI */}
+          <div className="grid grid-cols-5 gap-2 px-4 py-2 text-xs">
+            <span className="text-white/50 font-mono">/dev/sda1</span>
+            <span className="text-white/70 font-semibold">EFI System</span>
+            <span className="text-white/40">FAT32</span>
+            <span className="text-white/40">512 MB</span>
+            <span className="text-white/30">/boot/efi</span>
+          </div>
+          {/* Windows */}
+          <div className="grid grid-cols-5 gap-2 px-4 py-2 text-xs">
+            <span className="text-white/50 font-mono">/dev/sda2</span>
+            <span className="text-blue-400 font-semibold">Windows (C:)</span>
+            <span className="text-white/40">NTFS</span>
+            <span className="text-white/40">{existingGB} GB</span>
+            <span className="text-white/30">/mnt/windows</span>
+          </div>
+          {/* Swap */}
+          <div className="grid grid-cols-5 gap-2 px-4 py-2 text-xs">
+            <span className="text-white/50 font-mono">/dev/sda3</span>
+            <span className="text-amber-400 font-semibold">swap</span>
+            <span className="text-white/40">swap</span>
+            <span className="text-white/40">{Math.min(4, Math.floor(newGB * 0.15))} GB</span>
+            <span className="text-white/30">[swap]</span>
+          </div>
+          {/* Root */}
+          <div className="grid grid-cols-5 gap-2 px-4 py-2 text-xs bg-emerald-500/5">
+            <span className="text-white/50 font-mono">/dev/sda4</span>
+            <span className="text-emerald-400 font-semibold">Linux Root</span>
+            <span className="text-white/40">ext4</span>
+            <span className="text-white/40">{newGB - Math.min(4, Math.floor(newGB * 0.15))} GB</span>
+            <span className="text-white/30">/</span>
+          </div>
+        </div>
+      </div>
+
       {/* Confirm */}
       <div className="flex flex-col items-center gap-2">
         {!canConfirm && (
