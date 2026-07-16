@@ -88,8 +88,6 @@ const ACTIVE_APP: Record<string, AppInfo> = {
   complete: { name: "Done", icon: "🎉" },
 };
 
-const FULLSCREEN_SCENES = new Set<string>();
-
 const STATUS_TEXT: Record<string, string> = {
   select_host_os: "Select your host operating system…",
   searching: "Searching for the official download page…",
@@ -300,6 +298,9 @@ function SimulationPageInner() {
   useEffect(() => {
     if (config && path && state.matches("idle")) {
       send({ type: "START", osId: config.id, path: path as never });
+      // Auto-enter presentation mode (fullscreen)
+      setPresentationMode(true);
+      document.documentElement.requestFullscreen?.().catch(() => {});
     }
   }, [config, path]);
 
@@ -440,7 +441,6 @@ function SimulationPageInner() {
   const currentIndex = (SIM_SCENES as readonly string[]).indexOf(current);
   const cfg = config;
   const activeApp = ACTIVE_APP[current] ?? { name: "OS Simulator", icon: "💿" };
-  const isFullscreen = FULLSCREEN_SCENES.has(current);
   const isVm = path === "vm";
 
   const canGoBack = current !== "idle";
@@ -767,7 +767,9 @@ function SimulationPageInner() {
       <div className="vignette-overlay" aria-hidden />
 
       <div className="min-h-full flex flex-col relative z-0">
-        <header className="mx-auto w-full max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem] px-4 sm:px-6 py-3 sm:py-5">
+        <header className={`mx-auto w-full max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem] px-4 sm:px-6 py-3 sm:py-5 ${
+          presentationMode ? "fixed top-0 left-0 right-0 z-50 bg-[#0d0d14]/90 backdrop-blur-md border-b border-white/[0.06]" : ""
+        }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Link to="/" className="text-xs sm:text-sm text-white/60 hover:text-white">
@@ -946,8 +948,8 @@ function SimulationPageInner() {
           </div>
         )}
 
-        {isFullscreen ? (
-          <div className="flex-1" key={current}>
+        {presentationMode ? (
+          <div className="flex-1 w-full pt-16" key={current}>
             <ErrorBoundary label={current}>
               {renderScene()}
             </ErrorBoundary>
