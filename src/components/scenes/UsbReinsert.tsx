@@ -50,7 +50,7 @@ function PcTower({ glowing }: { glowing: boolean }) {
           className="absolute -inset-6 rounded-2xl bg-accent/20 blur-xl pointer-events-none"
         />
       )}
-      <svg viewBox="0 0 120 160" className="w-28 h-36" fill="none">
+      <svg viewBox="0 0 120 160" className="w-28 h-36 sm:w-36 sm:h-44 lg:w-44 lg:h-52 xl:w-52 xl:h-60" fill="none">
         <rect x="10" y="5" width="100" height="150" rx="6" fill="url(#towerBody)" stroke="#444" strokeWidth="1.5" />
         <rect x="16" y="10" width="88" height="140" rx="3" fill="#1a1a1e" />
         <circle cx="60" cy="20" r="4" fill="none" stroke="#555" strokeWidth="1" />
@@ -191,8 +191,8 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
                 whileDrag={{ scale: 1.08, rotate: -8, zIndex: 50, filter: "drop-shadow(0 8px 24px rgba(124,92,255,0.4))" }}
                 className="cursor-grab active:cursor-grabbing select-none"
               >
-                <UsbStickSvg className="w-16 h-28 drop-shadow-lg" />
-                <div className="text-center mt-2 text-xs lg:text-sm text-amber-200/40">drag me →</div>
+                <UsbStickSvg className="w-20 h-32 sm:w-24 sm:h-40 lg:w-28 lg:h-48 xl:w-32 xl:h-56 drop-shadow-lg" />
+                <div className="text-center mt-2 text-xs lg:text-sm xl:text-base text-amber-200/40 font-semibold">drag me →</div>
               </motion.div>
             )}
 

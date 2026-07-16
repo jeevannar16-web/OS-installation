@@ -362,6 +362,19 @@ body {
   .aurora-blob:nth-child(2) { width: 1200px; height: 1200px; }
   .aurora-blob:nth-child(3) { width: 1000px; height: 1000px; }
 }
+/* ── 4XL screens (≥ 3200px) — school smartboard ──────────── */
+@media (min-width: 3200px) {
+  html { font-size: 30px; }
+  .btn { @apply px-12 py-6; min-height: 72px; border-radius: 1.25rem; }
+  .btn-primary { @apply px-12 py-6; min-height: 72px; border-radius: 1.25rem; }
+  .glass { @apply p-12; }
+}
+/* ── Touch devices — bigger targets ────────────────────────── */
+@media (pointer: coarse) {
+  .btn { min-height: 56px; }
+  .btn-primary { min-height: 56px; }
+  [draggable="true"] { min-width: 80px; min-height: 80px; }
+}
 /* ── Reduced motion ────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   [draggable="true"] { transition: none !important; }

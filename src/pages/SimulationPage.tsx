@@ -982,7 +982,7 @@ function SimulationPageInner() {
                     if (prev) jumpToScene(prev);
                   }}
                   disabled={!canGoBack}
-                  className={`pointer-events-auto rounded-2xl border px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold transition-all shadow-lg ${
+                  className={`pointer-events-auto rounded-2xl border px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl font-bold transition-all shadow-lg ${
                     canGoBack
                       ? "border-white/20 bg-[#14142a]/95 text-white hover:bg-white/10 active:scale-95 backdrop-blur-xl"
                       : "border-white/5 bg-[#14142a]/60 text-white/20 cursor-not-allowed"
@@ -992,7 +992,7 @@ function SimulationPageInner() {
                 </button>
                 <button
                   onClick={() => { send({ type: "RESET" }); }}
-                  className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
+                  className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
                 >
                   🔄 Start Over
                 </button>
@@ -1002,7 +1002,7 @@ function SimulationPageInner() {
                 <button
                   onClick={goBack}
                   disabled={!canGoBack}
-                  className={`pointer-events-auto rounded-2xl border px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold transition-all shadow-lg ${
+                  className={`pointer-events-auto rounded-2xl border px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl font-bold transition-all shadow-lg ${
                     canGoBack
                       ? "border-white/20 bg-[#14142a]/95 text-white hover:bg-white/10 active:scale-95 backdrop-blur-xl"
                       : "border-white/5 bg-[#14142a]/60 text-white/20 cursor-not-allowed"
@@ -1010,7 +1010,7 @@ function SimulationPageInner() {
                 >
                   ← Previous
                 </button>
-                <div className="pointer-events-auto rounded-full bg-[#14142a]/95 border border-white/10 px-4 py-2 text-xs sm:text-sm text-white/50 font-mono backdrop-blur-xl">
+                <div className="pointer-events-auto rounded-full bg-[#14142a]/95 border border-white/10 px-4 py-2 lg:px-6 lg:py-3 text-xs sm:text-sm lg:text-base text-white/50 font-mono backdrop-blur-xl">
                   {SCENE_LABELS[current] ?? current}
                 </div>
                 <button
@@ -1018,7 +1018,7 @@ function SimulationPageInner() {
                     if (sceneAdvance) sceneAdvance();
                     else advanceScene();
                   }}
-                  className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
+                  className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
                 >
                   Next →
                 </button>
