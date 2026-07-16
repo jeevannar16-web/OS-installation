@@ -62,48 +62,25 @@ const SLIDES = [
 ];
 
 const TIMEZONE_LIST = [
-  "UTC (London)",
-  "EST (New York)",
-  "CST (Chicago)",
-  "MST (Denver)",
-  "PST (Los Angeles)",
-  "IST (Mumbai)",
-  "JST (Tokyo)",
-  "AEST (Sydney)",
-  "CET (Paris)",
-  "MSK (Moscow)",
+  "UTC (London)", "EST (New York)", "CST (Chicago)", "MST (Denver)",
+  "PST (Los Angeles)", "IST (Mumbai)", "JST (Tokyo)", "AEST (Sydney)",
+  "CET (Paris)", "MSK (Moscow)",
 ];
 
 const LANGUAGES = [
-  "English",
-  "Español",
-  "Français",
-  "Deutsch",
-  "Português (Brasil)",
-  "Italiano",
-  "中文 (简体)",
-  "日本語",
-  "한국어",
-  "Русский",
+  "English", "Español", "Français", "Deutsch", "Português (Brasil)",
+  "Italiano", "中文 (简体)", "日本語", "한국어", "Русский",
 ];
 
 const KEYBOARD_LAYOUTS = [
-  "English (US)",
-  "English (UK)",
-  "English (India)",
-  "Español (Latinoamérica)",
-  "Français",
-  "Deutsch",
-  "Italiano",
-  "Português (Brasil)",
-  "Dvorak",
-  "Colemak",
+  "English (US)", "English (UK)", "English (India)", "Español (Latinoamérica)",
+  "Français", "Deutsch", "Italiano", "Português (Brasil)", "Dvorak", "Colemak",
 ];
 
 function Sidebar({ current }: { current: InstallerStep }) {
   const idx = STEP_ORDER.indexOf(current);
   return (
-    <div className="hidden md:flex w-52 lg:w-60 flex-col border-r border-gray-200 bg-gray-50 p-4 gap-1">
+    <div className="hidden md:flex w-52 lg:w-60 flex-col border-r border-white/10 bg-white/[0.03] p-4 gap-1">
       {STEP_ORDER.map((step, i) => (
         <div
           key={step}
@@ -111,17 +88,13 @@ function Sidebar({ current }: { current: InstallerStep }) {
             step === current
               ? "bg-[#E95420]/10 text-[#E95420] font-semibold"
               : i < idx
-                ? "text-gray-500"
-                : "text-gray-300"
+                ? "text-white/50"
+                : "text-white/30"
           }`}
         >
           <div
             className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-              i < idx
-                ? "bg-[#E95420] text-white"
-                : step === current
-                  ? "bg-[#E95420] text-white"
-                  : "bg-gray-200 text-gray-400"
+              i < idx || step === current ? "bg-[#E95420] text-white" : "bg-white/10 text-white/30"
             }`}
           >
             {i < idx ? "✓" : i + 1}
@@ -134,11 +107,7 @@ function Sidebar({ current }: { current: InstallerStep }) {
 }
 
 function StepNav({
-  onBack,
-  onNext,
-  nextLabel,
-  nextDisabled,
-  showBack,
+  onBack, onNext, nextLabel, nextDisabled, showBack,
 }: {
   onBack: () => void;
   onNext: () => void;
@@ -147,23 +116,21 @@ function StepNav({
   showBack?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-3">
+    <div className="flex items-center justify-between border-t border-white/10 bg-white/[0.03] px-6 py-3">
       {showBack !== false ? (
         <button
           onClick={() => { playClick(); onBack(); }}
-          className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          className="rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-colors"
         >
           ← Back
         </button>
-      ) : (
-        <div />
-      )}
+      ) : <div />}
       <button
         disabled={nextDisabled}
         onClick={() => { playClick(); onNext(); }}
         className={`rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors ${
           nextDisabled
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            ? "bg-white/10 text-white/30 cursor-not-allowed"
             : "bg-[#E95420] text-white hover:bg-[#c7441a]"
         }`}
       >
@@ -200,9 +167,7 @@ export default function Install({
   const currentIdx = STEP_ORDER.indexOf(step);
 
   useEffect(() => {
-    if (phase === "installing") {
-      registerAdvance(() => onComplete());
-    }
+    if (phase === "installing") registerAdvance(() => onComplete());
   }, [phase, registerAdvance, onComplete]);
 
   useEffect(() => {
@@ -271,18 +236,14 @@ export default function Install({
       setPhase("installing");
     } else {
       const nextIdx = currentIdx + 1;
-      if (nextIdx < STEP_ORDER.length) {
-        setStep(STEP_ORDER[nextIdx]);
-      }
+      if (nextIdx < STEP_ORDER.length) setStep(STEP_ORDER[nextIdx]);
     }
   }
 
   function handleBack() {
     playClick();
     const prevIdx = currentIdx - 1;
-    if (prevIdx >= 0) {
-      setStep(STEP_ORDER[prevIdx]);
-    }
+    if (prevIdx >= 0) setStep(STEP_ORDER[prevIdx]);
   }
 
   function setVal(field: string, val: string) {
@@ -293,7 +254,7 @@ export default function Install({
     return (
       <div className="mx-auto w-full max-w-3xl lg:max-w-4xl">
         <SparkleBurst trigger={showSparkle} />
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+        <div className="rounded-2xl border border-white/10 bg-[#12121a] shadow-2xl overflow-hidden">
           <div className="bg-[#E95420] px-6 py-4 text-white font-semibold text-lg">
             Installing Ubuntu…
           </div>
@@ -303,39 +264,28 @@ export default function Install({
                 <div className="text-3xl font-bold text-[#E95420]">U</div>
               </div>
               <div className="flex-1">
-                <h2 className="text-lg font-bold text-gray-800">
-                  {config.installTips[tipIdx]}
-                </h2>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  {SLIDES[slideIdx].title}
-                </p>
+                <h2 className="text-lg font-bold text-white/90">{config.installTips[tipIdx]}</h2>
+                <p className="text-sm text-white/50 mt-0.5">{SLIDES[slideIdx].title}</p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="h-3 w-full overflow-hidden rounded-full bg-gray-100">
+              <div className="h-3 w-full overflow-hidden rounded-full bg-white/10">
                 <motion.div
                   className="h-full rounded-full bg-[#E95420]"
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.15 }}
                 />
               </div>
-              <div className="flex justify-between text-xs text-gray-400">
+              <div className="flex justify-between text-xs text-white/40">
                 <span>{Math.floor(progress)}%</span>
-                <span>
-                  {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} elapsed
-                </span>
+                <span>{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} elapsed</span>
               </div>
             </div>
 
-            <div className="h-24 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-3 font-mono text-xs text-gray-500">
+            <div className="h-24 overflow-hidden rounded-lg border border-white/10 bg-black/30 p-3 font-mono text-xs text-white/50">
               {config.installFiles.slice(0, fileIdx + 1).map((file, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: i === fileIdx ? 1 : 0.4 }}
-                  className="leading-relaxed truncate"
-                >
+                <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: i === fileIdx ? 1 : 0.4 }} className="leading-relaxed truncate">
                   {i === fileIdx && <span className="text-[#E95420] mr-1">▸</span>}
                   {file}
                 </motion.div>
@@ -348,10 +298,10 @@ export default function Install({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="rounded-xl bg-orange-50 border border-orange-100 p-4"
+                className="rounded-xl bg-[#E95420]/5 border border-[#E95420]/10 p-4"
               >
-                <h3 className="font-semibold text-gray-800 text-sm">{SLIDES[slideIdx].title}</h3>
-                <p className="text-xs text-gray-500 mt-1">{SLIDES[slideIdx].body}</p>
+                <h3 className="font-semibold text-white/80 text-sm">{SLIDES[slideIdx].title}</h3>
+                <p className="text-xs text-white/40 mt-1">{SLIDES[slideIdx].body}</p>
               </motion.div>
             </AnimatePresence>
           </div>
@@ -362,9 +312,8 @@ export default function Install({
 
   return (
     <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-lg overflow-hidden flex flex-col md:flex-row min-h-[500px] lg:min-h-[600px]">
+      <div className="rounded-2xl border border-white/10 bg-[#12121a] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[500px] lg:min-h-[600px]">
         <Sidebar current={step} />
-
         <div className="flex-1 flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
@@ -382,13 +331,12 @@ export default function Install({
                       <span className="text-2xl font-bold text-white">U</span>
                     </div>
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-800">Welcome to Ubuntu</h1>
-                      <p className="text-sm text-gray-500">Try or install Ubuntu {config.downloadPage.versions?.[0] ?? "24.04 LTS"}</p>
+                      <h1 className="text-2xl font-bold text-white/90">Welcome to Ubuntu</h1>
+                      <p className="text-sm text-white/50">Try or install Ubuntu {config.downloadPage.versions?.[0] ?? "24.04 LTS"}</p>
                     </div>
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Choose your language</label>
+                    <label className="block text-sm font-medium text-white/70 mb-2">Choose your language</label>
                     <div className="grid grid-cols-2 gap-1 max-h-[280px] overflow-y-auto">
                       {LANGUAGES.map((lang) => (
                         <button
@@ -397,7 +345,7 @@ export default function Install({
                           className={`rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
                             values["language"] === lang
                               ? "bg-[#E95420]/10 text-[#E95420] ring-1 ring-[#E95420]/40 font-medium"
-                              : "text-gray-600 hover:bg-gray-100"
+                              : "text-white/60 hover:bg-white/5"
                           }`}
                         >
                           {lang}
@@ -410,8 +358,8 @@ export default function Install({
 
               {step === "accessibility" && (
                 <div className="space-y-5">
-                  <h2 className="text-xl font-bold text-gray-800">Accessibility</h2>
-                  <p className="text-sm text-gray-500">Make Ubuntu easier to see, hear, and use.</p>
+                  <h2 className="text-xl font-bold text-white/90">Accessibility</h2>
+                  <p className="text-sm text-white/50">Make Ubuntu easier to see, hear, and use.</p>
                   <div className="space-y-3">
                     {[
                       { key: "highContrast", label: "High Contrast", desc: "Increase contrast for easier reading" },
@@ -425,15 +373,15 @@ export default function Install({
                         className={`w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors ${
                           (accessibility as Record<string, unknown>)[opt.key]
                             ? "border-[#E95420]/40 bg-[#E95420]/5"
-                            : "border-gray-200 hover:bg-gray-50"
+                            : "border-white/10 hover:bg-white/5"
                         }`}
                       >
                         <div>
-                          <div className="text-sm font-medium text-gray-800">{opt.label}</div>
-                          <div className="text-xs text-gray-400 mt-0.5">{opt.desc}</div>
+                          <div className="text-sm font-medium text-white/80">{opt.label}</div>
+                          <div className="text-xs text-white/40 mt-0.5">{opt.desc}</div>
                         </div>
                         <div className={`h-5 w-10 rounded-full transition-colors relative ${
-                          (accessibility as Record<string, unknown>)[opt.key] ? "bg-[#E95420]" : "bg-gray-300"
+                          (accessibility as Record<string, unknown>)[opt.key] ? "bg-[#E95420]" : "bg-white/15"
                         }`}>
                           <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
                             (accessibility as Record<string, unknown>)[opt.key] ? "translate-x-5" : "translate-x-0.5"
@@ -447,8 +395,8 @@ export default function Install({
 
               {step === "keyboard" && (
                 <div className="space-y-5">
-                  <h2 className="text-xl font-bold text-gray-800">Keyboard layout</h2>
-                  <p className="text-sm text-gray-500">Choose the layout that matches your keyboard.</p>
+                  <h2 className="text-xl font-bold text-white/90">Keyboard layout</h2>
+                  <p className="text-sm text-white/50">Choose the layout that matches your keyboard.</p>
                   <div className="max-h-[320px] overflow-y-auto space-y-1">
                     {KEYBOARD_LAYOUTS.map((layout) => (
                       <button
@@ -457,7 +405,7 @@ export default function Install({
                         className={`w-full rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
                           values["keyboard"] === layout
                             ? "bg-[#E95420]/10 text-[#E95420] ring-1 ring-[#E95420]/40 font-medium"
-                            : "text-gray-600 hover:bg-gray-100"
+                            : "text-white/60 hover:bg-white/5"
                         }`}
                       >
                         {layout}
@@ -469,8 +417,8 @@ export default function Install({
 
               {step === "network" && (
                 <div className="space-y-5">
-                  <h2 className="text-xl font-bold text-gray-800">Connect to a network</h2>
-                  <p className="text-sm text-gray-500">Get online to download updates during installation.</p>
+                  <h2 className="text-xl font-bold text-white/90">Connect to a network</h2>
+                  <p className="text-sm text-white/50">Get online to download updates during installation.</p>
                   <div className="space-y-1">
                     {[
                       { id: "wifi-home", label: "HomeWiFi", signal: 4 },
@@ -483,18 +431,14 @@ export default function Install({
                         className={`w-full flex items-center gap-3 rounded-lg px-4 py-3 text-left text-sm transition-colors ${
                           values["network"] === iface.id
                             ? "bg-[#E95420]/10 text-[#E95420] ring-1 ring-[#E95420]/40"
-                            : "text-gray-600 hover:bg-gray-100"
+                            : "text-white/60 hover:bg-white/5"
                         }`}
                       >
                         <span className="text-lg">{iface.id.startsWith("wifi") ? "📶" : "🔌"}</span>
                         <span className="flex-1 font-medium">{iface.label}</span>
                         <div className="flex items-end gap-0.5">
                           {[1, 2, 3, 4].map((i) => (
-                            <div
-                              key={i}
-                              className={`w-1 rounded-sm ${i <= iface.signal ? "bg-[#E95420]" : "bg-gray-200"}`}
-                              style={{ height: `${4 + i * 3}px` }}
-                            />
+                            <div key={i} className={`w-1 rounded-sm ${i <= iface.signal ? "bg-[#E95420]" : "bg-white/15"}`} style={{ height: `${4 + i * 3}px` }} />
                           ))}
                         </div>
                       </button>
@@ -502,9 +446,7 @@ export default function Install({
                     <button
                       onClick={() => { playClick(); setVal("network", "skip"); }}
                       className={`w-full rounded-lg px-4 py-3 text-left text-sm transition-colors ${
-                        values["network"] === "skip"
-                          ? "bg-[#E95420]/10 text-[#E95420] ring-1 ring-[#E95420]/40"
-                          : "text-gray-400 hover:bg-gray-100"
+                        values["network"] === "skip" ? "bg-[#E95420]/10 text-[#E95420] ring-1 ring-[#E95420]/40" : "text-white/40 hover:bg-white/5"
                       }`}
                     >
                       Skip for now
@@ -515,32 +457,24 @@ export default function Install({
 
               {step === "installer_update" && (
                 <div className="space-y-5">
-                  <h2 className="text-xl font-bold text-gray-800">Installer update available</h2>
-                  <p className="text-sm text-gray-500">
-                    An update to the installer is available. It is recommended that you update before continuing.
-                  </p>
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <h2 className="text-xl font-bold text-white/90">Installer update available</h2>
+                  <p className="text-sm text-white/50">An update to the installer is available. It is recommended that you update before continuing.</p>
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
                     <div className="flex items-start gap-3">
-                      <span className="text-amber-500 text-lg">⚠</span>
+                      <span className="text-amber-400 text-lg">⚠</span>
                       <div>
-                        <div className="text-sm font-medium text-amber-800">Update recommended</div>
-                        <div className="text-xs text-amber-600 mt-1">
-                          The updated installer includes bug fixes and improved hardware support.
-                        </div>
+                        <div className="text-sm font-medium text-amber-300">Update recommended</div>
+                        <div className="text-xs text-amber-400/70 mt-1">The updated installer includes bug fixes and improved hardware support.</div>
                       </div>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <button
-                      onClick={() => { playClick(); setVal("installerUpdate", "skip"); }}
-                      className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
+                    <button onClick={() => { playClick(); setVal("installerUpdate", "skip"); }}
+                      className="rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/60 hover:bg-white/10 transition-colors">
                       Skip
                     </button>
-                    <button
-                      onClick={() => { playClick(); setVal("installerUpdate", "update"); }}
-                      className="rounded-lg bg-[#E95420] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#c7441a] transition-colors"
-                    >
+                    <button onClick={() => { playClick(); setVal("installerUpdate", "update"); }}
+                      className="rounded-lg bg-[#E95420] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#c7441a] transition-colors">
                       Update now
                     </button>
                   </div>
@@ -549,8 +483,8 @@ export default function Install({
 
               {step === "install_type" && (
                 <div className="space-y-5">
-                  <h2 className="text-xl font-bold text-gray-800">Installation type</h2>
-                  <p className="text-sm text-gray-500">How would you like to install Ubuntu?</p>
+                  <h2 className="text-xl font-bold text-white/90">Installation type</h2>
+                  <p className="text-sm text-white/50">How would you like to install Ubuntu?</p>
                   <div className="space-y-3">
                     {[
                       { id: "interactive", label: "Interactive installation", desc: "Go through the full setup wizard with all options." },
@@ -562,11 +496,11 @@ export default function Install({
                         className={`w-full rounded-xl border px-5 py-4 text-left transition-colors ${
                           installType === opt.id
                             ? "border-[#E95420] bg-[#E95420]/5 ring-1 ring-[#E95420]/30"
-                            : "border-gray-200 hover:bg-gray-50"
+                            : "border-white/10 hover:bg-white/5"
                         }`}
                       >
-                        <div className="text-sm font-semibold text-gray-800">{opt.label}</div>
-                        <div className="text-xs text-gray-400 mt-1">{opt.desc}</div>
+                        <div className="text-sm font-semibold text-white/80">{opt.label}</div>
+                        <div className="text-xs text-white/40 mt-1">{opt.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -575,8 +509,8 @@ export default function Install({
 
               {step === "optimise" && (
                 <div className="space-y-5">
-                  <h2 className="text-xl font-bold text-gray-800">Optimise your computer</h2>
-                  <p className="text-sm text-gray-500">Choose what to install alongside the base system.</p>
+                  <h2 className="text-xl font-bold text-white/90">Optimise your computer</h2>
+                  <p className="text-sm text-white/50">Choose what to install alongside the base system.</p>
                   <div className="space-y-3">
                     {[
                       { key: "thirdParty", label: "Install third-party software for graphics and Wi-Fi hardware", desc: "Proprietary drivers for NVIDIA, Broadcom, etc." },
@@ -588,17 +522,15 @@ export default function Install({
                         className={`w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors ${
                           optimise[opt.key as keyof typeof optimise]
                             ? "border-[#E95420]/40 bg-[#E95420]/5"
-                            : "border-gray-200 hover:bg-gray-50"
+                            : "border-white/10 hover:bg-white/5"
                         }`}
                       >
                         <div className="flex-1 pr-4">
-                          <div className="text-sm font-medium text-gray-800">{opt.label}</div>
-                          <div className="text-xs text-gray-400 mt-0.5">{opt.desc}</div>
+                          <div className="text-sm font-medium text-white/80">{opt.label}</div>
+                          <div className="text-xs text-white/40 mt-0.5">{opt.desc}</div>
                         </div>
                         <div className={`h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
-                          optimise[opt.key as keyof typeof optimise]
-                            ? "border-[#E95420] bg-[#E95420]"
-                            : "border-gray-300"
+                          optimise[opt.key as keyof typeof optimise] ? "border-[#E95420] bg-[#E95420]" : "border-white/20"
                         }`}>
                           {optimise[opt.key as keyof typeof optimise] && (
                             <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -614,8 +546,8 @@ export default function Install({
 
               {step === "disk" && (
                 <div className="space-y-5">
-                  <h2 className="text-xl font-bold text-gray-800">Type of installation</h2>
-                  <p className="text-sm text-gray-500">Select how Ubuntu should be installed on this disk.</p>
+                  <h2 className="text-xl font-bold text-white/90">Type of installation</h2>
+                  <p className="text-sm text-white/50">Select how Ubuntu should be installed on this disk.</p>
                   <div className="space-y-3">
                     {[
                       { id: "erase", label: "Erase disk and install Ubuntu", desc: "Deletes all data on the disk and installs a fresh copy of Ubuntu. Best for VMs or dedicated installs." },
@@ -626,27 +558,27 @@ export default function Install({
                         key={opt.id}
                         onClick={() => { playClick(); setVal("disk", opt.id); setInstallType(opt.id); }}
                         className={`w-full rounded-xl border px-5 py-4 text-left transition-colors ${
-                          valOrDisk(opt.id, values)
+                          values["disk"] === opt.id
                             ? "border-[#E95420] bg-[#E95420]/5 ring-1 ring-[#E95420]/30"
-                            : "border-gray-200 hover:bg-gray-50"
+                            : "border-white/10 hover:bg-white/5"
                         }`}
                       >
-                        <div className="text-sm font-semibold text-gray-800">{opt.label}</div>
-                        <div className="text-xs text-gray-400 mt-1">{opt.desc}</div>
+                        <div className="text-sm font-semibold text-white/80">{opt.label}</div>
+                        <div className="text-xs text-white/40 mt-1">{opt.desc}</div>
                       </button>
                     ))}
                   </div>
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                    <div className="text-xs font-medium text-gray-600 mb-1">Detected disks</div>
-                    <div className="text-xs text-gray-400">/dev/sda — 500 GB WDC WD5000</div>
+                  <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                    <div className="text-xs font-medium text-white/50 mb-1">Detected disks</div>
+                    <div className="text-xs text-white/40">/dev/sda — 500 GB WDC WD5000</div>
                   </div>
                 </div>
               )}
 
               {step === "account" && (
                 <div className="space-y-5">
-                  <h2 className="text-xl font-bold text-gray-800">Who are you?</h2>
-                  <p className="text-sm text-gray-500">Tell us a bit about yourself to set up your account.</p>
+                  <h2 className="text-xl font-bold text-white/90">Who are you?</h2>
+                  <p className="text-sm text-white/50">Tell us a bit about yourself to set up your account.</p>
                   <div className="space-y-4">
                     {[
                       { key: "name", label: "Your name", placeholder: "Ada Lovelace" },
@@ -655,18 +587,18 @@ export default function Install({
                       { key: "password", label: "Choose a password", placeholder: "••••••••", secret: true },
                     ].map((field) => (
                       <div key={field.key}>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">{field.label}</label>
+                        <label className="block text-xs font-medium text-white/50 mb-1">{field.label}</label>
                         <input
                           type={field.secret ? "password" : "text"}
                           value={values[field.key] ?? ""}
                           onChange={(e) => { setVal(field.key, e.target.value); playKeyClick(); }}
                           placeholder={field.placeholder}
-                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none focus:border-[#E95420] focus:ring-1 focus:ring-[#E95420]/30 transition-colors placeholder:text-gray-300"
+                          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/90 outline-none focus:border-[#E95420] focus:ring-1 focus:ring-[#E95420]/30 transition-colors placeholder:text-white/20"
                         />
                       </div>
                     ))}
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <div className="flex items-center gap-2 text-xs text-white/40">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                     Log in automatically
                   </div>
@@ -675,8 +607,8 @@ export default function Install({
 
               {step === "timezone" && (
                 <div className="space-y-5">
-                  <h2 className="text-xl font-bold text-gray-800">Select your timezone</h2>
-                  <p className="text-sm text-gray-500">Choose your region to set the correct time.</p>
+                  <h2 className="text-xl font-bold text-white/90">Select your timezone</h2>
+                  <p className="text-sm text-white/50">Choose your region to set the correct time.</p>
                   <div className="max-h-[300px] overflow-y-auto space-y-1">
                     {TIMEZONE_LIST.map((tz) => (
                       <button
@@ -685,7 +617,7 @@ export default function Install({
                         className={`w-full rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
                           values["timezone"] === tz
                             ? "bg-[#E95420]/10 text-[#E95420] ring-1 ring-[#E95420]/40 font-medium"
-                            : "text-gray-600 hover:bg-gray-100"
+                            : "text-white/60 hover:bg-white/5"
                         }`}
                       >
                         <span className="mr-2">🌍</span>
@@ -698,25 +630,31 @@ export default function Install({
 
               {step === "ready" && (
                 <div className="space-y-5">
-                  <h2 className="text-xl font-bold text-gray-800">Ready to install</h2>
-                  <p className="text-sm text-gray-500">Review your choices before installation begins.</p>
-                  <div className="rounded-xl border border-gray-200 divide-y divide-gray-100">
-                    <SummaryRow label="Language" value={values["language"] ?? "English"} />
-                    <SummaryRow label="Keyboard" value={values["keyboard"] ?? "English (US)"} />
-                    <SummaryRow label="Network" value={values["network"] === "skip" ? "Skipped" : values["network"] ?? "HomeWiFi"} />
-                    <SummaryRow label="Installation type" value={installType === "erase" ? "Erase disk" : installType === "alongside" ? "Dual boot" : installType === "manual" ? "Manual" : "Interactive"} />
-                    <SummaryRow label="Third-party software" value={optimise.thirdParty ? "Yes" : "No"} />
-                    <SummaryRow label="Additional codecs" value={optimise.codecs ? "Yes" : "No"} />
-                    <SummaryRow label="Name" value={values["name"] ?? "User"} />
-                    <SummaryRow label="Computer name" value={values["computer_name"] ?? "ubuntu"} />
-                    <SummaryRow label="Username" value={values["username"] ?? "user"} />
-                    <SummaryRow label="Timezone" value={values["timezone"] ?? "UTC (London)"} />
+                  <h2 className="text-xl font-bold text-white/90">Ready to install</h2>
+                  <p className="text-sm text-white/50">Review your choices before installation begins.</p>
+                  <div className="rounded-xl border border-white/10 divide-y divide-white/5">
+                    {[
+                      ["Language", values["language"] ?? "English"],
+                      ["Keyboard", values["keyboard"] ?? "English (US)"],
+                      ["Network", values["network"] === "skip" ? "Skipped" : values["network"] ?? "HomeWiFi"],
+                      ["Installation type", installType === "erase" ? "Erase disk" : installType === "alongside" ? "Dual boot" : installType === "manual" ? "Manual" : "Interactive"],
+                      ["Third-party software", optimise.thirdParty ? "Yes" : "No"],
+                      ["Additional codecs", optimise.codecs ? "Yes" : "No"],
+                      ["Name", values["name"] ?? "User"],
+                      ["Computer name", values["computer_name"] ?? "ubuntu"],
+                      ["Username", values["username"] ?? "user"],
+                      ["Timezone", values["timezone"] ?? "UTC (London)"],
+                    ].map(([label, value]) => (
+                      <div key={label} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                        <span className="text-white/50">{label}</span>
+                        <span className="font-medium text-white/80">{value}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
             </motion.div>
           </AnimatePresence>
-
           <StepNav
             onBack={handleBack}
             onNext={handleNext}
@@ -726,19 +664,6 @@ export default function Install({
           />
         </div>
       </div>
-    </div>
-  );
-}
-
-function valOrDisk(id: string, values: Record<string, string>): boolean {
-  return values["disk"] === id;
-}
-
-function SummaryRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between px-4 py-2.5 text-sm">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-gray-800">{value}</span>
     </div>
   );
 }
