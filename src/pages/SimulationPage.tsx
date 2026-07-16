@@ -235,6 +235,18 @@ function SimulationPageInner() {
         e.preventDefault();
         goBack();
       }
+      if (e.key === "n" || e.key === "N") {
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+        setShowNavigator((v) => !v);
+        setShowNotes(false);
+      }
+      if (e.key === "b" || e.key === "B") {
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+        setShowNotes((v) => !v);
+        setShowNavigator(false);
+      }
       if (e.key === "Enter") {
         const active = document.activeElement;
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "BUTTON")) return;
