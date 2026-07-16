@@ -79,7 +79,7 @@ export default function BootMenu({
       </div>
 
       {/* Boot entries */}
-      <div className="w-full max-w-xl lg:max-w-2xl space-y-1 px-4">
+      <div className="w-full max-w-xl lg:max-w-2xl space-y-2 px-4">
         {ENTRIES.map((entry, i) => (
           <button
             key={entry.id}

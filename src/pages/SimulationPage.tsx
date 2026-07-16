@@ -128,6 +128,7 @@ export default function SimulationPage() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [muted, setMuted] = useState(() => isMuted());
   const [presentationMode, setPresentationMode] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [sceneLabelKey, setSceneLabelKey] = useState(0);
   const [sceneLabelVisible, setSceneLabelVisible] = useState(false);
   const autoAdvanceRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -244,9 +245,9 @@ export default function SimulationPage() {
     return () => clearTimeout(t);
   }, [current]);
 
-  // Presentation mode: auto-advance every 8 seconds
+  // Presentation mode: auto-advance every 15 seconds (with pause support)
   useEffect(() => {
-    if (presentationMode && current !== "idle" && current !== "complete") {
+    if (presentationMode && !paused && current !== "idle" && current !== "complete") {
       autoAdvanceRef.current = setInterval(() => {
         const s = String(state.value);
         if (s === "searching") send({ type: "SEARCH_DONE" });
@@ -261,20 +262,27 @@ export default function SimulationPage() {
         else if (s === "mount_iso") send({ type: "ISO_MOUNTED" });
         else if (s === "vm_boot") send({ type: "VM_POWERED_ON" });
         else if (s === "vm_close") send({ type: "VM_CLOSED" });
-      }, 8000);
+      }, 15000);
     }
     return () => {
       if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
     };
-  }, [presentationMode, state.value, send, current]);
+  }, [presentationMode, paused, state.value, send, current]);
 
-  // Exit presentation mode on Escape
+  // Exit presentation mode on Escape; Space to pause/resume
   useEffect(() => {
     if (!presentationMode) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         setPresentationMode(false);
+        setPaused(false);
         if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      }
+      if (e.key === " " || e.code === "Space") {
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+        e.preventDefault();
+        setPaused((p) => !p);
       }
     }
     window.addEventListener("keydown", onKey);
@@ -499,8 +507,12 @@ export default function SimulationPage() {
                   <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">M</kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/50">Close overlay</span>
+                  <span className="text-white/50">Close overlay / Exit presentation</span>
                   <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">Esc</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">Pause / Resume auto-advance</span>
+                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">Space</kbd>
                 </div>
               </div>
               <p className="mt-4 text-xs text-white/30 text-center">
@@ -644,6 +656,12 @@ export default function SimulationPage() {
           </div>
 
           <div className="mt-1.5 sm:mt-2 min-h-[1rem] sm:min-h-[1.25rem] text-xs sm:text-sm text-white/40" key={`status-${current}`}>
+            {presentationMode && paused && (
+              <span className="inline-flex items-center gap-1.5 text-amber-400 font-semibold mr-3">
+                <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                PAUSED
+              </span>
+            )}
             {STATUS_TEXT[current] ?? ""}
           </div>
         </header>

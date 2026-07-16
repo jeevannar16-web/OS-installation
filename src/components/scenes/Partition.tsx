@@ -69,7 +69,7 @@ export default function Partition({
               playClick();
               onRebootWindows();
             }}
-            className="rounded-lg bg-red-600 hover:bg-red-700 px-6 py-2.5 text-xs font-bold text-white transition-colors"
+            className="rounded-lg bg-red-600 hover:bg-red-700 px-6 py-3 text-xs font-bold text-white transition-colors min-h-[48px]"
           >
             🔌 Reboot into Windows (Reset Simulator)
           </button>
