@@ -28,6 +28,8 @@ export type SimEvent =
   | { type: "ISO_MOUNTED" }
   | { type: "VM_POWERED_ON" }
   | { type: "INSTALL_DONE" }
+  | { type: "GRUB_DONE" }
+  | { type: "FIRST_BOOT_DONE" }
   | { type: "VM_CLOSED" }
   | { type: "DISK_PREPPED" }
   | { type: "SET_SPEED"; speed: "normal" | "fast" }
@@ -181,9 +183,17 @@ export const simulationMachine = setup({
       on: {
         INSTALL_DONE: [
           { guard: "isVm", target: "vm_close" },
-          { target: "complete" },
+          { target: "grub_menu" },
         ],
       },
+    },
+
+    grub_menu: {
+      on: { GRUB_DONE: "first_boot" },
+    },
+
+    first_boot: {
+      on: { FIRST_BOOT_DONE: "complete" },
     },
 
     vm_close: {
@@ -214,6 +224,8 @@ export const SIM_SCENES = [
   "mount_iso",
   "vm_boot",
   "installing",
+  "grub_menu",
+  "first_boot",
   "vm_close",
   "complete",
 ] as const;

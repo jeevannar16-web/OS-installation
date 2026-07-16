@@ -32,6 +32,17 @@ export const arch: OSConfig = {
     "Setting up the terminal…",
     "You'll use the terminal for everything.",
   ],
+  installFiles: [
+    "mounting /dev/sda1 on /mnt…",
+    "pacstrap /mnt base linux linux-firmware…",
+    "Generating /etc/fstab…",
+    "arch-chroot /mnt…",
+    "Setting timezone…",
+    "Configuring locale-gen…",
+    "Setting hostname…",
+    "Installing grub…",
+    "grub-install --target=x86_64-efi…",
+  ],
   searchKeywords: ["arch linux", "download arch", "arch iso", "archlinux", "arch linux download"],
   completion: {
     headline: "You just installed Arch Linux — the hard way! 🏹",

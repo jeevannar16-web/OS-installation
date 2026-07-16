@@ -301,12 +301,14 @@ export default function Install({
   const [progress, setProgress] = useState(0);
   const [tipIdx, setTipIdx] = useState(0);
   const [showSparkle, setShowSparkle] = useState(false);
+  const [fileIdx, setFileIdx] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
 
   const steps = config.wizard;
   const currentStep = steps[stepIdx];
   const isLastStep = stepIdx === steps.length - 1;
 
-  const installDuration = speed === "fast" ? 2000 : 8000;
+  const installDuration = speed === "fast" ? 2000 : 12000;
 
   useEffect(() => {
     if (phase === "installing") {
@@ -332,11 +334,20 @@ export default function Install({
   useEffect(() => {
     if (phase !== "installing") return;
     setProgress(0);
+    setFileIdx(0);
+    setElapsed(0);
     const start = performance.now();
     let raf = 0;
+    const files = config.installFiles;
     const tick = (now: number) => {
       const pct = Math.min(100, ((now - start) / installDuration) * 100);
       setProgress(pct);
+      setElapsed(Math.floor((now - start) / 1000));
+      const newFileIdx = Math.min(
+        files.length - 1,
+        Math.floor((pct / 100) * files.length)
+      );
+      setFileIdx(newFileIdx);
       if (pct < 100) raf = requestAnimationFrame(tick);
       else {
         setShowSparkle(true);
@@ -346,7 +357,7 @@ export default function Install({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [phase, installDuration, onComplete]);
+  }, [phase, installDuration, onComplete, config.installFiles]);
 
   // Rotate tips
   useEffect(() => {
@@ -487,16 +498,18 @@ export default function Install({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="rounded-2xl border border-white/10 p-8 text-center shadow-2xl backdrop-blur-xl"
+            className="rounded-2xl border border-white/10 p-8 shadow-2xl backdrop-blur-xl"
             style={surfaceStyle}
           >
-            <div className="text-4xl lg:text-5xl xl:text-6xl mb-4">{config.branding.logo}</div>
-            <h2 className="text-lg lg:text-xl xl:text-2xl font-bold text-white/90">
-              Installing {config.branding.name}…
-            </h2>
+            <div className="text-center mb-6">
+              <div className="text-4xl lg:text-5xl xl:text-6xl mb-4">{config.branding.logo}</div>
+              <h2 className="text-lg lg:text-xl xl:text-2xl font-bold text-white/90">
+                Installing {config.branding.name}…
+              </h2>
+            </div>
 
             {/* Progress bar */}
-            <div className="mt-6 mx-auto max-w-md lg:max-w-lg space-y-2">
+            <div className="mx-auto max-w-md lg:max-w-lg space-y-2">
               <div className="h-3 lg:h-4 w-full overflow-hidden rounded-full bg-white/10">
                 <motion.div
                   className="h-full rounded-full"
@@ -505,11 +518,33 @@ export default function Install({
                   transition={{ duration: 0.15 }}
                 />
               </div>
-              <div className="text-xs text-white/40">{Math.floor(progress)}%</div>
+              <div className="flex justify-between text-xs text-white/40">
+                <span>{Math.floor(progress)}%</span>
+                <span>
+                  {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} elapsed
+                </span>
+              </div>
+            </div>
+
+            {/* File-copy names */}
+            <div className="mt-4 mx-auto max-w-md lg:max-w-lg h-20 overflow-hidden rounded-lg border border-white/5 bg-black/30 p-3 font-mono text-xs text-white/50">
+              {config.installFiles.slice(0, fileIdx + 1).map((file, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: i === fileIdx ? 1 : 0.4 }}
+                  className="leading-relaxed truncate"
+                >
+                  {i === fileIdx && (
+                    <span className="text-white/70 mr-1">▸</span>
+                  )}
+                  {file}
+                </motion.div>
+              ))}
             </div>
 
             {/* Rotating tips */}
-            <div className="mt-6 min-h-[2em]">
+            <div className="mt-4 min-h-[2em] text-center">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={tipIdx}

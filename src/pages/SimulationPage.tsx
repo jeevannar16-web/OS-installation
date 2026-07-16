@@ -25,6 +25,8 @@ import MountISO from "../components/scenes/MountISO";
 import VmBoot from "../components/scenes/VmBoot";
 import VmClose from "../components/scenes/VmClose";
 import Done from "../components/scenes/Done";
+import GrubMenu from "../components/scenes/GrubMenu";
+import FirstBoot from "../components/scenes/FirstBoot";
 import SelectHostOS from "../components/scenes/SelectHostOS";
 import DiskManagement from "../components/scenes/DiskManagement";
 import { toggleMute, isMuted } from "../components/shared/sounds";
@@ -249,6 +251,8 @@ function SimulationPageInner() {
         else if (s === "create_vm") send({ type: "VM_CREATED" });
         else if (s === "mount_iso") send({ type: "ISO_MOUNTED" });
         else if (s === "vm_boot") send({ type: "VM_POWERED_ON" });
+        else if (s === "grub_menu") send({ type: "GRUB_DONE" });
+        else if (s === "first_boot") send({ type: "FIRST_BOOT_DONE" });
         else if (s === "vm_close") send({ type: "VM_CLOSED" });
       }
     }
@@ -290,6 +294,8 @@ function SimulationPageInner() {
         else if (s === "create_vm") send({ type: "VM_CREATED" });
         else if (s === "mount_iso") send({ type: "ISO_MOUNTED" });
         else if (s === "vm_boot") send({ type: "VM_POWERED_ON" });
+        else if (s === "grub_menu") send({ type: "GRUB_DONE" });
+        else if (s === "first_boot") send({ type: "FIRST_BOOT_DONE" });
         else if (s === "vm_close") send({ type: "VM_CLOSED" });
       }, 15000);
     }
@@ -450,6 +456,8 @@ function SimulationPageInner() {
       mount_iso: "ISO_MOUNTED",
       vm_boot: "VM_POWERED_ON",
       installing: "INSTALL_DONE",
+      grub_menu: "GRUB_DONE",
+      first_boot: "FIRST_BOOT_DONE",
       vm_close: "VM_CLOSED",
     };
     const evt = transitions[s];
@@ -473,6 +481,8 @@ function SimulationPageInner() {
     vm_boot: "Power on the VM. It boots from the attached ISO, just like a real machine booting from USB. You'll see the same installer screens.",
     installing: "The installer copies files, sets up your user account, configures the bootloader. This is the part that takes 10-30 minutes on real hardware. We're speeding through it.",
     vm_close: "After installation, shut down the VM. In VirtualBox, you'd remove the ISO from the virtual drive and reboot — but here we're just closing the window.",
+    grub_menu: "This is the GRUB bootloader menu. On a dual-boot machine, you choose between Ubuntu and Windows every time you start the PC. Explain that GRUB is installed to the EFI partition and controls which OS boots.",
+    first_boot: "The first-boot wizard guides you through online accounts, privacy settings, and initial configuration. This only happens once — after that, you go straight to the desktop.",
   };
 
   function renderScene() {
@@ -587,6 +597,19 @@ function SimulationPageInner() {
         }
         return (
           <Install config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} />
+        );
+      case "grub_menu":
+        return (
+          <GrubMenu onComplete={() => send({ type: "GRUB_DONE" })} />
+        );
+      case "first_boot":
+        return (
+          <FirstBoot
+            osName={cfg.branding.name}
+            osLogo={cfg.branding.logo}
+            accent={cfg.branding.accent}
+            onComplete={() => send({ type: "FIRST_BOOT_DONE" })}
+          />
         );
       case "vm_close":
         return (
