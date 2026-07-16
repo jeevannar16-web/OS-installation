@@ -6,6 +6,7 @@ import type { InstallPath } from "../data/types";
 import Footer from "../components/Footer";
 import MiniDemo from "../components/MiniDemo";
 import BootSequence from "../components/BootSequence";
+import { useProjector } from "../components/shared/ProjectorMode";
 
 const TYPING_TEXTS = [
   "before you actually do it",
@@ -263,6 +264,7 @@ const FLOAT_ICONS = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { toggle: toggleProjector, on: projectorOn } = useProjector();
   const [path, setPath] = useState<InstallPath | null>(null);
   const [os, setOs] = useState<string | null>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -390,9 +392,22 @@ export default function LandingPage() {
             <span className="text-xl">💿</span>
             <span className="text-white/90">OS Install Simulator</span>
           </div>
-          <span className="text-[10px] uppercase tracking-[0.15em] text-white/30 font-medium">
-            Practice · Don't risk
-          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleProjector}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                projectorOn
+                  ? "border-amber-500/50 bg-amber-500/20 text-amber-300"
+                  : "border-white/10 text-white/30 hover:text-white/60"
+              }`}
+              title="Projector mode — high contrast for smartboards"
+            >
+              📽️ projector
+            </button>
+            <span className="text-[10px] uppercase tracking-[0.15em] text-white/30 font-medium">
+              Practice · Don't risk
+            </span>
+          </div>
         </header>
 
         {/* ── Hero Section ── */}

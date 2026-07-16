@@ -17,6 +17,22 @@ No real emulator. No risk to your hardware. Just confidence.
 [![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite_5-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
 [![XState](https://img.shields.io/badge/XState_5-222222?style=for-the-badge&logo=xstate&logoColor=white)](https://stately.ai/docs/xstate)
+[![Tailwind](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Deploy](https://img.shields.io/badge/Live-Demo-00C853?style=for-the-badge&logo=vercel&logoColor=white)](https://os-installation.vercel.app)
+
+</div>
+
+---
+
+## Demo
+
+<div align="center">
+
+<!-- Replace the placeholder below with an actual screen recording GIF -->
+<!-- Record with: https://github.com/nicedoc/screenity or https://www.loom.com -->
+<img src="https://raw.githubusercontent.com/jeevannar16-web/OS-installation/main/public/demo-placeholder.png" alt="OS Install Simulator Demo" width="720" />
+
+*Replace this with a screen recording GIF showing the full dual-boot flow*
 
 </div>
 
@@ -42,11 +58,15 @@ Think of it like [learngitbranching](https://learngitbranching.js.org/) — but 
 | **Multi-OS support** | Ubuntu, Windows 11, Arch Linux fully built. Debian & Fedora stubbed on the same data-driven engine. |
 | **VM path** | Create VirtualBox VM, attach ISO, boot from BIOS — entirely separate from physical hardware scenes. |
 | **XState v5 machines** | Every simulation is modeled with a real finite state machine for predictable, consistent behavior. |
-| **Sound effects** | Web Audio API — USB connect, click, success chimes. |
-| **Keyboard shortcuts** | `?` overlay, `Enter` to advance, `S` for speed toggle. |
+| **Sound effects** | Web Audio API — USB connect, POST beep, key click, success chimes. Toggle with 🔊/🔇 button or `M` key. |
+| **Presentation mode** | Fullscreen + auto-advance timer. Press the 🎬 button to present to a class. |
+| **Projector mode** | One-click high-contrast dark theme for smartboards and projectors. Press `P` to toggle. |
+| **Scene labels** | Context tooltip appears at the start of each scene explaining what to do. |
+| **Keyboard shortcuts** | `?` overlay, `Enter` to advance, `S` speed toggle, `M` mute, `P` projector mode. |
 | **LocalStorage resume** | Progress is saved and can be resumed on reload. |
 | **Speed run mode** | Fast-forward all animations with a single toggle. |
 | **Premium UI** | Aurora background, constellation network layer, glassmorphism, animated gradient text, parallax tilt hero. |
+| **Responsive** | Scales from phones to 85" school whiteboard touchscreens with dynamic font sizing. |
 | **100% client-side** | Static-hostable on Vercel, Netlify, or GitHub Pages. Zero backend. |
 
 ---
@@ -88,6 +108,31 @@ Each install path is a completely separate flow through the XState state machine
 │  → Install → Done                                      │
 └────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|---|---|
+| `?` | Show keyboard shortcuts overlay |
+| `Enter` | Advance / skip current scene |
+| `S` | Toggle speed-run mode |
+| `M` | Mute / unmute sounds |
+| `P` | Toggle projector mode (high contrast for smartboards) |
+| `Esc` | Close overlays / exit presentation mode |
+
+---
+
+## Projector / Smartboard Mode
+
+Presenting on a school whiteboard or projector? Press **`P`** or click the **📽️** button to enable **Projector Mode**:
+
+- Solid dark backgrounds (no glass transparency that washes out)
+- High-contrast text visible from across the room
+- Decorative effects hidden (aurora, constellation, noise)
+- Oversized touch targets for interactive whiteboards
+- Persists across page loads via localStorage
 
 ---
 
@@ -144,13 +189,14 @@ src/
 │   │   ├── Toast.tsx
 │   │   ├── FilePickerModal.tsx
 │   │   ├── InteractiveEffects.tsx  # SparkleBurst, Tooltip, PulseHint
-│   │   ├── sounds.ts              # Web Audio API
+│   │   ├── sounds.ts              # Web Audio API + global mute
+│   │   ├── ProjectorMode.tsx      # Projector/smartboard high-contrast toggle
 │   │   └── Showcase.tsx           # First-visit walkthrough
 │   ├── shell/
 │   │   └── DesktopShell.tsx   # OS window frame
 │   ├── BootSequence.tsx       # Overlay boot animation
 │   ├── MiniDemo.tsx           # Hero preview widget
-│   └── Footer.tsx             # GitHub CTA + star count
+│   └── Footer.tsx             # GitHub link
 ├── data/
 │   ├── types.ts               # Shared OSConfig types
 │   ├── ubuntu.ts              # Ubuntu config
@@ -161,9 +207,9 @@ src/
 ├── machines/
 │   └── simulationMachine.ts   # XState state machine
 ├── pages/
-│   ├── LandingPage.tsx        # Home — path + OS selection
-│   └── SimulationPage.tsx     # Scene router + progress bar
-└── index.css                  # Aurora, constellation, vignette
+│   ├── LandingPage.tsx        # Home — path + OS selection + typing animation
+│   └── SimulationPage.tsx     # Scene router + progress bar + presentation mode
+└── index.css                  # Aurora, constellation, projector mode CSS
 ```
 
 ---

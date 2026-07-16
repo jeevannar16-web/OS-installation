@@ -373,3 +373,59 @@ body {
   .aurora-blob { animation: none !important; opacity: 0.5 !important; }
   .float-icon { animation: none !important; opacity: 0.12 !important; }
 }
+
+/* ── Projector Mode — high contrast for smartboard/projector ── */
+body.projector .aurora-bg,
+body.projector .dot-grid,
+body.projector .noise-overlay,
+body.projector .constellation-layer,
+body.projector .vignette-overlay {
+  display: none !important;
+}
+body.projector {
+  background: #0a0a14 !important;
+}
+body.projector .glass {
+  background: #14142a !important;
+  backdrop-filter: none !important;
+  border: 1.5px solid rgba(255,255,255,0.12) !important;
+}
+body.projector .text-white\/25,
+body.projector .text-white\/30,
+body.projector .text-white\/35,
+body.projector .text-white\/40,
+body.projector .text-white\/45,
+body.projector .text-white\/50,
+body.projector .text-white\/55 {
+  color: rgba(255,255,255,0.75) !important;
+}
+body.projector .text-white\/60,
+body.projector .text-white\/70 {
+  color: rgba(255,255,255,0.9) !important;
+}
+body.projector .btn {
+  min-height: 56px !important;
+  font-size: 1.05em !important;
+  border: 1.5px solid rgba(255,255,255,0.15) !important;
+}
+body.projector .btn-primary {
+  min-height: 56px !important;
+  font-size: 1.05em !important;
+}
+body.projector .ribbon {
+  background: rgba(255,255,255,0.15) !important;
+  color: rgba(255,255,255,0.7) !important;
+}
+body.projector .section-label {
+  color: rgba(255,255,255,0.6) !important;
+}
+body.projector .gradient-text-animated {
+  -webkit-text-fill-color: transparent;
+  filter: brightness(1.4) saturate(1.2);
+}
+body.projector .float-icon {
+  display: none !important;
+}
+body.projector .sheen-sweep::after {
+  display: none !important;
+}
