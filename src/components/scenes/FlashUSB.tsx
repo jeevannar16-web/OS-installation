@@ -101,6 +101,7 @@ function RufusTool({
   return (
     <div className="rounded-xl bg-[#f0f0f0] ring-1 ring-black/10 overflow-hidden">
       <div className="flex items-center gap-2 bg-[#4a8c5c] px-3 lg:px-4 py-2 lg:py-3 text-xs lg:text-sm text-white">
+        <img src="/images/rufus-real.jpg" alt="Rufus" className="h-5 lg:h-6 w-auto rounded-sm opacity-80" />
         <span className="font-bold text-sm lg:text-base">Rufus</span>
         <span className="text-white/70">v4.5.2180</span>
       </div>
