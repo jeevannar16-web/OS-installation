@@ -387,8 +387,7 @@ export default function LandingPage() {
       <div className="relative z-0">
         {/* Header */}
         <header className="mx-auto w-full max-w-6xl px-6 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3 font-semibold">
-            <img src="/logo.svg" alt="OS Install Simulator" className="w-9 h-9 drop-shadow-[0_0_12px_rgba(124,92,255,0.4)]" />
+          <div className="flex items-center gap-2.5 font-semibold">
             <span className="text-white/90 tracking-tight text-lg">OS Install Simulator</span>
           </div>
           <div className="flex items-center gap-3">
