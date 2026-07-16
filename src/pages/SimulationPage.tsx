@@ -28,7 +28,8 @@ import Done from "../components/scenes/Done";
 import SelectHostOS from "../components/scenes/SelectHostOS";
 import DiskManagement from "../components/scenes/DiskManagement";
 import { toggleMute, isMuted } from "../components/shared/sounds";
-import { useProjector } from "../components/shared/ProjectorMode";
+import ThemePicker from "../components/shared/ThemePicker";
+import { useTheme } from "../components/shared/ThemeProvider";
 
 const SCENE_LABELS: Record<string, string> = {
   idle: "Start",
@@ -118,7 +119,7 @@ const SCENE_CONTEXT: Record<string, string> = {
 export default function SimulationPage() {
   const { os, path } = useParams();
   const config = getOS(os);
-  const { toggle: toggleProjector, on: projectorOn } = useProjector();
+  const { cycleTheme } = useTheme();
 
   const [state, send] = useMachine(simulationMachine);
   const [showcase, setShowcase] = useState(() => {
@@ -197,10 +198,10 @@ export default function SimulationPage() {
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
         send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" });
       }
-      if (e.key === "p" || e.key === "P") {
+      if (e.key === "t" || e.key === "T") {
         const active = document.activeElement;
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
-        toggleProjector();
+        cycleTheme();
       }
       if (e.key === "Enter") {
         const active = document.activeElement;
@@ -490,8 +491,8 @@ export default function SimulationPage() {
                   <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">S</kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/50">Toggle projector mode</span>
-                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">P</kbd>
+                  <span className="text-white/50">Cycle theme</span>
+                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">T</kbd>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white/50">Toggle sound (mute/unmute)</span>
@@ -563,17 +564,7 @@ export default function SimulationPage() {
               >
                 {muted ? "🔇" : "🔊"}
               </button>
-              <button
-                onClick={toggleProjector}
-                className={`rounded-full border px-2.5 sm:px-3 py-1 text-xs sm:text-sm transition-colors ${
-                  projectorOn
-                    ? "border-amber-500/40 bg-amber-500/20 text-amber-300"
-                    : "border-white/10 text-white/50 hover:text-white"
-                }`}
-                title="Projector mode — high contrast for smartboards (P)"
-              >
-                📽️
-              </button>
+              <ThemePicker />
               <button
                 onClick={() => {
                   setPresentationMode((p) => {
