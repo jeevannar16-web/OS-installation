@@ -8,7 +8,7 @@ export const fedora: OSConfig = {
     shortName: "Fedora",
     accent: "#3C6EB4",
     surface: "#0d1117",
-    logo: "🎩",
+    logo: "F",
     officialUrl: "https://fedoraproject.org/workstation/",
   },
   downloadPage: {

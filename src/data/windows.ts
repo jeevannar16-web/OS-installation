@@ -7,7 +7,7 @@ export const windows: OSConfig = {
     shortName: "Windows",
     accent: "#0078D4",
     surface: "#0a0a0a",
-    logo: "🪟",
+    logo: "W",
     officialUrl: "https://www.microsoft.com/software-download/windows11",
   },
   downloadPage: {

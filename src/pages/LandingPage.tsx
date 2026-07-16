@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Monitor, ArrowLeftRight, Usb, Check } from "lucide-react";
 import { PATHS, OS_LIST } from "../data";
 import type { InstallPath } from "../data/types";
 import Footer from "../components/Footer";
@@ -73,6 +74,12 @@ const item = {
 };
 
 /* ── Path Card ───────────────────────────────────────────────── */
+const PATH_ICONS: Record<string, React.ReactNode> = {
+  vm: <Monitor size={28} strokeWidth={1.5} />,
+  "dual-boot": <ArrowLeftRight size={28} strokeWidth={1.5} />,
+  "live-usb": <Usb size={28} strokeWidth={1.5} />,
+};
+
 function PathCard({
   p,
   active,
@@ -109,11 +116,11 @@ function PathCard({
 
       <div className="relative h-10 overflow-hidden">
         <motion.div
-          className="text-3xl"
+          className="text-accent"
           animate={hovered ? { scale: 1.15, rotate: -5 } : { scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 15 }}
         >
-          {p.icon}
+          {PATH_ICONS[p.id]}
         </motion.div>
         <AnimatePresence>
           {hovered && (
@@ -170,7 +177,7 @@ function PathCard({
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
             className="absolute top-3 right-3 h-6 w-6 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-accent/30"
           >
-            ✓
+            <Check size={14} strokeWidth={3} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -203,11 +210,13 @@ function OSCard({
       }`}
     >
       <motion.div
-        className="text-5xl"
+        className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold"
         style={{
-          filter: disabled
-            ? "grayscale(1) opacity(0.4)"
-            : `drop-shadow(0 0 20px ${o.branding.accent}88)`,
+          background: disabled
+            ? "rgba(255,255,255,0.05)"
+            : `${o.branding.accent}20`,
+          color: disabled ? "rgba(255,255,255,0.2)" : o.branding.accent,
+          border: `1px solid ${disabled ? "rgba(255,255,255,0.05)" : `${o.branding.accent}30`}`,
         }}
         animate={
           !disabled
@@ -244,23 +253,13 @@ function OSCard({
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
             className="absolute top-3 right-3 h-6 w-6 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-accent/30"
           >
-            ✓
+            <Check size={14} strokeWidth={3} />
           </motion.div>
         )}
       </AnimatePresence>
     </motion.button>
   );
 }
-
-/* ── Floating decorative icons ───────────────────────────────── */
-const FLOAT_ICONS = [
-  { icon: "💿", top: "12%", left: "5%", dur: "7s", delay: "0s", op: 0.12, fy: "-14px", fr: "8deg" },
-  { icon: "🔌", top: "25%", right: "3%", dur: "9s", delay: "-2s", op: 0.10, fy: "-10px", fr: "-5deg" },
-  { icon: "💻", top: "55%", left: "2%", dur: "8s", delay: "-4s", op: 0.08, fy: "-16px", fr: "6deg" },
-  { icon: "🐧", top: "70%", right: "6%", dur: "10s", delay: "-1s", op: 0.10, fy: "-12px", fr: "-7deg" },
-  { icon: "⚡", top: "40%", left: "8%", dur: "6s", delay: "-3s", op: 0.09, fy: "-8px", fr: "4deg" },
-  { icon: "🔧", top: "80%", left: "12%", dur: "11s", delay: "-5s", op: 0.07, fy: "-18px", fr: "-3deg" },
-];
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -332,56 +331,8 @@ export default function LandingPage() {
         <rect width="100%" height="100%" filter="url(#noise)" />
       </svg>
 
-      {/* ── Constellation network mid-layer ── */}
-      <svg className="constellation-layer" aria-hidden viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
-        {/* Nodes */}
-        <circle cx="120" cy="80" r="2" fill="#7c5cff" opacity="0.6" />
-        <circle cx="300" cy="150" r="1.5" fill="#06b6d4" opacity="0.5" />
-        <circle cx="520" cy="60" r="2" fill="#a855f7" opacity="0.4" />
-        <circle cx="680" cy="200" r="1.5" fill="#7c5cff" opacity="0.5" />
-        <circle cx="200" cy="350" r="1.8" fill="#06b6d4" opacity="0.3" />
-        <circle cx="450" cy="300" r="2" fill="#a855f7" opacity="0.4" />
-        <circle cx="700" cy="420" r="1.5" fill="#7c5cff" opacity="0.3" />
-        <circle cx="100" cy="500" r="1.8" fill="#06b6d4" opacity="0.4" />
-        <circle cx="550" cy="500" r="2" fill="#a855f7" opacity="0.3" />
-        <circle cx="350" cy="450" r="1.5" fill="#7c5cff" opacity="0.4" />
-        {/* Edges */}
-        <line x1="120" y1="80" x2="300" y2="150" stroke="#7c5cff" strokeWidth="0.5" opacity="0.15" />
-        <line x1="300" y1="150" x2="520" y2="60" stroke="#06b6d4" strokeWidth="0.5" opacity="0.12" />
-        <line x1="520" y1="60" x2="680" y2="200" stroke="#a855f7" strokeWidth="0.5" opacity="0.1" />
-        <line x1="300" y1="150" x2="450" y2="300" stroke="#7c5cff" strokeWidth="0.4" opacity="0.12" />
-        <line x1="200" y1="350" x2="450" y2="300" stroke="#06b6d4" strokeWidth="0.4" opacity="0.1" />
-        <line x1="450" y1="300" x2="700" y2="420" stroke="#a855f7" strokeWidth="0.4" opacity="0.08" />
-        <line x1="100" y1="500" x2="350" y2="450" stroke="#7c5cff" strokeWidth="0.4" opacity="0.1" />
-        <line x1="350" y1="450" x2="550" y2="500" stroke="#06b6d4" strokeWidth="0.4" opacity="0.1" />
-        <line x1="200" y1="350" x2="100" y2="500" stroke="#a855f7" strokeWidth="0.3" opacity="0.08" />
-        <line x1="680" y1="200" x2="700" y2="420" stroke="#7c5cff" strokeWidth="0.3" opacity="0.08" />
-      </svg>
-
       {/* ── Radial vignette ── */}
       <div className="vignette-overlay" aria-hidden />
-
-      {/* ── Floating decorative icons (hidden on mobile) ── */}
-      <div className="hidden lg:block" aria-hidden>
-        {FLOAT_ICONS.map((fi, i) => (
-          <div
-            key={i}
-            className="float-icon text-2xl"
-            style={{
-              top: fi.top,
-              left: fi.left,
-              right: fi.right,
-              ["--dur" as string]: fi.dur,
-              ["--delay" as string]: fi.delay,
-              ["--op" as string]: fi.op,
-              ["--fy" as string]: fi.fy,
-              ["--fr" as string]: fi.fr,
-            }}
-          >
-            {fi.icon}
-          </div>
-        ))}
-      </div>
 
       {/* ── Main content ── */}
       <div className="relative z-0">

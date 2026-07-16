@@ -982,61 +982,57 @@ function SimulationPageInner() {
           Simulation only — no files are downloaded or executed.
         </div>
 
-        {/* ── Floating step navigation bar (touch-friendly for smartboards) ── */}
+        {/* ── Corner navigation (small, unobtrusive) ── */}
         {current !== "idle" && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-4 pb-4 px-4 pointer-events-none">
-            {current === "complete" ? (
-              <>
-                <button
-                  onClick={() => {
-                    historyRef.current.pop();
-                    const prev = historyRef.current[historyRef.current.length - 1];
-                    if (prev) jumpToScene(prev);
-                  }}
-                  disabled={!canGoBack}
-                  className={`pointer-events-auto rounded-2xl border px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl font-bold transition-all shadow-lg ${
-                    canGoBack
-                      ? "border-white/20 bg-[#14142a]/95 text-white hover:bg-white/10 active:scale-95 backdrop-blur-xl"
-                      : "border-white/5 bg-[#14142a]/60 text-white/20 cursor-not-allowed"
-                  }`}
-                >
-                  ← Back to previous scene
-                </button>
-                <button
-                  onClick={() => { send({ type: "RESET" }); }}
-                  className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
-                >
-                  🔄 Start Over
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={goBack}
-                  disabled={!canGoBack}
-                  className={`pointer-events-auto rounded-2xl border px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl font-bold transition-all shadow-lg ${
-                    canGoBack
-                      ? "border-white/20 bg-[#14142a]/95 text-white hover:bg-white/10 active:scale-95 backdrop-blur-xl"
-                      : "border-white/5 bg-[#14142a]/60 text-white/20 cursor-not-allowed"
-                  }`}
-                >
-                  ← Previous
-                </button>
-                <div className="pointer-events-auto rounded-full bg-[#14142a]/95 border border-white/10 px-4 py-2 lg:px-6 lg:py-3 text-xs sm:text-sm lg:text-base text-white/50 font-mono backdrop-blur-xl">
-                  {SCENE_LABELS[current] ?? current}
-                </div>
-                <button
-                  onClick={() => {
-                    if (sceneAdvance) sceneAdvance();
-                    else advanceScene();
-                  }}
-                  className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
-                >
-                  Next →
-                </button>
-              </>
+          <>
+            {/* Back — bottom-left */}
+            <button
+              onClick={() => {
+                if (current === "complete") {
+                  historyRef.current.pop();
+                  const prev = historyRef.current[historyRef.current.length - 1];
+                  if (prev) jumpToScene(prev);
+                } else {
+                  goBack();
+                }
+              }}
+              disabled={!canGoBack}
+              className={`fixed bottom-4 left-4 z-50 rounded-lg border px-3 py-1.5 text-[11px] font-medium transition-all backdrop-blur-md pointer-events-auto ${
+                canGoBack
+                  ? "border-white/10 bg-[#14142a]/90 text-white/60 hover:text-white hover:border-white/20"
+                  : "border-white/5 bg-[#14142a]/50 text-white/15 cursor-not-allowed"
+              }`}
+            >
+              ← Back
+            </button>
+
+            {/* Scene label — bottom-center */}
+            {current !== "complete" && (
+              <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-full bg-[#14142a]/90 border border-white/[0.08] px-3 py-1.5 text-[10px] text-white/30 font-mono backdrop-blur-md pointer-events-none">
+                {SCENE_LABELS[current] ?? current}
+              </div>
             )}
-          </div>
+
+            {/* Next / Restart — bottom-right */}
+            <button
+              onClick={() => {
+                if (current === "complete") {
+                  send({ type: "RESET" });
+                } else if (sceneAdvance) {
+                  sceneAdvance();
+                } else {
+                  advanceScene();
+                }
+              }}
+              className={`fixed bottom-4 right-4 z-50 rounded-lg border px-3 py-1.5 text-[11px] font-medium transition-all backdrop-blur-md pointer-events-auto ${
+                current === "complete"
+                  ? "border-accent/30 bg-accent/80 text-white hover:bg-accent"
+                  : "border-accent/30 bg-accent/80 text-white hover:bg-accent"
+              }`}
+            >
+              {current === "complete" ? "Restart" : "Next →"}
+            </button>
+          </>
         )}
 
         {/* Scene context label */}

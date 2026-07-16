@@ -7,7 +7,7 @@ export const arch: OSConfig = {
     shortName: "Arch",
     accent: "#1793D1",
     surface: "#111111",
-    logo: "🏹",
+    logo: "A",
     officialUrl: "https://archlinux.org/download/",
   },
   downloadPage: {

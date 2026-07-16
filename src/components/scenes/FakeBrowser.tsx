@@ -22,7 +22,7 @@ function isRelevant(query: string, keywords: string[]): boolean {
     const kn = k.toLowerCase();
     if (kn.includes(norm) || norm.includes(kn)) return true;
     const kt = kn.split(/\s+/);
-    return kt.some((t) => qt.includes(t) && t.length > 2);
+    return kt.some((t) => qt.some((q) => t.includes(q) || q.includes(t)));
   });
 }
 

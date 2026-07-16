@@ -8,7 +8,7 @@ export const debian: OSConfig = {
     shortName: "Debian",
     accent: "#A80030",
     surface: "#101010",
-    logo: "🌀",
+    logo: "D",
     officialUrl: "https://www.debian.org/distrib/",
   },
   downloadPage: {
