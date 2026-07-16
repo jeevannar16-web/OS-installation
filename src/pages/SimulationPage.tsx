@@ -165,6 +165,7 @@ function SimulationPageInner() {
   const [sceneLabelVisible, setSceneLabelVisible] = useState(false);
   const [showNavigator, setShowNavigator] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [fullscreenPrompt, setFullscreenPrompt] = useState(true);
   const jumpRef = useRef<string | null>(null);
   const historyRef = useRef<string[]>([]);
 
@@ -298,9 +299,6 @@ function SimulationPageInner() {
   useEffect(() => {
     if (config && path && state.matches("idle")) {
       send({ type: "START", osId: config.id, path: path as never });
-      // Auto-enter presentation mode (fullscreen)
-      setPresentationMode(true);
-      document.documentElement.requestFullscreen?.().catch(() => {});
     }
   }, [config, path]);
 
@@ -946,6 +944,26 @@ function SimulationPageInner() {
             <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
             ESC to exit fullscreen
           </div>
+        )}
+
+        {/* ── Click-to-start-fullscreen overlay ── */}
+        {fullscreenPrompt && current !== "idle" && !presentationMode && (
+          <button
+            onClick={() => {
+              setPresentationMode(true);
+              document.documentElement.requestFullscreen?.().catch(() => {});
+              setFullscreenPrompt(false);
+            }}
+            className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer group"
+          >
+            <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#12121a]/90 px-10 py-8 shadow-2xl group-hover:border-accent/30 transition-colors">
+              <span className="text-4xl">▶</span>
+              <div className="text-center">
+                <p className="text-white/90 text-lg font-semibold">Click to start in fullscreen</p>
+                <p className="text-white/40 text-sm mt-1">Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/60 font-mono text-xs">ESC</kbd> to exit anytime</p>
+              </div>
+            </div>
+          </button>
         )}
 
         {presentationMode ? (
