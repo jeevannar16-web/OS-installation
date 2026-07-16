@@ -180,7 +180,7 @@ export default function Reboot({
             initial={{ opacity: 1 }}
             animate={{ opacity: [1, 0.2, 0.8, 0.1, 0.9] }}
             transition={{ duration: flickerDur / 1000 }}
-            className="absolute inset-0 bg-white pointer-events-none"
+            className="absolute inset-0 bg-white/10 pointer-events-none"
           />
           <button
             onClick={() => {
