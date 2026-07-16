@@ -88,7 +88,7 @@ const ACTIVE_APP: Record<string, AppInfo> = {
   complete: { name: "Done", icon: "🎉" },
 };
 
-const FULLSCREEN_SCENES = new Set(["bios_setup", "rebooting", "boot_prompt", "boot_menu", "live_welcome", "live_desktop"]);
+const FULLSCREEN_SCENES = new Set<string>();
 
 const STATUS_TEXT: Record<string, string> = {
   select_host_os: "Select your host operating system…",
@@ -315,24 +315,30 @@ function SimulationPageInner() {
     return () => clearTimeout(t);
   }, [current]);
 
-  // Space to pause/resume auto-advance; Escape to exit presentation; N/B for navigator/notes
+  // Escape exits fullscreen; Backspace/Left goes back; N/B for navigator/notes
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      const active = document.activeElement;
+      const isInput = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || (active as HTMLElement).isContentEditable);
       if (e.key === "Escape") {
         if (presentationMode) {
           setPresentationMode(false);
           if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
         }
+        setShowNavigator(false);
+        setShowNotes(false);
       }
-      if (e.key === "n" || e.key === "N") {
-        const active = document.activeElement;
-        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+      if (!isInput && (e.key === "Backspace" || e.key === "ArrowLeft")) {
+        e.preventDefault();
+        goBack();
+      }
+      if (!isInput && (e.key === "n" || e.key === "N")) {
+        e.preventDefault();
         setShowNavigator((v) => !v);
         setShowNotes(false);
       }
-      if (e.key === "b" || e.key === "B") {
-        const active = document.activeElement;
-        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+      if (!isInput && (e.key === "b" || e.key === "B")) {
+        e.preventDefault();
         setShowNotes((v) => !v);
         setShowNavigator(false);
       }
@@ -411,7 +417,10 @@ function SimulationPageInner() {
   }
 
   function goBack() {
-    if (historyRef.current.length < 2) return;
+    if (historyRef.current.length < 2) {
+      send({ type: "RESET" });
+      return;
+    }
     historyRef.current.pop();
     const prev = historyRef.current[historyRef.current.length - 1];
     if (prev) jumpToScene(prev);
@@ -434,7 +443,7 @@ function SimulationPageInner() {
   const isFullscreen = FULLSCREEN_SCENES.has(current);
   const isVm = path === "vm";
 
-  const canGoBack = historyRef.current.length >= 2;
+  const canGoBack = current !== "idle";
 
   const SPEAKER_NOTES: Record<string, string> = {
     searching: "This is the browser search step. Explain that you always go to the official website to download — never third-party sites. Point out the URL bar and search results.",
@@ -807,7 +816,7 @@ function SimulationPageInner() {
                     ? "border-accent bg-accent/20 text-white"
                     : "border-white/10 text-white/50 hover:text-white"
                 }`}
-                title="Presentation mode (fullscreen + auto-advance)"
+                title="Presentation mode (fullscreen)"
               >
                 🎬 present
               </button>
@@ -929,6 +938,14 @@ function SimulationPageInner() {
           </div>
         </header>
 
+        {/* ── Presentation mode exit hint ── */}
+        {presentationMode && (
+          <div className="fixed top-3 right-3 z-50 flex items-center gap-2 rounded-full border border-white/10 bg-[#14142a]/80 px-3 py-1.5 text-[11px] text-white/40 font-mono backdrop-blur-md pointer-events-none">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+            ESC to exit fullscreen
+          </div>
+        )}
+
         {isFullscreen ? (
           <div className="flex-1" key={current}>
             <ErrorBoundary label={current}>
@@ -956,15 +973,7 @@ function SimulationPageInner() {
           <>
             {/* Back — bottom-left */}
             <button
-              onClick={() => {
-                if (current === "complete") {
-                  historyRef.current.pop();
-                  const prev = historyRef.current[historyRef.current.length - 1];
-                  if (prev) jumpToScene(prev);
-                } else {
-                  goBack();
-                }
-              }}
+              onClick={goBack}
               disabled={!canGoBack}
               className={`fixed bottom-4 left-4 z-50 rounded-lg border px-3 py-1.5 text-[11px] font-medium transition-all backdrop-blur-md pointer-events-auto ${
                 canGoBack
