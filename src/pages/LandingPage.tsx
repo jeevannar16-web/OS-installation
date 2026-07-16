@@ -404,6 +404,14 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Text */}
             <div className="flex-1 text-center lg:text-left">
+              <motion.img
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                src="/logo.svg"
+                alt="OS Install Simulator logo"
+                className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 mx-auto lg:mx-0 mb-6 drop-shadow-[0_0_30px_rgba(124,92,255,0.3)]"
+              />
               <motion.span
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
