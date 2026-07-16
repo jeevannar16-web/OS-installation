@@ -163,15 +163,11 @@ function SimulationPageInner() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [muted, setMuted] = useState(() => isMuted());
   const [presentationMode, setPresentationMode] = useState(false);
-  const [paused, setPaused] = useState(false);
   const [sceneLabelKey, setSceneLabelKey] = useState(0);
   const [sceneLabelVisible, setSceneLabelVisible] = useState(false);
   const [showNavigator, setShowNavigator] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const autoAdvanceRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jumpRef = useRef<string | null>(null);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const historyRef = useRef<string[]>([]);
 
   const [diskShrunk, setDiskShrunk] = useState(false);
@@ -319,40 +315,6 @@ function SimulationPageInner() {
     return () => clearTimeout(t);
   }, [current]);
 
-  // Auto-advance every scene after 15 seconds (always active)
-  useEffect(() => {
-    if (current === "idle" || current === "complete") {
-      if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
-      return;
-    }
-    autoAdvanceRef.current = setInterval(() => {
-      const s = String(state.value);
-      if (s === "searching") send({ type: "SEARCH_DONE" });
-      else if (s === "downloading") send({ type: "DOWNLOAD_DONE" });
-      else if (s === "flashing_usb") send({ type: "FLASH_DONE" });
-      else if (s === "usb_reinsert") send({ type: "USB_INSERTED" });
-      else if (s === "disk_prep") send({ type: "DISK_PREPPED" });
-      else if (s === "bios_setup") send({ type: "BIOS_DONE" });
-      else if (s === "rebooting") send({ type: "REBOOT_DONE" });
-      else if (s === "boot_prompt") send({ type: "BOOT_KEY_PRESSED" });
-      else if (s === "boot_menu") send({ type: "BOOT_SELECTED" });
-      else if (s === "windows_setup") send({ type: "SETUP_DONE" });
-      else if (s === "partitioning") send({ type: "PARTITION_DONE" });
-      else if (s === "live_welcome") send({ type: "LIVE_INSTALL" });
-      else if (s === "live_desktop") send({ type: "LIVE_INSTALL" });
-      else if (s === "create_vm") send({ type: "VM_CREATED" });
-      else if (s === "mount_iso") send({ type: "ISO_MOUNTED" });
-      else if (s === "vm_boot") send({ type: "VM_POWERED_ON" });
-      else if (s === "installing") send({ type: "INSTALL_DONE" });
-      else if (s === "grub_menu") send({ type: "GRUB_DONE" });
-      else if (s === "oobe") send({ type: "OOBE_DONE" });
-      else if (s === "vm_close") send({ type: "VM_CLOSED" });
-    }, 15000);
-    return () => {
-      if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
-    };
-  }, [paused, state.value, send, current]);
-
   // Space to pause/resume auto-advance; Escape to exit presentation; N/B for navigator/notes
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -374,12 +336,6 @@ function SimulationPageInner() {
         setShowNotes((v) => !v);
         setShowNavigator(false);
       }
-      if (e.key === " " || e.code === "Space") {
-        const active = document.activeElement;
-        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
-        e.preventDefault();
-        setPaused((p) => !p);
-      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -399,6 +355,35 @@ function SimulationPageInner() {
     return () => document.removeEventListener("mousedown", onClick);
   }, [showNavigator, showNotes]);
 
+  // Single source of truth for state transitions
+  const TRANSITIONS: Record<string, string> = {
+    searching: "SEARCH_DONE",
+    downloading: "DOWNLOAD_DONE",
+    flashing_usb: "FLASH_DONE",
+    usb_reinsert: "USB_INSERTED",
+    disk_prep: "DISK_PREPPED",
+    bios_setup: "BIOS_DONE",
+    rebooting: "REBOOT_DONE",
+    boot_prompt: "BOOT_KEY_PRESSED",
+    boot_menu: "BOOT_SELECTED",
+    windows_setup: "SETUP_DONE",
+    partitioning: "PARTITION_DONE",
+    live_welcome: "LIVE_INSTALL",
+    live_desktop: "LIVE_INSTALL",
+    create_vm: "VM_CREATED",
+    mount_iso: "ISO_MOUNTED",
+    vm_boot: "VM_POWERED_ON",
+    installing: "INSTALL_DONE",
+    grub_menu: "GRUB_DONE",
+    oobe: "OOBE_DONE",
+    vm_close: "VM_CLOSED",
+  };
+
+  function advanceScene() {
+    const evt = TRANSITIONS[String(state.value)];
+    if (evt) send({ type: evt as never });
+  }
+
   // ── Auto-jump: fast-forward to a target scene ──
   useEffect(() => {
     if (!jumpRef.current || !config) return;
@@ -412,55 +397,25 @@ function SimulationPageInner() {
       send({ type: "START", osId: config.id, path: path as never });
       return;
     }
-    // Map states to their forward-transition events
-    const transitions: Record<string, string> = {
-      searching: "SEARCH_DONE",
-      downloading: "DOWNLOAD_DONE",
-      flashing_usb: "FLASH_DONE",
-      usb_reinsert: "USB_INSERTED",
-      disk_prep: "DISK_PREPPED",
-      bios_setup: "BIOS_DONE",
-      rebooting: "REBOOT_DONE",
-      boot_prompt: "BOOT_KEY_PRESSED",
-      boot_menu: "BOOT_SELECTED",
-      windows_setup: "SETUP_DONE",
-      partitioning: "PARTITION_DONE",
-      live_welcome: "LIVE_INSTALL",
-      live_desktop: "LIVE_INSTALL",
-      create_vm: "VM_CREATED",
-      mount_iso: "ISO_MOUNTED",
-      vm_boot: "VM_POWERED_ON",
-      installing: "INSTALL_DONE",
-      grub_menu: "GRUB_DONE",
-      oobe: "OOBE_DONE",
-      vm_close: "VM_CLOSED",
-    };
-    const evt = transitions[s];
+    const evt = TRANSITIONS[s];
     if (evt) {
-      // Small delay so the user sees scenes flash by
-      const t = setTimeout(() => send({ type: evt as never }), 150);
+      const t = setTimeout(() => send({ type: evt as never }), 100);
       return () => clearTimeout(t);
     }
   }, [state.value, config, path, send]);
 
-  // Countdown timer — always visible, 15 seconds per scene
-  useEffect(() => {
-    if (current === "idle" || current === "complete" || paused) {
-      setCountdown(0);
-      return;
-    }
-    const total = 15;
-    setCountdown(total);
-    countdownRef.current = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) return 0;
-        return c - 1;
-      });
-    }, 1000);
-    return () => {
-      if (countdownRef.current) clearInterval(countdownRef.current);
-    };
-  }, [paused, current]);
+  function jumpToScene(target: string) {
+    jumpRef.current = target;
+    send({ type: "RESET" });
+    setShowNavigator(false);
+  }
+
+  function goBack() {
+    if (historyRef.current.length < 2) return;
+    historyRef.current.pop();
+    const prev = historyRef.current[historyRef.current.length - 1];
+    if (prev) jumpToScene(prev);
+  }
 
   if (!config) {
     return (
@@ -478,48 +433,6 @@ function SimulationPageInner() {
   const activeApp = ACTIVE_APP[current] ?? { name: "OS Simulator", icon: "💿" };
   const isFullscreen = FULLSCREEN_SCENES.has(current);
   const isVm = path === "vm";
-
-  function jumpToScene(target: string) {
-    jumpRef.current = target;
-    send({ type: "RESET" });
-    setShowNavigator(false);
-  }
-
-  function goBack() {
-    if (historyRef.current.length < 2) return;
-    // Remove current scene from history, then jump to the previous one
-    historyRef.current.pop();
-    const prev = historyRef.current[historyRef.current.length - 1];
-    if (prev) jumpToScene(prev);
-  }
-
-  function advanceScene() {
-    const s = String(state.value);
-    const transitions: Record<string, string> = {
-      searching: "SEARCH_DONE",
-      downloading: "DOWNLOAD_DONE",
-      flashing_usb: "FLASH_DONE",
-      usb_reinsert: "USB_INSERTED",
-      disk_prep: "DISK_PREPPED",
-      bios_setup: "BIOS_DONE",
-      rebooting: "REBOOT_DONE",
-      boot_prompt: "BOOT_KEY_PRESSED",
-      boot_menu: "BOOT_SELECTED",
-      windows_setup: "SETUP_DONE",
-      partitioning: "PARTITION_DONE",
-      live_welcome: "LIVE_INSTALL",
-      live_desktop: "LIVE_INSTALL",
-      create_vm: "VM_CREATED",
-      mount_iso: "ISO_MOUNTED",
-      vm_boot: "VM_POWERED_ON",
-      installing: "INSTALL_DONE",
-      grub_menu: "GRUB_DONE",
-      oobe: "OOBE_DONE",
-      vm_close: "VM_CLOSED",
-    };
-    const evt = transitions[s];
-    if (evt) send({ type: evt as never });
-  }
 
   const canGoBack = historyRef.current.length >= 2;
 
@@ -1012,18 +925,6 @@ function SimulationPageInner() {
           </div>
 
           <div className="mt-1.5 sm:mt-2 min-h-[1rem] sm:min-h-[1.25rem] text-xs sm:text-sm text-white/40" key={`status-${current}`}>
-            {!paused && countdown > 0 && current !== "complete" && current !== "idle" && (
-              <span className="inline-flex items-center gap-1.5 text-accent font-mono font-semibold mr-3">
-                <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-                Next: {countdown}s
-              </span>
-            )}
-            {paused && (
-              <span className="inline-flex items-center gap-1.5 text-amber-400 font-semibold mr-3">
-                <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                PAUSED
-              </span>
-            )}
             {STATUS_TEXT[current] ?? ""}
           </div>
         </header>
