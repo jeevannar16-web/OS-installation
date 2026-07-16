@@ -404,19 +404,42 @@ export default function LandingPage() {
             {/* Text */}
             <div className="flex-1 text-center lg:text-left">
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                className="flex items-center gap-4 mx-auto lg:mx-0 mb-6 w-fit"
+                transition={{ type: "spring", stiffness: 180, damping: 18 }}
+                className="flex items-center gap-5 mx-auto lg:mx-0 mb-8 w-fit relative"
               >
-                <img src="/logo.svg" alt="" className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-[0_0_40px_rgba(124,92,255,0.35)]" />
-                <div className="flex flex-col items-start">
-                  <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-white/90 to-white/70 bg-clip-text text-transparent">
-                    OS Install
+                {/* Glow ring behind icon */}
+                <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-[#7c5cff]/20 via-[#06b6d4]/10 to-[#a855f7]/20 blur-2xl animate-pulse pointer-events-none" />
+                <div className="relative flex-shrink-0">
+                  <img
+                    src="/logo.svg"
+                    alt="OS Install Simulator"
+                    className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 drop-shadow-[0_0_50px_rgba(124,92,255,0.5)]"
+                  />
+                  {/* Spinning orbit ring */}
+                  <svg className="absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] animate-spin" style={{ animationDuration: "8s" }} viewBox="0 0 100 100">
+                    <ellipse cx="50" cy="50" rx="48" ry="48" fill="none" stroke="url(#orbitGrad)" strokeWidth="1.5" strokeDasharray="8 12" />
+                    <defs>
+                      <linearGradient id="orbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#7c5cff" />
+                        <stop offset="50%" stopColor="#06b6d4" />
+                        <stop offset="100%" stopColor="#a855f7" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+                <div className="flex flex-col items-start relative">
+                  <span className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-none">
+                    <span className="bg-gradient-to-r from-white via-[#e0e0ff] to-[#c8b8ff] bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(124,92,255,0.3)]">
+                      OS Install
+                    </span>
                   </span>
-                  <span className="text-xs sm:text-sm tracking-[0.3em] uppercase text-[#7c5cff] font-semibold">
+                  <span className="text-[10px] sm:text-xs tracking-[0.4em] uppercase font-bold bg-gradient-to-r from-[#7c5cff] via-[#06b6d4] to-[#a855f7] bg-clip-text text-transparent">
                     Simulator
                   </span>
+                  {/* Decorative line */}
+                  <div className="mt-1.5 h-0.5 w-full bg-gradient-to-r from-[#7c5cff] via-[#06b6d4] to-[#a855f7] rounded-full opacity-60" />
                 </div>
               </motion.div>
               <motion.span
