@@ -2,14 +2,21 @@ import { setup, assign } from "xstate";
 import type { InstallPath, HostOS } from "../data/types";
 
 /**
- * OS simulation state machine — two distinct flows:
+ * OS simulation state machine — realistic installation flows:
  *
- * Physical path (dual-boot / live-usb):
- *   idle → searching → downloading → flashing_usb → usb_reinsert → rebooting → boot_menu
- *        → [partitioning | live_welcome → live_desktop] → installing → complete
+ * Physical path (dual-boot):
+ *   idle → searching → downloading → flashing_usb → usb_reinsert → bios_setup
+ *        → boot_prompt → boot_menu → windows_setup → partitioning
+ *        → installing → grub_menu → oobe → complete
+ *
+ * Physical path (live-usb):
+ *   idle → searching → downloading → flashing_usb → usb_reinsert → bios_setup
+ *        → boot_prompt → boot_menu → live_welcome → live_desktop
+ *        → installing → grub_menu → oobe → complete
  *
  * VM path:
- *   idle → searching → downloading → create_vm → mount_iso → vm_boot → installing → vm_close → complete
+ *   idle → select_host_os → searching → downloading → create_vm → mount_iso
+ *        → vm_boot → windows_setup → partitioning → installing → vm_close → oobe → complete
  */
 
 export type SimEvent =
@@ -19,17 +26,22 @@ export type SimEvent =
   | { type: "DOWNLOAD_DONE" }
   | { type: "FLASH_DONE" }
   | { type: "USB_INSERTED" }
+  | { type: "BIOS_DONE" }
+  | { type: "BOOT_KEY_PRESSED" }
+  | { type: "BOOT_KEY_TIMEOUT" }
   | { type: "REBOOT_DONE" }
   | { type: "BOOT_SELECTED" }
   | { type: "LIVE_TRY" }
   | { type: "LIVE_INSTALL" }
+  | { type: "POST_INSTALL" }
+  | { type: "SETUP_DONE" }
   | { type: "PARTITION_DONE" }
   | { type: "VM_CREATED" }
   | { type: "ISO_MOUNTED" }
   | { type: "VM_POWERED_ON" }
   | { type: "INSTALL_DONE" }
   | { type: "GRUB_DONE" }
-  | { type: "FIRST_BOOT_DONE" }
+  | { type: "OOBE_DONE" }
   | { type: "VM_CLOSED" }
   | { type: "DISK_PREPPED" }
   | { type: "SET_SPEED"; speed: "normal" | "fast" }
@@ -52,6 +64,8 @@ export const simulationMachine = setup({
     isLiveUsb: ({ context }) => context.path === "live-usb",
     isVm: ({ context }) => context.path === "vm",
     isPhysical: ({ context }) => context.path !== "vm",
+    isWindows: ({ context }) => context.osId === "windows",
+    isNotWindows: ({ context }) => context.osId !== "windows",
   },
   actions: {
     setMeta: assign(({ event }) => {
@@ -118,7 +132,7 @@ export const simulationMachine = setup({
       },
     },
 
-    /* ── Physical path states ── */
+    /* ── Physical path: Flash USB ── */
     flashing_usb: {
       on: { FLASH_DONE: "usb_reinsert" },
     },
@@ -127,29 +141,55 @@ export const simulationMachine = setup({
       on: {
         USB_INSERTED: [
           { guard: "isDualBoot", target: "disk_prep" },
-          { target: "rebooting" },
+          { target: "bios_setup" },
         ],
       },
     },
 
     disk_prep: {
-      on: { DISK_PREPPED: "rebooting" },
+      on: { DISK_PREPPED: "bios_setup" },
     },
 
+    /* ── BIOS Setup ── */
+    bios_setup: {
+      on: { BIOS_DONE: "rebooting" },
+    },
+
+    /* ── Reboot / POST ── */
     rebooting: {
-      on: { REBOOT_DONE: "boot_menu" },
+      on: { REBOOT_DONE: "boot_prompt" },
     },
 
+    /* ── Press any key to boot from USB ── */
+    boot_prompt: {
+      on: {
+        BOOT_KEY_PRESSED: "boot_menu",
+        BOOT_KEY_TIMEOUT: "boot_menu",
+      },
+    },
+
+    /* ── Boot Menu (BIOS boot device selection) ── */
     boot_menu: {
       on: {
         LIVE_TRY: "live_welcome",
         BOOT_SELECTED: [
+          { guard: "isPhysical", target: "windows_setup" },
+          { target: "installing" },
+        ],
+      },
+    },
+
+    /* ── Windows Setup (Language → Install Now → Product Key → EULA → Install Type) ── */
+    windows_setup: {
+      on: {
+        SETUP_DONE: [
           { guard: "isDualBoot", target: "partitioning" },
           { target: "installing" },
         ],
       },
     },
 
+    /* ── Live USB path ── */
     live_welcome: {
       on: {
         LIVE_TRY: "live_desktop",
@@ -158,14 +198,18 @@ export const simulationMachine = setup({
     },
 
     live_desktop: {
-      on: { LIVE_INSTALL: "installing" },
+      on: {
+        LIVE_INSTALL: "installing",
+        POST_INSTALL: "grub_menu",
+      },
     },
 
+    /* ── Partitioning ── */
     partitioning: {
       on: { PARTITION_DONE: "installing" },
     },
 
-    /* ── VM path states ── */
+    /* ── VM path ── */
     create_vm: {
       on: { VM_CREATED: "mount_iso" },
     },
@@ -175,10 +219,10 @@ export const simulationMachine = setup({
     },
 
     vm_boot: {
-      on: { VM_POWERED_ON: "installing" },
+      on: { VM_POWERED_ON: "windows_setup" },
     },
 
-    /* ── Shared terminal states ── */
+    /* ── Installing ── */
     installing: {
       on: {
         INSTALL_DONE: [
@@ -188,16 +232,18 @@ export const simulationMachine = setup({
       },
     },
 
+    /* ── GRUB Menu (dual-boot) ── */
     grub_menu: {
-      on: { GRUB_DONE: "first_boot" },
+      on: { GRUB_DONE: "oobe" },
     },
 
-    first_boot: {
-      on: { FIRST_BOOT_DONE: "complete" },
+    /* ── OOBE (Windows first-boot wizard) ── */
+    oobe: {
+      on: { OOBE_DONE: "complete" },
     },
 
     vm_close: {
-      on: { VM_CLOSED: "complete" },
+      on: { VM_CLOSED: "oobe" },
     },
 
     complete: {},
@@ -213,8 +259,11 @@ export const SIM_SCENES = [
   "flashing_usb",
   "usb_reinsert",
   "disk_prep",
+  "bios_setup",
   "rebooting",
+  "boot_prompt",
   "boot_menu",
+  "windows_setup",
   "partitioning",
   "live_welcome",
   "live_desktop",
@@ -223,7 +272,7 @@ export const SIM_SCENES = [
   "vm_boot",
   "installing",
   "grub_menu",
-  "first_boot",
+  "oobe",
   "vm_close",
   "complete",
 ] as const;

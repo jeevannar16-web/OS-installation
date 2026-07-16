@@ -24,9 +24,12 @@ import CreateVM from "../components/scenes/CreateVM";
 import MountISO from "../components/scenes/MountISO";
 import VmBoot from "../components/scenes/VmBoot";
 import VmClose from "../components/scenes/VmClose";
+import BiosSetup from "../components/scenes/BiosSetup";
+import BootPrompt from "../components/scenes/BootPrompt";
+import WindowsSetup from "../components/scenes/WindowsSetup";
+import WindowsOOBE from "../components/scenes/WindowsOOBE";
 import Done from "../components/scenes/Done";
 import GrubMenu from "../components/scenes/GrubMenu";
-import FirstBoot from "../components/scenes/FirstBoot";
 import SelectHostOS from "../components/scenes/SelectHostOS";
 import DiskManagement from "../components/scenes/DiskManagement";
 import { toggleMute, isMuted } from "../components/shared/sounds";
@@ -42,8 +45,11 @@ const SCENE_LABELS: Record<string, string> = {
   flashing_usb: "Flash USB",
   usb_reinsert: "Insert USB",
   disk_prep: "Disk Prep",
+  bios_setup: "BIOS Setup",
   rebooting: "Reboot",
+  boot_prompt: "Boot from USB",
   boot_menu: "Boot Menu",
+  windows_setup: "Windows Setup",
   partitioning: "Partition",
   live_welcome: "Live Welcome",
   live_desktop: "Live Desktop",
@@ -51,6 +57,8 @@ const SCENE_LABELS: Record<string, string> = {
   mount_iso: "Mount ISO",
   vm_boot: "Power On",
   installing: "Install",
+  grub_menu: "GRUB Menu",
+  oobe: "First Boot",
   vm_close: "Close VM",
   complete: "Done",
 };
@@ -62,8 +70,11 @@ const ACTIVE_APP: Record<string, AppInfo> = {
   flashing_usb: { name: "USB Tool", icon: "🔌" },
   usb_reinsert: { name: "Setup", icon: "🔌" },
   disk_prep: { name: "Disk Management", icon: "💾" },
+  bios_setup: { name: "BIOS Setup", icon: "🔧" },
   rebooting: { name: "System", icon: "⏻" },
+  boot_prompt: { name: "Boot", icon: "💻" },
   boot_menu: { name: "Boot Menu", icon: "💻" },
+  windows_setup: { name: "Windows Setup", icon: "🪟" },
   live_welcome: { name: "Installer", icon: "💿" },
   live_desktop: { name: "Live Session", icon: "🖥️" },
   partitioning: { name: "Installer", icon: "🧩" },
@@ -71,11 +82,13 @@ const ACTIVE_APP: Record<string, AppInfo> = {
   mount_iso: { name: "VirtualBox", icon: "💿" },
   vm_boot: { name: "VirtualBox", icon: "▶" },
   installing: { name: "Installer", icon: "🧩" },
+  grub_menu: { name: "GRUB", icon: "🐧" },
+  oobe: { name: "First Boot", icon: "🎉" },
   vm_close: { name: "VirtualBox", icon: "💻" },
   complete: { name: "Done", icon: "🎉" },
 };
 
-const FULLSCREEN_SCENES = new Set(["rebooting", "boot_menu", "live_welcome", "live_desktop"]);
+const FULLSCREEN_SCENES = new Set(["bios_setup", "rebooting", "boot_prompt", "boot_menu", "live_welcome", "live_desktop"]);
 
 const STATUS_TEXT: Record<string, string> = {
   select_host_os: "Select your host operating system…",
@@ -84,8 +97,11 @@ const STATUS_TEXT: Record<string, string> = {
   flashing_usb: "Flashing the ISO image to your USB drive…",
   usb_reinsert: "Insert the USB into the target machine…",
   disk_prep: "Shrink Windows partition to create space…",
+  bios_setup: "Configuring BIOS/UEFI settings…",
   rebooting: "Restarting and entering BIOS…",
+  boot_prompt: "Press a key to boot from USB…",
   boot_menu: "Select a boot device from the menu…",
+  windows_setup: "Running Windows Setup…",
   live_welcome: "Choose between trying or installing…",
   live_desktop: "Exploring the live desktop environment…",
   partitioning: "Allocating disk space for the new OS…",
@@ -93,12 +109,14 @@ const STATUS_TEXT: Record<string, string> = {
   mount_iso: "Attaching the installation ISO…",
   vm_boot: "Powering on the virtual machine…",
   installing: "Installing the operating system…",
+  grub_menu: "Selecting your operating system…",
+  oobe: "Setting up Windows for the first time…",
   vm_close: "Closing the virtual machine…",
   complete: "Installation complete!",
 };
 
 const VM_ONLY = new Set(["select_host_os", "create_vm", "mount_iso", "vm_boot"]);
-const PHYSICAL_ONLY = new Set(["flashing_usb", "usb_reinsert", "disk_prep", "rebooting", "boot_menu"]);
+const PHYSICAL_ONLY = new Set(["flashing_usb", "usb_reinsert", "disk_prep", "bios_setup", "rebooting", "boot_prompt", "boot_menu"]);
 
 const SCENE_CONTEXT: Record<string, string> = {
   searching: "Use the browser to find the official download page for your OS.",
@@ -106,8 +124,11 @@ const SCENE_CONTEXT: Record<string, string> = {
   flashing_usb: "Write the ISO image to a USB drive using a flashing tool.",
   usb_reinsert: "Remove the USB, then plug it back into the target machine.",
   disk_prep: "Open Disk Management in Windows to shrink your partition.",
+  bios_setup: "Enter BIOS/UEFI to configure boot order and enable USB boot.",
   rebooting: "Restart the computer and enter the BIOS/UEFI setup.",
+  boot_prompt: "Press any key within 5 seconds to boot from the USB drive.",
   boot_menu: "Select the USB drive from the boot device menu to start the installer.",
+  windows_setup: "Follow the Windows Setup wizard: language, product key, license, install type.",
   live_welcome: "Choose whether to try the OS live or install it directly.",
   live_desktop: "Explore the live desktop — everything runs from the USB.",
   partitioning: "Resize your existing partition and allocate space for the new OS.",
@@ -115,6 +136,8 @@ const SCENE_CONTEXT: Record<string, string> = {
   mount_iso: "Attach the downloaded ISO as a virtual CD/DVD drive.",
   vm_boot: "Power on the VM and boot from the attached ISO.",
   installing: "Follow the installer wizard to set up your new operating system.",
+  grub_menu: "GRUB lets you choose between your installed operating systems.",
+  oobe: "Windows first-boot wizard: region, keyboard, account, and privacy settings.",
   vm_close: "Shut down the VM now that installation is complete.",
   complete: "Congratulations — your new OS is ready to use!",
 };
@@ -256,15 +279,21 @@ function SimulationPageInner() {
         else if (s === "downloading") send({ type: "DOWNLOAD_DONE" });
         else if (s === "flashing_usb") send({ type: "FLASH_DONE" });
         else if (s === "usb_reinsert") send({ type: "USB_INSERTED" });
+        else if (s === "disk_prep") send({ type: "DISK_PREPPED" });
+        else if (s === "bios_setup") send({ type: "BIOS_DONE" });
         else if (s === "rebooting") send({ type: "REBOOT_DONE" });
+        else if (s === "boot_prompt") send({ type: "BOOT_KEY_PRESSED" });
+        else if (s === "boot_menu") send({ type: "BOOT_SELECTED" });
+        else if (s === "windows_setup") send({ type: "SETUP_DONE" });
         else if (s === "partitioning") send({ type: "PARTITION_DONE" });
         else if (s === "live_welcome") send({ type: "LIVE_INSTALL" });
         else if (s === "live_desktop") send({ type: "LIVE_INSTALL" });
         else if (s === "create_vm") send({ type: "VM_CREATED" });
         else if (s === "mount_iso") send({ type: "ISO_MOUNTED" });
         else if (s === "vm_boot") send({ type: "VM_POWERED_ON" });
+        else if (s === "installing") send({ type: "INSTALL_DONE" });
         else if (s === "grub_menu") send({ type: "GRUB_DONE" });
-        else if (s === "first_boot") send({ type: "FIRST_BOOT_DONE" });
+        else if (s === "oobe") send({ type: "OOBE_DONE" });
         else if (s === "vm_close") send({ type: "VM_CLOSED" });
       }
     }
@@ -302,15 +331,21 @@ function SimulationPageInner() {
       else if (s === "downloading") send({ type: "DOWNLOAD_DONE" });
       else if (s === "flashing_usb") send({ type: "FLASH_DONE" });
       else if (s === "usb_reinsert") send({ type: "USB_INSERTED" });
+      else if (s === "disk_prep") send({ type: "DISK_PREPPED" });
+      else if (s === "bios_setup") send({ type: "BIOS_DONE" });
       else if (s === "rebooting") send({ type: "REBOOT_DONE" });
+      else if (s === "boot_prompt") send({ type: "BOOT_KEY_PRESSED" });
+      else if (s === "boot_menu") send({ type: "BOOT_SELECTED" });
+      else if (s === "windows_setup") send({ type: "SETUP_DONE" });
       else if (s === "partitioning") send({ type: "PARTITION_DONE" });
       else if (s === "live_welcome") send({ type: "LIVE_INSTALL" });
       else if (s === "live_desktop") send({ type: "LIVE_INSTALL" });
       else if (s === "create_vm") send({ type: "VM_CREATED" });
       else if (s === "mount_iso") send({ type: "ISO_MOUNTED" });
       else if (s === "vm_boot") send({ type: "VM_POWERED_ON" });
+      else if (s === "installing") send({ type: "INSTALL_DONE" });
       else if (s === "grub_menu") send({ type: "GRUB_DONE" });
-      else if (s === "first_boot") send({ type: "FIRST_BOOT_DONE" });
+      else if (s === "oobe") send({ type: "OOBE_DONE" });
       else if (s === "vm_close") send({ type: "VM_CLOSED" });
     }, 15000);
     return () => {
@@ -384,8 +419,11 @@ function SimulationPageInner() {
       flashing_usb: "FLASH_DONE",
       usb_reinsert: "USB_INSERTED",
       disk_prep: "DISK_PREPPED",
+      bios_setup: "BIOS_DONE",
       rebooting: "REBOOT_DONE",
+      boot_prompt: "BOOT_KEY_PRESSED",
       boot_menu: "BOOT_SELECTED",
+      windows_setup: "SETUP_DONE",
       partitioning: "PARTITION_DONE",
       live_welcome: "LIVE_INSTALL",
       live_desktop: "LIVE_INSTALL",
@@ -393,6 +431,8 @@ function SimulationPageInner() {
       mount_iso: "ISO_MOUNTED",
       vm_boot: "VM_POWERED_ON",
       installing: "INSTALL_DONE",
+      grub_menu: "GRUB_DONE",
+      oobe: "OOBE_DONE",
       vm_close: "VM_CLOSED",
     };
     const evt = transitions[s];
@@ -461,8 +501,11 @@ function SimulationPageInner() {
       flashing_usb: "FLASH_DONE",
       usb_reinsert: "USB_INSERTED",
       disk_prep: "DISK_PREPPED",
+      bios_setup: "BIOS_DONE",
       rebooting: "REBOOT_DONE",
+      boot_prompt: "BOOT_KEY_PRESSED",
       boot_menu: "BOOT_SELECTED",
+      windows_setup: "SETUP_DONE",
       partitioning: "PARTITION_DONE",
       live_welcome: "LIVE_INSTALL",
       live_desktop: "LIVE_INSTALL",
@@ -471,7 +514,7 @@ function SimulationPageInner() {
       vm_boot: "VM_POWERED_ON",
       installing: "INSTALL_DONE",
       grub_menu: "GRUB_DONE",
-      first_boot: "FIRST_BOOT_DONE",
+      oobe: "OOBE_DONE",
       vm_close: "VM_CLOSED",
     };
     const evt = transitions[s];
@@ -485,8 +528,12 @@ function SimulationPageInner() {
     downloading: "Show the file manager with the downloaded ISO. Explain that ISO files are disk images — like a perfect copy of a DVD. They're typically 2-4 GB.",
     flashing_usb: "Walk through Rufus/Ventoy/BalenaEtcher. Explain that 'flashing' writes the ISO to USB sector-by-sector — it's not just copying files. The USB will become bootable.",
     usb_reinsert: "This simulates physically removing the USB and plugging it into the target machine. On real hardware, you'd move the USB from your current PC to the one you want to install on.",
+    disk_prep: "Open Disk Management in Windows to shrink the existing partition. Right-click the C: drive, select Shrink Volume, and enter the amount of space to free up for the new OS.",
+    bios_setup: "Enter BIOS/UEFI setup. Show the different tabs (Main, Advanced, Boot, Exit). Explain Secure Boot, USB Boot priority, and boot order. F10 to save and exit.",
     rebooting: "Explain POST (Power-On Self-Test) and how to enter BIOS. Different brands use different keys: F2, F12, Del, Esc. Show the BIOS splash screen.",
+    boot_prompt: "This is the 'Press any key to boot from USB' prompt. You have 5 seconds — if you miss it, the computer boots from the hard drive instead. Press any key!",
     boot_menu: "This is the BIOS boot device menu. Explain that you select the USB drive to boot from. On real hardware, pressing F12 during POST opens this on most PCs.",
+    windows_setup: "Walk through the Windows Setup wizard: choose language/time/keyboard, click Install Now, enter a product key (or skip), accept the license, choose Custom install.",
     partitioning: "This is the scariest part for beginners. Explain that you're shrinking Windows to make room for Linux. Emphasize: nothing is deleted — you're just resizing. Use the slider to show how it works.",
     live_desktop: "Welcome to the live desktop! Everything runs from USB — nothing touches the hard drive. You can browse, open apps, test hardware compatibility. When ready, click Install.",
     live_welcome: "The installer asks: Try or Install? 'Try' boots into the live desktop. 'Install' goes straight to installation. For a first-timer, 'Try' is safer.",
@@ -494,8 +541,9 @@ function SimulationPageInner() {
     mount_iso: "Attach the downloaded ISO as a virtual CD/DVD. This is like inserting a physical disc — the VM will boot from it.",
     vm_boot: "Power on the VM. It boots from the attached ISO, just like a real machine booting from USB. You'll see the same installer screens.",
     installing: "The installer copies files, sets up your user account, configures the bootloader. This is the part that takes 10-30 minutes on real hardware. We're speeding through it.",
-    vm_close: "After installation, shut down the VM. In VirtualBox, you'd remove the ISO from the virtual drive and reboot — but here we're just closing the window.",
     grub_menu: "This is the GRUB bootloader menu. On a dual-boot machine, you choose between Ubuntu and Windows every time you start the PC. Explain that GRUB is installed to the EFI partition and controls which OS boots.",
+    oobe: "The OOBE (Out-of-Box Experience) is Windows' first-boot wizard. Walk through region, keyboard, Wi-Fi, account creation, PIN setup, and privacy settings. This only happens once.",
+    vm_close: "After installation, shut down the VM. In VirtualBox, you'd remove the ISO from the virtual drive and reboot — but here we're just closing the window.",
     first_boot: "The first-boot wizard guides you through online accounts, privacy settings, and initial configuration. This only happens once — after that, you go straight to the desktop.",
   };
 
@@ -544,6 +592,14 @@ function SimulationPageInner() {
             setDiskShrunk={setDiskShrunk}
           />
         );
+      case "bios_setup":
+        return (
+          <BiosSetup
+            onComplete={() => send({ type: "BIOS_DONE" })}
+            secureBoot={secureBoot}
+            setSecureBoot={setSecureBoot}
+          />
+        );
       case "rebooting":
         return (
           <Reboot
@@ -557,11 +613,22 @@ function SimulationPageInner() {
             setBootOrderUSB={setBootOrderUSB}
           />
         );
+      case "boot_prompt":
+        return (
+          <BootPrompt
+            onComplete={() => send({ type: "BOOT_KEY_PRESSED" })}
+            onError={() => send({ type: "BOOT_KEY_TIMEOUT" })}
+          />
+        );
       case "boot_menu":
         return (
           <BootMenu
             onComplete={() => send({ type: path === "live-usb" ? "LIVE_TRY" : "BOOT_SELECTED" })}
           />
+        );
+      case "windows_setup":
+        return (
+          <WindowsSetup config={cfg} onComplete={() => send({ type: "SETUP_DONE" })} />
         );
       case "live_welcome":
         return (
@@ -616,13 +683,11 @@ function SimulationPageInner() {
         return (
           <GrubMenu onComplete={() => send({ type: "GRUB_DONE" })} />
         );
-      case "first_boot":
+      case "oobe":
         return (
-          <FirstBoot
+          <WindowsOOBE
             osName={cfg.branding.name}
-            osLogo={cfg.branding.logo}
-            accent={cfg.branding.accent}
-            onComplete={() => send({ type: "FIRST_BOOT_DONE" })}
+            onComplete={() => send({ type: "OOBE_DONE" })}
           />
         );
       case "vm_close":
@@ -670,6 +735,7 @@ function SimulationPageInner() {
     if (s === "vm_close") return false;
     if (s === "disk_prep" && path !== "dual-boot") return false;
     if (s === "partitioning" && path !== "dual-boot") return false;
+    if (s === "windows_setup" && path === "live-usb") return false;
     if (s === "live_welcome" && path !== "live-usb") return false;
     if (s === "live_desktop" && path !== "live-usb") return false;
     return true;

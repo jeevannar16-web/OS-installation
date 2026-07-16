@@ -4,61 +4,59 @@ import type { OSConfig } from "../../data/types";
 import { playKeyClick, playClick } from "../shared/sounds";
 import { SparkleBurst, PulseHint } from "../shared/InteractiveEffects";
 
-/**
- * Arch Linux guided terminal install.
- *
- * Each step presents a command that the user must type (or click to auto-complete).
- * Correct commands produce realistic terminal output. Wrong commands show errors.
- * The user advances through the full manual Arch install flow.
- */
-
 type Phase = "terminal" | "done";
 
 type TerminalLine = { text: string; kind: "input" | "output" | "error" | "success" };
 
 type ArchStep = {
   prompt: string;
-  /** The expected command(s). User must type the exact command to advance. */
   commands: string[];
-  /** Output lines shown after correct command. */
   output: TerminalLine[];
-  /** Hint shown below the terminal if user is stuck. */
   hint: string;
 };
 
 const ARCH_STEPS: ArchStep[] = [
   {
-    prompt: "First, verify the boot mode is UEFI. Type the command to check the EFI variables directory:",
+    prompt: "Set keyboard keymap (useful for non-US layouts). Type the loadkeys command:",
+    commands: ["loadkeys us", "loadkeys uk", "loadkeys de", "loadkeys fr"],
+    output: [
+      { text: "# loadkeys us", kind: "input" },
+      { text: "keymap set to us", kind: "success" },
+    ],
+    hint: "Try: loadkeys us",
+  },
+  {
+    prompt: "Verify the boot mode is UEFI. Check the EFI variables directory exists:",
     commands: ["ls /sys/firmware/efi/efivars"],
     output: [
-      { text: "$ ls /sys/firmware/efi/efivars", kind: "input" },
+      { text: "# ls /sys/firmware/efi/efivars", kind: "input" },
       { text: "BootOrder-8be4df61-93ca-11d2-aa0d-00e098032b8c", kind: "output" },
       { text: "Boot0000-8be4df61-93ca-11d2-aa0d-00e098032b8c", kind: "output" },
       { text: "Boot0001-8be4df61-93ca-11d2-aa0d-00e098032b8c", kind: "output" },
-      { text: "✓ UEFI boot mode confirmed", kind: "success" },
+      { text: "✓ UEFI boot mode confirmed — /sys/firmware/efi/efivars exists", kind: "success" },
     ],
     hint: "Try: ls /sys/firmware/efi/efivars",
   },
   {
-    prompt: "Connect to the internet and verify with a ping. Type the ping command:",
+    prompt: "Connect to the internet. Test with a ping:",
     commands: ["ping -c 3 archlinux.org"],
     output: [
-      { text: "$ ping -c 3 archlinux.org", kind: "input" },
+      { text: "# ping -c 3 archlinux.org", kind: "input" },
       { text: "PING archlinux.org (95.217.163.246) 56(84) bytes of data.", kind: "output" },
       { text: "64 bytes from 95.217.163.246: icmp_seq=1 ttl=56 time=12.3 ms", kind: "output" },
       { text: "64 bytes from 95.217.163.246: icmp_seq=2 ttl=56 time=11.8 ms", kind: "output" },
       { text: "64 bytes from 95.217.163.246: icmp_seq=3 ttl=56 time=12.1 ms", kind: "output" },
       { text: "--- archlinux.org ping statistics ---", kind: "output" },
-      { text: "3 packets transmitted, 3 received, 0% packet loss", kind: "success" },
+      { text: "3 packets transmitted, 3 received, 0% packet loss, time 2004ms", kind: "success" },
     ],
     hint: "Try: ping -c 3 archlinux.org",
   },
   {
-    prompt: "Update the system clock. Type the timedatectl command:",
+    prompt: "Update the system clock with NTP:",
     commands: ["timedatectl set-ntp true", "timedatectl"],
     output: [
-      { text: "$ timedatectl set-ntp true", kind: "input" },
-      { text: "$ timedatectl", kind: "input" },
+      { text: "# timedatectl set-ntp true", kind: "input" },
+      { text: "# timedatectl", kind: "input" },
       { text: "               Local time: Tue 2024-07-01 14:32:07 UTC", kind: "output" },
       { text: "           Universal time: Tue 2024-07-01 14:32:07 UTC", kind: "output" },
       { text: "                 RTC time: Tue 2024-07-01 14:32:07", kind: "output" },
@@ -68,31 +66,37 @@ const ARCH_STEPS: ArchStep[] = [
     hint: "Try: timedatectl set-ntp true",
   },
   {
-    prompt: "Partition the disk with cfdisk. Type the command to start cfdisk on /dev/sda:",
-    commands: ["cfdisk /dev/sda", "cfdisk /dev/sda --help"],
+    prompt: "Partition the disk with fdisk. Create EFI, swap, and root partitions:",
+    commands: ["fdisk /dev/sda"],
     output: [
-      { text: "$ cfdisk /dev/sda", kind: "input" },
-      { text: "                              cfdisk (util-linux 2.39.3)", kind: "output" },
-      { text: "                              Disk: /dev/sda", kind: "output" },
-      { text: "                           Sector size: 512 bytes", kind: "output" },
-      { text: "                            Disk size: 50 GiB (53687091200 bytes)", kind: "output" },
-      { text: "", kind: "output" },
-      { text: "  ┌─────────────────────────────────────────┐", kind: "output" },
-      { text: "  │  Name   Flags  Type        Size    FS   │", kind: "output" },
-      { text: "  ├─────────────────────────────────────────┤", kind: "output" },
-      { text: "  │  sda1   Boot   EFI        512M   FAT32 │", kind: "success" },
-      { text: "  │  sda2          Linux swap   4G   swap  │", kind: "success" },
-      { text: "  │  sda3          Linux       45.5G  ext4  │", kind: "success" },
-      { text: "  └─────────────────────────────────────────┘", kind: "output" },
-      { text: "✓ Partitions created: EFI (512M), Swap (4G), Root (45.5G ext4)", kind: "success" },
+      { text: "# fdisk /dev/sda", kind: "input" },
+      { text: "Welcome to fdisk (util-linux 2.39.3).", kind: "output" },
+      { text: "Changes will remain in memory only, until you decide to write them.", kind: "output" },
+      { text: "Command (m for help): g", kind: "output" },
+      { text: "Created a new GPT disklabel", kind: "output" },
+      { text: "Command: n  →  Partition 1, default, +512M  →  Type: EFI System", kind: "output" },
+      { text: "Command: n  →  Partition 2, default, +4G     →  Type: Linux swap", kind: "output" },
+      { text: "Command: n  →  Partition 3, default, rest    →  Type: Linux filesystem", kind: "output" },
+      { text: "Command: w  →  The partition table has been altered.", kind: "output" },
+      { text: "✓ Created 3 partitions: /dev/sda1 (EFI 512M), /dev/sda2 (swap 4G), /dev/sda3 (root)", kind: "success" },
     ],
-    hint: "Try: cfdisk /dev/sda",
+    hint: "Try: fdisk /dev/sda",
   },
   {
-    prompt: "Format the partitions. Type the command to format the root partition as ext4:",
-    commands: ["mkfs.ext4 /dev/sda3", "mkfs.ext4 /dev/sda3 -F"],
+    prompt: "Format the EFI partition as FAT32:",
+    commands: ["mkfs.fat -F32 /dev/sda1"],
     output: [
-      { text: "$ mkfs.ext4 /dev/sda3", kind: "input" },
+      { text: "# mkfs.fat -F32 /dev/sda1", kind: "input" },
+      { text: "mkfs.fat 4.2 (2021-01-31)", kind: "output" },
+      { text: "✓ /dev/sda1 formatted as FAT32 (EFI)", kind: "success" },
+    ],
+    hint: "Try: mkfs.fat -F32 /dev/sda1",
+  },
+  {
+    prompt: "Format the root partition as ext4:",
+    commands: ["mkfs.ext4 /dev/sda3"],
+    output: [
+      { text: "# mkfs.ext4 /dev/sda3", kind: "input" },
       { text: "mke2fs 1.47.0 (5-Feb-2023)", kind: "output" },
       { text: "Creating filesystem with 11945984 4k blocks and 2988032 inodes", kind: "output" },
       { text: "Filesystem UUID: a1b2c3d4-e5f6-7890-abcd-ef1234567890", kind: "output" },
@@ -101,24 +105,26 @@ const ARCH_STEPS: ArchStep[] = [
     hint: "Try: mkfs.ext4 /dev/sda3",
   },
   {
-    prompt: "Mount the root partition. Type the mount command:",
-    commands: ["mount /dev/sda3 /mnt"],
+    prompt: "Enable swap and mount partitions:",
+    commands: ["swapon /dev/sda2", "mount /dev/sda3 /mnt", "mkdir -p /mnt/boot && mount /dev/sda1 /mnt/boot"],
     output: [
-      { text: "$ mount /dev/sda3 /mnt", kind: "input" },
-      { text: "✓ Root partition mounted at /mnt", kind: "success" },
+      { text: "# swapon /dev/sda2", kind: "input" },
+      { text: "# mount /dev/sda3 /mnt", kind: "input" },
+      { text: "# mkdir -p /mnt/boot", kind: "input" },
+      { text: "# mount /dev/sda1 /mnt/boot", kind: "input" },
+      { text: "✓ Partitions mounted: / (ext4), /boot (EFI), swap enabled", kind: "success" },
     ],
-    hint: "Try: mount /dev/sda3 /mnt",
+    hint: "Try: swapon /dev/sda2 && mount /dev/sda3 /mnt && mkdir -p /mnt/boot && mount /dev/sda1 /mnt/boot",
   },
   {
-    prompt: "Install the base system with pacstrap. Type the pacstrap command:",
+    prompt: "Install the base system with pacstrap:",
     commands: ["pacstrap /mnt base linux linux-firmware", "pacstrap /mnt base linux linux-firmware nano"],
     output: [
-      { text: "$ pacstrap /mnt base linux linux-firmware", kind: "input" },
+      { text: "# pacstrap /mnt base linux linux-firmware", kind: "input" },
       { text: ":: Synchronizing package databases...", kind: "output" },
       { text: "  core                   156.2 MiB  12.3 MiB/s  00:12 [------------------] 100%", kind: "output" },
       { text: "  extra                 1823.4 MiB  14.1 MiB/s  02:09 [------------------] 100%", kind: "output" },
       { text: ":: Starting full system upgrade...", kind: "output" },
-      { text: ":: Installing base packages...", kind: "output" },
       { text: "resolving dependencies...", kind: "output" },
       { text: "looking for conflicting packages...", kind: "output" },
       { text: "Packages (142)  base-1r1  linux-6.9.7.arch1-1  linux-firmware-20240610  ...", kind: "output" },
@@ -126,56 +132,55 @@ const ARCH_STEPS: ArchStep[] = [
       { text: "Total Download Size:   2145.3 MiB", kind: "output" },
       { text: "Installed Size:        3421.7 MiB", kind: "output" },
       { text: "", kind: "output" },
-      { text: "✓ Base system installed via pacstrap", kind: "success" },
+      { text: "✓ Base system installed (142 packages)", kind: "success" },
     ],
     hint: "Try: pacstrap /mnt base linux linux-firmware",
   },
   {
-    prompt: "Generate an fstab file. Type the genfstab command:",
+    prompt: "Generate an fstab file for the new system:",
     commands: ["genfstab -U /mnt >> /mnt/etc/fstab"],
     output: [
-      { text: "$ genfstab -U /mnt >> /mnt/etc/fstab", kind: "input" },
+      { text: "# genfstab -U /mnt >> /mnt/etc/fstab", kind: "input" },
       { text: "✓ /mnt/etc/fstab generated", kind: "success" },
     ],
     hint: "Try: genfstab -U /mnt >> /mnt/etc/fstab",
   },
   {
-    prompt: "Change root into the new system with arch-chroot. Type the command:",
+    prompt: "Change root into the new system:",
     commands: ["arch-chroot /mnt"],
     output: [
-      { text: "$ arch-chroot /mnt", kind: "input" },
+      { text: "# arch-chroot /mnt", kind: "input" },
       { text: "[root@archlinux /]#", kind: "output" },
-      { text: "✓ Entered the new system via arch-chroot", kind: "success" },
+      { text: "✓ Entered new system via arch-chroot", kind: "success" },
     ],
     hint: "Try: arch-chroot /mnt",
   },
   {
-    prompt: "Set the timezone. Type the timedatectl command (we'll use UTC):",
-    commands: ["ln -sf /usr/share/zoneinfo/UTC /etc/localtime", "timedatectl set-timezone UTC"],
+    prompt: "Set the timezone to UTC:",
+    commands: ["ln -sf /usr/share/zoneinfo/UTC /etc/localtime", "hwclock --systohc"],
     output: [
       { text: "# ln -sf /usr/share/zoneinfo/UTC /etc/localtime", kind: "input" },
       { text: "# hwclock --systohc", kind: "input" },
-      { text: "✓ Timezone set to UTC and hardware clock synced", kind: "success" },
+      { text: "✓ Timezone set to UTC, hardware clock synced", kind: "success" },
     ],
     hint: "Try: ln -sf /usr/share/zoneinfo/UTC /etc/localtime",
   },
   {
-    prompt: "Install the bootloader with GRUB. Type the grub-install command:",
-    commands: ["grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB"],
+    prompt: "Generate locale and set hostname:",
+    commands: ["echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen", "locale-gen", "echo 'archlinux' > /etc/hostname"],
     output: [
-      { text: "# grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB", kind: "input" },
-      { text: "Installing for x86_64-efi platform.", kind: "output" },
-      { text: "Installation finished. No error reported.", kind: "success" },
-      { text: "# grub-mkconfig -o /boot/grub/grub.cfg", kind: "input" },
-      { text: "Generating grub configuration file ...", kind: "output" },
-      { text: "Found linux image: /boot/vmlinuz-linux", kind: "output" },
-      { text: "Found initrd image: /boot/initramfs-linux.img", kind: "output" },
-      { text: "✓ GRUB bootloader installed and configured", kind: "success" },
+      { text: "# echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen", kind: "input" },
+      { text: "# locale-gen", kind: "input" },
+      { text: "Generating locales...", kind: "output" },
+      { text: "  en_US.UTF-8... done", kind: "output" },
+      { text: "Generation complete.", kind: "output" },
+      { text: "# echo 'archlinux' > /etc/hostname", kind: "input" },
+      { text: "✓ Locale generated, hostname set to 'archlinux'", kind: "success" },
     ],
-    hint: "Try: grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB",
+    hint: "Try: echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen",
   },
   {
-    prompt: "Set the root password. Type the passwd command:",
+    prompt: "Set the root password:",
     commands: ["passwd", "passwd root"],
     output: [
       { text: "# passwd", kind: "input" },
@@ -186,7 +191,35 @@ const ARCH_STEPS: ArchStep[] = [
     hint: "Try: passwd",
   },
   {
-    prompt: "Exit chroot and reboot. Type the exit command:",
+    prompt: "Install and configure the GRUB bootloader:",
+    commands: ["grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB", "grub-mkconfig -o /boot/grub/grub.cfg"],
+    output: [
+      { text: "# grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB", kind: "input" },
+      { text: "Installing for x86_64-efi platform.", kind: "output" },
+      { text: "Installation finished. No error reported.", kind: "output" },
+      { text: "# grub-mkconfig -o /boot/grub/grub.cfg", kind: "input" },
+      { text: "Generating grub configuration file ...", kind: "output" },
+      { text: "Found linux image: /boot/vmlinuz-linux", kind: "output" },
+      { text: "Found initrd image: /boot/initramfs-linux.img", kind: "output" },
+      { text: "✓ GRUB bootloader installed and configured", kind: "success" },
+    ],
+    hint: "Try: grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB",
+  },
+  {
+    prompt: "Generate initramfs image:",
+    commands: ["mkinitcpio -P", "mkinitcpio -P linux"],
+    output: [
+      { text: "# mkinitcpio -P", kind: "input" },
+      { text: "==> Building image from preset: /etc/mkinitcpio.d/linux.preset: 'default'", kind: "output" },
+      { text: "  -> -k /boot/vmlinuz-linux -g /boot/initramfs-linux.img", kind: "output" },
+      { text: "==> Starting build: default", kind: "output" },
+      { text: "  ...", kind: "output" },
+      { text: "==> Image generation successful", kind: "success" },
+    ],
+    hint: "Try: mkinitcpio -P",
+  },
+  {
+    prompt: "Exit chroot, unmount, and reboot:",
     commands: ["exit", "umount -R /mnt", "reboot"],
     output: [
       { text: "# exit", kind: "input" },
@@ -210,8 +243,11 @@ export default function ArchInstall({
   const [phase] = useState<Phase>("terminal");
   const [stepIdx, setStepIdx] = useState(0);
   const [lines, setLines] = useState<TerminalLine[]>([
-    { text: "Welcome to Arch Linux live environment!", kind: "output" },
-    { text: "Follow the guided install below. Type each command and press Enter.", kind: "output" },
+    { text: "Welcome to Arch Linux (archlinux-2024.07.01-x86_64.iso)", kind: "output" },
+    { text: "archlinux login: root", kind: "output" },
+    { text: "", kind: "output" },
+    { text: "Follow the official Installation Guide.", kind: "output" },
+    { text: "Type each command and press Enter, or click Auto-complete.", kind: "output" },
     { text: "", kind: "output" },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -225,21 +261,18 @@ export default function ArchInstall({
   const currentStep = ARCH_STEPS[stepIdx];
   const isComplete = stepIdx >= ARCH_STEPS.length;
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
   }, [lines]);
 
-  // Focus input
   useEffect(() => {
     if (phase === "terminal" && !isComplete && !isProcessing) {
       inputRef.current?.focus();
     }
   }, [phase, stepIdx, isComplete, isProcessing]);
 
-  // Auto-complete timer for hint
   useEffect(() => {
     if (phase === "terminal" && currentStep) {
       const timer = setTimeout(() => {
@@ -250,7 +283,6 @@ export default function ArchInstall({
     }
   }, [stepIdx, phase, currentStep, speed]);
 
-  // Complete handler
   useEffect(() => {
     if (isComplete && phase === "terminal") {
       const timer = setTimeout(() => {
@@ -269,24 +301,20 @@ export default function ArchInstall({
     setIsProcessing(true);
     playClick();
 
-    // Check if command matches any accepted command
     const isCorrect = currentStep.commands.some(
       (c) => cmd.toLowerCase() === c.toLowerCase()
     );
 
     if (isCorrect) {
-      // Show the input line
       setLines((prev) => [
         ...prev,
         { text: `$ ${cmd}`, kind: "input" },
-        ...currentStep.output.slice(1), // skip the first line (it's the echo of the command)
+        ...currentStep.output.slice(1),
       ]);
 
-      // Clear hint timer
       if (hintTimer) clearTimeout(hintTimer);
       setHintVisible(false);
 
-      // Advance after a short delay
       setTimeout(() => {
         setStepIdx((p) => p + 1);
         setCompletedSteps((p) => p + 1);
@@ -294,7 +322,6 @@ export default function ArchInstall({
         setIsProcessing(false);
       }, speed === "fast" ? 200 : 500);
     } else {
-      // Wrong command - show error
       setLines((prev) => [
         ...prev,
         { text: `$ ${cmd}`, kind: "input" },
@@ -452,13 +479,13 @@ export default function ArchInstall({
           )}
         </div>
         <PulseHint pulse={hintVisible}>
-        <button
-          onClick={handleAutoComplete}
-          disabled={isProcessing}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-        >
-          ⏩ Auto-complete step
-        </button>
+          <button
+            onClick={handleAutoComplete}
+            disabled={isProcessing}
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            ⏩ Auto-complete step
+          </button>
         </PulseHint>
       </div>
     </div>
