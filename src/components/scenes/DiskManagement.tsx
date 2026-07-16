@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playClick, playSuccess } from "../shared/sounds";
 import { PulseHint } from "../shared/InteractiveEffects";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 export default function DiskManagement({
   onComplete,
@@ -10,6 +11,7 @@ export default function DiskManagement({
   onComplete: () => void;
   setDiskShrunk: (v: boolean) => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [phase, setPhase] = useState<"idle" | "shrinking" | "shrunk">("idle");
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
@@ -18,6 +20,12 @@ export default function DiskManagement({
   const [progress, setProgress] = useState(0);
 
   const cDriveRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (phase === "shrunk") {
+      registerAdvance(() => onComplete());
+    }
+  }, [phase, registerAdvance, onComplete]);
 
   function handleRightClick(e: React.MouseEvent) {
     e.preventDefault();

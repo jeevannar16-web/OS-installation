@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 type TerminalEntry = { cmd: string; output: string };
 
@@ -36,8 +37,13 @@ export default function LiveDesktop({
   config: OSConfig;
   onInstallClick: () => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [termOpen, setTermOpen] = useState(false);
   const osName = config.branding.name;
+
+  useEffect(() => {
+    registerAdvance(() => onInstallClick());
+  }, [registerAdvance, onInstallClick]);
   const [entries, setEntries] = useState<TerminalEntry[]>([
     { cmd: "", output: getWelcomeText(osName) },
   ]);

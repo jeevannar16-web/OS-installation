@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig, WizardStep } from "../../data/types";
 import { playClick, playKeyClick } from "../shared/sounds";
 import { SparkleBurst } from "../shared/InteractiveEffects";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 type WizardPhase = "wizard" | "installing" | "done";
 
@@ -293,6 +294,7 @@ export default function Install({
   speed: "normal" | "fast";
   onComplete: () => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [phase, setPhase] = useState<WizardPhase>("wizard");
   const [stepIdx, setStepIdx] = useState(0);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -305,6 +307,12 @@ export default function Install({
   const isLastStep = stepIdx === steps.length - 1;
 
   const installDuration = speed === "fast" ? 2000 : 8000;
+
+  useEffect(() => {
+    if (phase === "installing") {
+      registerAdvance(() => onComplete());
+    }
+  }, [phase, registerAdvance, onComplete]);
 
   // Keyboard shortcuts
   useEffect(() => {

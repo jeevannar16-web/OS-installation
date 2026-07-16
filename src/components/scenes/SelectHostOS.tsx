@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import type { HostOS } from "../../data/types";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 type SelectHostOSProps = {
   onSelect: (hostOS: HostOS) => void;
@@ -27,6 +29,11 @@ const HOST_OPTIONS: Array<{ id: HostOS; name: string; icon: string; description:
 ];
 
 export default function SelectHostOS({ onSelect }: SelectHostOSProps) {
+  const { register: registerAdvance } = useSceneAdvance();
+
+  useEffect(() => {
+    registerAdvance(() => onSelect("windows"));
+  }, [registerAdvance, onSelect]);
   return (
     <div className="flex flex-col items-center gap-8 py-8">
       <div className="text-center">

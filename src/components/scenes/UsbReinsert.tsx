@@ -1,9 +1,10 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "../shared/Toast";
 import { playUsbConnect, playClick } from "../shared/sounds";
 import { PulseHint } from "../shared/InteractiveEffects";
 import GhostCursor from "../shared/GhostCursor";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 function UsbStickSvg({ className = "" }: { className?: string }) {
   return (
@@ -83,6 +84,7 @@ function PcTower({ glowing }: { glowing: boolean }) {
 type Phase = "drag" | "inserted";
 
 export default function UsbReinsert({ onComplete }: { onComplete: () => void }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [phase, setPhase] = useState<Phase>("drag");
   const [overPort, setOverPort] = useState(false);
   const toast = useToast();
@@ -95,6 +97,12 @@ export default function UsbReinsert({ onComplete }: { onComplete: () => void }) 
     toast("USB Drive inserted — removable disk detected", "🔌");
     setPhase("inserted");
   }, [toast]);
+
+  useEffect(() => {
+    if (phase === "inserted") {
+      registerAdvance(() => onComplete());
+    }
+  }, [phase, registerAdvance, onComplete]);
 
   // No auto-triggering: user must click "Show me again" manually
   // Removed auto-trigger useEffect

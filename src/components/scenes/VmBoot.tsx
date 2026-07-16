@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick, playError } from "../shared/sounds";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 type Phase = "off" | "bios" | "loading" | "menu" | "vt_error";
 
@@ -33,6 +34,7 @@ export default function VmBoot({
   vtEnabled: boolean;
   onHostReboot?: () => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [phase, setPhase] = useState<Phase>("off");
   const [biosLine, setBiosLine] = useState(0);
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -77,6 +79,15 @@ export default function VmBoot({
     const t = setTimeout(() => setPhase("menu"), speed === "fast" ? 500 : 1500);
     return () => clearTimeout(t);
   }, [phase, speed]);
+
+  useEffect(() => {
+    if (phase === "menu") {
+      registerAdvance(() => {
+        playClick();
+        onComplete();
+      });
+    }
+  }, [phase, registerAdvance, onComplete]);
 
   // Keyboard nav in menu
   useEffect(() => {

@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 export default function VmClose({
   config,
@@ -9,6 +11,12 @@ export default function VmClose({
   config: OSConfig;
   onComplete: () => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
+
+  useEffect(() => {
+    registerAdvance(() => onComplete());
+  }, [registerAdvance, onComplete]);
+
   return (
     <div className="mx-auto w-full max-w-4xl lg:max-w-5xl space-y-6">
       {/* VM Window */}

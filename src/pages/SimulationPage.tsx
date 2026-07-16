@@ -30,6 +30,7 @@ import DiskManagement from "../components/scenes/DiskManagement";
 import { toggleMute, isMuted } from "../components/shared/sounds";
 import ThemePicker from "../components/shared/ThemePicker";
 import { useTheme } from "../components/shared/ThemeProvider";
+import { SceneAdvanceProvider, useSceneAdvance } from "../components/shared/SceneAdvance";
 
 const SCENE_LABELS: Record<string, string> = {
   idle: "Start",
@@ -117,9 +118,18 @@ const SCENE_CONTEXT: Record<string, string> = {
 };
 
 export default function SimulationPage() {
+  return (
+    <SceneAdvanceProvider>
+      <SimulationPageInner />
+    </SceneAdvanceProvider>
+  );
+}
+
+function SimulationPageInner() {
   const { os, path } = useParams();
   const config = getOS(os);
   const { cycleTheme } = useTheme();
+  const { current: sceneAdvance } = useSceneAdvance();
 
   const [state, send] = useMachine(simulationMachine);
   const [showcase, setShowcase] = useState(() => {
@@ -950,7 +960,10 @@ export default function SimulationPage() {
               {SCENE_LABELS[current] ?? current}
             </div>
             <button
-              onClick={advanceScene}
+              onClick={() => {
+                if (sceneAdvance) sceneAdvance();
+                else advanceScene();
+              }}
               disabled={current === "complete"}
               className="pointer-events-auto rounded-2xl border border-accent/40 bg-accent/90 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-all shadow-lg shadow-accent/20 hover:bg-accent active:scale-95 backdrop-blur-xl"
             >

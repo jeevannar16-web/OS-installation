@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 export default function LiveWelcome({
   config,
@@ -11,7 +13,12 @@ export default function LiveWelcome({
   onTry: () => void;
   onInstall: () => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const name = config.branding.name;
+
+  useEffect(() => {
+    registerAdvance(() => onInstall());
+  }, [registerAdvance, onInstall]);
 
   return (
     <div

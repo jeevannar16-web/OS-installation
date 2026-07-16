@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { playKeyClick } from "../shared/sounds";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 const ENTRIES = [
   { id: "usb", label: "UEFI: Generic Flash Disk 8.0, Partition 1", correct: true },
@@ -13,8 +14,17 @@ export default function BootMenu({
 }: {
   onComplete: () => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [selected, setSelected] = useState(0);
   const [wrongFakeout, setWrongFakeout] = useState(false);
+
+  const correctIndex = ENTRIES.findIndex((e) => e.correct);
+
+  useEffect(() => {
+    if (selected === correctIndex) {
+      registerAdvance(() => onComplete());
+    }
+  }, [selected, correctIndex, registerAdvance, onComplete]);
 
   const handleKey = useCallback(
     (e: KeyboardEvent) => {

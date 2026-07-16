@@ -4,6 +4,7 @@ import type { OSConfig } from "../../data/types";
 import { useToast } from "../shared/Toast";
 import FilePickerModal from "../shared/FilePickerModal";
 import { playUsbConnect, playSuccess, playClick } from "../shared/sounds";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 
 const SUPPORTED_TOOLS = new Set(["rufus", "ventoy", "balena"]);
@@ -30,6 +31,7 @@ function RufusTool({
   onComplete: () => void;
   setRufusPartitionScheme: (v: "GPT" | "MBR") => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [device, setDevice] = useState(USB_DEVICES[0].id);
   const [isoFile, setIsoFile] = useState<string | null>(null);
   const [rufusPhase, setRufusPhase] = useState<"idle" | "flashing" | "done">("idle");
@@ -85,6 +87,12 @@ function RufusTool({
   }, [rufusPhase]);
 
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [logLines]);
+
+  useEffect(() => {
+    if (rufusPhase === "done") {
+      registerAdvance(() => onComplete());
+    }
+  }, [rufusPhase, registerAdvance, onComplete]);
 
   const selected = USB_DEVICES.find((d) => d.id === device);
   const isoGB = isoFile ? parseSizeGB(config.iso.size) : 0;
@@ -195,6 +203,7 @@ function RufusTool({
 
 /* ─── Ventoy ─── */
 function VentoyTool({ config, speed, onComplete }: { config: OSConfig; speed: "normal" | "fast"; onComplete: () => void }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [phase, setPhase] = useState<"idle" | "installing" | "copying" | "done">("idle");
   const [progress, setProgress] = useState(0);
   const [over, setOver] = useState(false);
@@ -221,6 +230,12 @@ function VentoyTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
     return () => cancelAnimationFrame(raf);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
+
+  useEffect(() => {
+    if (phase === "done") {
+      registerAdvance(() => onComplete());
+    }
+  }, [phase, registerAdvance, onComplete]);
 
   return (
     <div className="rounded-xl bg-[#1a1a2e] ring-1 ring-white/10 overflow-hidden p-5 space-y-4">
@@ -270,6 +285,7 @@ function VentoyTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
 
 /* ─── BalenaEtcher ─── */
 function EtcherTool({ config, speed, onComplete }: { config: OSConfig; speed: "normal" | "fast"; onComplete: () => void }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [etcherPhase, setEtcherPhase] = useState<"pick_file" | "pick_target" | "flashing" | "done">("pick_file");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
@@ -292,6 +308,12 @@ function EtcherTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
     return () => cancelAnimationFrame(raf);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [etcherPhase]);
+
+  useEffect(() => {
+    if (etcherPhase === "done") {
+      registerAdvance(() => onComplete());
+    }
+  }, [etcherPhase, registerAdvance, onComplete]);
 
   const steps = [
     { label: "Flash from file", done: !!selectedFile, onClick: () => setPickerOpen(true), icon: "📁" },

@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { Tooltip } from "../shared/InteractiveEffects";
 import { playClick } from "../shared/sounds";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 const TOTAL_GB = 500;
 const MIN_NEW_GB = 20;
@@ -14,6 +15,7 @@ export default function Partition({
   diskShrunk: boolean;
   onRebootWindows: () => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [newGB, setNewGB] = useState(diskShrunk ? 30 : 80);
   const existingGB = TOTAL_GB - newGB;
   const barRef = useRef<HTMLDivElement>(null);
@@ -21,6 +23,12 @@ export default function Partition({
 
   const pct = (newGB / TOTAL_GB) * 100;
   const canConfirm = newGB >= MIN_NEW_GB;
+
+  useEffect(() => {
+    if (diskShrunk && canConfirm) {
+      registerAdvance(() => onComplete());
+    }
+  }, [diskShrunk, canConfirm, registerAdvance, onComplete]);
 
   const handleMove = useCallback(
     (clientX: number) => {

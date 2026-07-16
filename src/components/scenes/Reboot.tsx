@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { getRandomBios } from "../../data/bios";
 import { playPostBeep, playKeyClick, playSuccess, playClick } from "../shared/sounds";
 import { Tooltip, PulseHint } from "../shared/InteractiveEffects";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 type RebootPhase = "flicker" | "fade_out" | "post" | "memory" | "prompt" | "missed" | "bios" | "done";
 type BiosTab = "main" | "advanced" | "security" | "boot" | "exit";
@@ -26,6 +27,7 @@ export default function Reboot({
   bootOrderUSB: boolean;
   setBootOrderUSB: (v: boolean) => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const bios = useMemo(() => getRandomBios(), []);
   const [phase, setPhase] = useState<RebootPhase>("flicker");
   const [memCount, setMemCount] = useState(0);
@@ -158,6 +160,17 @@ export default function Reboot({
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [handleKey]);
+
+  useEffect(() => {
+    if (phase === "prompt") {
+      registerAdvance(() => {
+        playKeyClick();
+        setPhase("done");
+        playSuccess();
+        onComplete();
+      });
+    }
+  }, [phase, registerAdvance, onComplete]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">

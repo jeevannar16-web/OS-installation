@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import GhostCursor from "../shared/GhostCursor";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 type Phase = "address" | "search" | "download" | "downloading" | "done";
 
@@ -85,6 +86,7 @@ export default function FakeBrowser({
   speed: "normal" | "fast";
   onComplete: () => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const dp = config.downloadPage;
   const [phase, setPhase] = useState<Phase>("address");
   const [query, setQuery] = useState("");
@@ -98,6 +100,13 @@ export default function FakeBrowser({
   const relevant = isRelevant(query, config.searchKeywords);
   const results = relevant ? buildRelevant(config) : buildIrrelevant();
   const didYouMean = `download ${config.branding.shortName.toLowerCase()}`;
+
+  // Register advance when download timer is running
+  useEffect(() => {
+    if (phase === "downloading") {
+      registerAdvance(() => onComplete());
+    }
+  }, [phase, registerAdvance, onComplete]);
 
   // Drive the fake download progress.
   useEffect(() => {

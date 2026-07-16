@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 type Step = "name" | "memory" | "efi" | "disk" | "summary";
 
@@ -25,6 +26,7 @@ export default function CreateVM({
   config: OSConfig;
   onComplete: () => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const STEPS = getSteps(config);
   const [step, setStep] = useState(0);
   const [vmName, setVmName] = useState(`${config.branding.shortName} VM`);
@@ -33,6 +35,12 @@ export default function CreateVM({
   const [efiEnabled, setEfiEnabled] = useState(true);
 
   const current = STEPS[step];
+
+  useEffect(() => {
+    if (step === STEPS.length - 1) {
+      registerAdvance(() => onComplete());
+    }
+  }, [step, STEPS.length, registerAdvance, onComplete]);
 
   function next() {
     playClick();

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
+import { useSceneAdvance } from "../shared/SceneAdvance";
 
 type Tab = "system" | "display" | "storage" | "network";
 
@@ -19,9 +20,16 @@ export default function MountISO({
   config: OSConfig;
   onComplete: () => void;
 }) {
+  const { register: registerAdvance } = useSceneAdvance();
   const [tab, setTab] = useState<Tab>("storage");
   const [isoAttached, setIsoAttached] = useState(false);
   const [showFilePicker, setShowFilePicker] = useState(false);
+
+  useEffect(() => {
+    if (isoAttached) {
+      registerAdvance(() => onComplete());
+    }
+  }, [isoAttached, registerAdvance, onComplete]);
 
   function handleAttach() {
     playClick();
