@@ -131,7 +131,12 @@ export default function SimulationPage() {
   const [paused, setPaused] = useState(false);
   const [sceneLabelKey, setSceneLabelKey] = useState(0);
   const [sceneLabelVisible, setSceneLabelVisible] = useState(false);
+  const [showNavigator, setShowNavigator] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const autoAdvanceRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const jumpRef = useRef<string | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [diskShrunk, setDiskShrunk] = useState(false);
   const [secureBoot, setSecureBoot] = useState(true);
@@ -278,6 +283,18 @@ export default function SimulationPage() {
         setPaused(false);
         if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       }
+      if (e.key === "n" || e.key === "N") {
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+        setShowNavigator((v) => !v);
+        setShowNotes(false);
+      }
+      if (e.key === "b" || e.key === "B") {
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+        setShowNotes((v) => !v);
+        setShowNavigator(false);
+      }
       if (e.key === " " || e.code === "Space") {
         const active = document.activeElement;
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
@@ -288,6 +305,78 @@ export default function SimulationPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [presentationMode]);
+
+  // Close navigator/notes on click outside
+  useEffect(() => {
+    if (!showNavigator && !showNotes) return;
+    function onClick(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-nav-panel]") && !target.closest("[data-nav-btn]")) {
+        setShowNavigator(false);
+        setShowNotes(false);
+      }
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [showNavigator, showNotes]);
+
+  // ── Auto-jump: fast-forward to a target scene ──
+  useEffect(() => {
+    if (!jumpRef.current || !config) return;
+    const target = jumpRef.current;
+    const s = String(state.value);
+    if (s === target) {
+      jumpRef.current = null;
+      return;
+    }
+    if (s === "idle") {
+      send({ type: "START", osId: config.id, path: path as never });
+      return;
+    }
+    // Map states to their forward-transition events
+    const transitions: Record<string, string> = {
+      searching: "SEARCH_DONE",
+      downloading: "DOWNLOAD_DONE",
+      flashing_usb: "FLASH_DONE",
+      usb_reinsert: "USB_INSERTED",
+      disk_prep: "DISK_PREPPED",
+      rebooting: "REBOOT_DONE",
+      boot_menu: "BOOT_SELECTED",
+      partitioning: "PARTITION_DONE",
+      live_welcome: "LIVE_INSTALL",
+      live_desktop: "LIVE_INSTALL",
+      create_vm: "VM_CREATED",
+      mount_iso: "ISO_MOUNTED",
+      vm_boot: "VM_POWERED_ON",
+      installing: "INSTALL_DONE",
+      vm_close: "VM_CLOSED",
+    };
+    const evt = transitions[s];
+    if (evt) {
+      // Small delay so the user sees scenes flash by
+      const t = setTimeout(() => send({ type: evt as never }), 150);
+      return () => clearTimeout(t);
+    }
+  }, [state.value, config, path, send]);
+
+  // ── Countdown timer for presentation mode ──
+  useEffect(() => {
+    if (!presentationMode || paused || current === "idle" || current === "complete") {
+      setCountdown(0);
+      return;
+    }
+    const total = 15;
+    setCountdown(total);
+    countdownRef.current = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) return 0;
+        return c - 1;
+      });
+    }, 1000);
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, [presentationMode, paused, current]);
 
   if (!config) {
     return (
@@ -305,6 +394,29 @@ export default function SimulationPage() {
   const activeApp = ACTIVE_APP[current] ?? { name: "OS Simulator", icon: "💿" };
   const isFullscreen = FULLSCREEN_SCENES.has(current);
   const isVm = path === "vm";
+
+  function jumpToScene(target: string) {
+    jumpRef.current = target;
+    send({ type: "RESET" });
+    setShowNavigator(false);
+  }
+
+  const SPEAKER_NOTES: Record<string, string> = {
+    searching: "This is the browser search step. Explain that you always go to the official website to download — never third-party sites. Point out the URL bar and search results.",
+    downloading: "Show the file manager with the downloaded ISO. Explain that ISO files are disk images — like a perfect copy of a DVD. They're typically 2-4 GB.",
+    flashing_usb: "Walk through Rufus/Ventoy/BalenaEtcher. Explain that 'flashing' writes the ISO to USB sector-by-sector — it's not just copying files. The USB will become bootable.",
+    usb_reinsert: "This simulates physically removing the USB and plugging it into the target machine. On real hardware, you'd move the USB from your current PC to the one you want to install on.",
+    rebooting: "Explain POST (Power-On Self-Test) and how to enter BIOS. Different brands use different keys: F2, F12, Del, Esc. Show the BIOS splash screen.",
+    boot_menu: "This is the BIOS boot device menu. Explain that you select the USB drive to boot from. On real hardware, pressing F12 during POST opens this on most PCs.",
+    partitioning: "This is the scariest part for beginners. Explain that you're shrinking Windows to make room for Linux. Emphasize: nothing is deleted — you're just resizing. Use the slider to show how it works.",
+    live_desktop: "Welcome to the live desktop! Everything runs from USB — nothing touches the hard drive. You can browse, open apps, test hardware compatibility. When ready, click Install.",
+    live_welcome: "The installer asks: Try or Install? 'Try' boots into the live desktop. 'Install' goes straight to installation. For a first-timer, 'Try' is safer.",
+    create_vm: "In VirtualBox, you create a virtual PC inside your real PC. Set RAM (4GB+), create a virtual hard disk, and attach the ISO as a virtual CD drive.",
+    mount_iso: "Attach the downloaded ISO as a virtual CD/DVD. This is like inserting a physical disc — the VM will boot from it.",
+    vm_boot: "Power on the VM. It boots from the attached ISO, just like a real machine booting from USB. You'll see the same installer screens.",
+    installing: "The installer copies files, sets up your user account, configures the bootloader. This is the part that takes 10-30 minutes on real hardware. We're speeding through it.",
+    vm_close: "After installation, shut down the VM. In VirtualBox, you'd remove the ISO from the virtual drive and reboot — but here we're just closing the window.",
+  };
 
   function renderScene() {
     console.log(`[SimPage] renderScene called — state="${current}", path="${path}"`);
@@ -514,6 +626,14 @@ export default function SimulationPage() {
                   <span className="text-white/50">Pause / Resume auto-advance</span>
                   <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">Space</kbd>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">Scene navigator (jump to any)</span>
+                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">N</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">Speaker notes</span>
+                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">B</kbd>
+                </div>
               </div>
               <p className="mt-4 text-xs text-white/30 text-center">
                 Press <kbd className="font-mono text-white/50">?</kbd> or <kbd className="font-mono text-white/50">Esc</kbd> to close
@@ -618,6 +738,62 @@ export default function SimulationPage() {
               >
                 ?
               </button>
+              <div className="relative">
+                <button
+                  data-nav-btn
+                  onClick={() => { setShowNavigator((v) => !v); setShowNotes(false); }}
+                  className={`rounded-full border px-2.5 sm:px-3 py-1 text-xs sm:text-sm transition-colors ${
+                    showNavigator
+                      ? "border-accent bg-accent/20 text-white"
+                      : "border-white/10 text-white/50 hover:text-white"
+                  }`}
+                  title="Scene navigator — jump to any scene"
+                >
+                  🗺️
+                </button>
+                {showNavigator && (
+                  <div data-nav-panel className="absolute right-0 top-full mt-2 z-50 w-64 rounded-2xl border border-white/10 bg-[#12121a] shadow-2xl p-2 max-h-80 overflow-y-auto">
+                    <div className="px-2 py-1.5 text-[10px] uppercase tracking-widest text-white/30 font-semibold">
+                      Jump to scene
+                    </div>
+                    {visibleScenes.map((s) => {
+                      const idx = (SIM_SCENES as readonly string[]).indexOf(s);
+                      const isCurrent = idx === currentIndex;
+                      const isDone = idx < currentIndex;
+                      return (
+                        <button
+                          key={s}
+                          onClick={() => jumpToScene(s)}
+                          disabled={isCurrent}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors text-left ${
+                            isCurrent
+                              ? "bg-accent/20 text-white font-semibold cursor-default"
+                              : isDone
+                                ? "text-emerald-400/80 hover:bg-white/[0.06]"
+                                : "text-white/60 hover:bg-white/[0.06] hover:text-white/90"
+                          }`}
+                        >
+                          <span className="text-xs w-5">
+                            {isCurrent ? "▶" : isDone ? "✓" : "○"}
+                          </span>
+                          <span>{SCENE_LABELS[s]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => { setShowNotes((v) => !v); setShowNavigator(false); }}
+                className={`rounded-full border px-2.5 sm:px-3 py-1 text-xs sm:text-sm transition-colors ${
+                  showNotes
+                    ? "border-accent bg-accent/20 text-white"
+                    : "border-white/10 text-white/50 hover:text-white"
+                }`}
+                title="Speaker notes — what to say at each step"
+              >
+                📝
+              </button>
               <div className="flex items-center gap-2">
                 <span className="text-base sm:text-lg">{cfg.branding.logo}</span>
                 <span className="font-semibold text-xs sm:text-sm">{cfg.branding.shortName}</span>
@@ -656,6 +832,12 @@ export default function SimulationPage() {
           </div>
 
           <div className="mt-1.5 sm:mt-2 min-h-[1rem] sm:min-h-[1.25rem] text-xs sm:text-sm text-white/40" key={`status-${current}`}>
+            {presentationMode && !paused && countdown > 0 && current !== "complete" && (
+              <span className="inline-flex items-center gap-1.5 text-accent font-mono font-semibold mr-3">
+                <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+                Next: {countdown}s
+              </span>
+            )}
             {presentationMode && paused && (
               <span className="inline-flex items-center gap-1.5 text-amber-400 font-semibold mr-3">
                 <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
@@ -702,6 +884,25 @@ export default function SimulationPage() {
               <div className="glass rounded-xl p-4 text-center border border-white/10 shadow-lg shadow-black/20">
                 <p className="text-sm text-white/80">{SCENE_CONTEXT[current]}</p>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Speaker notes panel */}
+        <AnimatePresence>
+          {showNotes && SPEAKER_NOTES[current] && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="mx-4 sm:mx-6 mb-3 rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-4 sm:p-5"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm">📝</span>
+                <span className="text-xs uppercase tracking-wider text-amber-400/80 font-semibold">Speaker Notes</span>
+              </div>
+              <p className="text-sm text-white/70 leading-relaxed">{SPEAKER_NOTES[current]}</p>
             </motion.div>
           )}
         </AnimatePresence>
