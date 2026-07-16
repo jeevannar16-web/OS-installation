@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="50%" stop-color="#12122a"/>
+      <stop offset="100%" stop-color="#1a1040"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c5cff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.1"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#7c5cff" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="96" fill="url(#glow)"/>
+
+  <!-- Orbit ring -->
+  <ellipse cx="256" cy="260" rx="160" ry="40" fill="none" stroke="#7c5cff" stroke-width="1.5" opacity="0.2"/>
+  <ellipse cx="256" cy="260" rx="120" ry="30" fill="none" stroke="#06b6d4" stroke-width="1" opacity="0.15"/>
+
+  <!-- Center: Install icon -->
+  <circle cx="256" cy="240" r="52" fill="#0a0a1a" stroke="#7c5cff" stroke-width="2" opacity="0.9"/>
+  <circle cx="256" cy="240" r="48" fill="#12122a"/>
+  <!-- Download arrow -->
+  <path d="M256 205 L256 260 M240 248 L256 264 L272 248" stroke="#7c5cff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Bottom line -->
+  <line x1="236" y1="272" x2="276" y2="272" stroke="#06b6d4" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Ubuntu logo (top-left) -->
+  <g transform="translate(90, 110)" filter="url(#shadow)">
+    <circle cx="0" cy="0" r="30" fill="#E95420" opacity="0.9"/>
+    <circle cx="0" cy="0" r="26" fill="#2c001e"/>
+    <circle cx="0" cy="-10" r="5" fill="#E95420" opacity="0.8"/>
+    <circle cx="-9" cy="5" r="5" fill="#E95420" opacity="0.8"/>
+    <circle cx="9" cy="5" r="5" fill="#E95420" opacity="0.8"/>
+  </g>
+
+  <!-- Windows logo (top-right) -->
+  <g transform="translate(422, 110)" filter="url(#shadow)">
+    <rect x="-24" y="-24" width="48" height="48" rx="4" fill="#0078D4"/>
+    <rect x="-20" y="-20" width="19" height="19" rx="2" fill="white" opacity="0.9"/>
+    <rect x="1" y="-20" width="19" height="19" rx="2" fill="white" opacity="0.7"/>
+    <rect x="-20" y="1" width="19" height="19" rx="2" fill="white" opacity="0.7"/>
+    <rect x="1" y="1" width="19" height="19" rx="2" fill="white" opacity="0.5"/>
+  </g>
+
+  <!-- Arch Linux logo (bottom-left) -->
+  <g transform="translate(110, 390)" filter="url(#shadow)">
+    <circle cx="0" cy="0" r="30" fill="#1793D1" opacity="0.9"/>
+    <circle cx="0" cy="0" r="26" fill="#111111"/>
+    <!-- Arch triangle -->
+    <path d="M0 -18 L-14 14 L-8 14 L0 -4 L8 14 L14 14 Z" fill="#1793D1" opacity="0.8"/>
+  </g>
+
+  <!-- Fedora logo (bottom-right) -->
+  <g transform="translate(402, 390)" filter="url(#shadow)">
+    <circle cx="0" cy="0" r="30" fill="#3C6EB4" opacity="0.9"/>
+    <circle cx="0" cy="0" r="26" fill="#0d1117"/>
+    <text x="0" y="6" text-anchor="middle" font-size="18" font-weight="bold" fill="#3C6EB4" font-family="sans-serif">F</text>
+  </g>
+
+  <!-- Debian logo (bottom-center) -->
+  <g transform="translate(256, 420)" filter="url(#shadow)">
+    <circle cx="0" cy="0" r="24" fill="#A80030" opacity="0.9"/>
+    <circle cx="0" cy="0" r="20" fill="#101010"/>
+    <text x="0" y="5" text-anchor="middle" font-size="14" font-weight="bold" fill="#A80030" font-family="serif">D</text>
+  </g>
+
+  <!-- USB icon (left) -->
+  <g transform="translate(42, 260)" opacity="0.6">
+    <rect x="-8" y="-16" width="16" height="32" rx="3" fill="#555" stroke="#777" stroke-width="1"/>
+    <rect x="-4" y="-20" width="8" height="8" rx="1" fill="#999"/>
+    <circle cx="0" cy="-6" r="2" fill="#22c55e"/>
+  </g>
+
+  <!-- Hard drive icon (right) -->
+  <g transform="translate(470, 260)" opacity="0.6">
+    <rect x="-12" y="-18" width="24" height="36" rx="3" fill="#333" stroke="#555" stroke-width="1"/>
+    <circle cx="0" cy="4" r="5" fill="none" stroke="#555" stroke-width="1.5"/>
+    <line x1="-8" y1="-10" x2="8" y2="-10" stroke="#555" stroke-width="1"/>
+    <line x1="-8" y1="-6" x2="8" y2="-6" stroke="#555" stroke-width="1"/>
+  </g>
+
+  <!-- Title text -->
+  <text x="256" y="330" text-anchor="middle" font-size="28" font-weight="800" fill="white" font-family="system-ui, sans-serif" letter-spacing="-0.5">
+    OS Install
+  </text>
+  <text x="256" y="358" text-anchor="middle" font-size="16" font-weight="400" fill="#7c5cff" font-family="system-ui, sans-serif" letter-spacing="3">
+    SIMULATOR
+  </text>
+</svg>
