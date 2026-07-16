@@ -137,6 +137,7 @@ export default function SimulationPage() {
   const autoAdvanceRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jumpRef = useRef<string | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const historyRef = useRef<string[]>([]);
 
   const [diskShrunk, setDiskShrunk] = useState(false);
   const [secureBoot, setSecureBoot] = useState(true);
@@ -180,6 +181,13 @@ export default function SimulationPage() {
     if (current === "complete") {
       localStorage.removeItem(STORAGE_KEY);
     }
+    // Track scene history for back navigation (skip idle, duplicate last, and jump targets)
+    if (current !== "idle" && current !== "complete" && !jumpRef.current) {
+      const last = historyRef.current[historyRef.current.length - 1];
+      if (last !== current) {
+        historyRef.current.push(current);
+      }
+    }
   }, [state.value, config, path]);
 
   useEffect(() => {
@@ -208,6 +216,12 @@ export default function SimulationPage() {
         const active = document.activeElement;
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
         cycleTheme();
+      }
+      if (e.key === "Backspace") {
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+        e.preventDefault();
+        goBack();
       }
       if (e.key === "Enter") {
         const active = document.activeElement;
@@ -400,6 +414,16 @@ export default function SimulationPage() {
     send({ type: "RESET" });
     setShowNavigator(false);
   }
+
+  function goBack() {
+    if (historyRef.current.length < 2) return;
+    // Remove current scene from history, then jump to the previous one
+    historyRef.current.pop();
+    const prev = historyRef.current[historyRef.current.length - 1];
+    if (prev) jumpToScene(prev);
+  }
+
+  const canGoBack = historyRef.current.length >= 2;
 
   const SPEAKER_NOTES: Record<string, string> = {
     searching: "This is the browser search step. Explain that you always go to the official website to download — never third-party sites. Point out the URL bar and search results.",
@@ -607,6 +631,10 @@ export default function SimulationPage() {
                   <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">Enter ↵</kbd>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-white/50">Go back to previous scene</span>
+                  <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">←</kbd>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-white/50">Toggle speed run</span>
                   <kbd className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/70">S</kbd>
                 </div>
@@ -678,9 +706,20 @@ export default function SimulationPage() {
       <div className="min-h-full flex flex-col relative z-0">
         <header className="mx-auto w-full max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem] px-4 sm:px-6 py-3 sm:py-5">
           <div className="flex items-center justify-between">
-            <Link to="/" className="text-xs sm:text-sm text-white/60 hover:text-white">
-              ← OS Install Simulator
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link to="/" className="text-xs sm:text-sm text-white/60 hover:text-white">
+                ← OS Install Simulator
+              </Link>
+              {canGoBack && (
+                <button
+                  onClick={goBack}
+                  className="rounded-full border border-white/10 px-2 sm:px-2.5 py-1 text-xs sm:text-sm text-white/50 hover:text-white transition-colors"
+                  title="Go back to previous scene (Backspace)"
+                >
+                  ← back
+                </button>
+              )}
+            </div>
             <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
               <button
                 onClick={() => {
