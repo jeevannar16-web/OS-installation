@@ -290,40 +290,42 @@ function SimulationPageInner() {
     return () => clearTimeout(t);
   }, [current]);
 
-  // Presentation mode: auto-advance every 15 seconds (with pause support)
+  // Auto-advance every scene after 15 seconds (always active)
   useEffect(() => {
-    if (presentationMode && !paused && current !== "idle" && current !== "complete") {
-      autoAdvanceRef.current = setInterval(() => {
-        const s = String(state.value);
-        if (s === "searching") send({ type: "SEARCH_DONE" });
-        else if (s === "downloading") send({ type: "DOWNLOAD_DONE" });
-        else if (s === "flashing_usb") send({ type: "FLASH_DONE" });
-        else if (s === "usb_reinsert") send({ type: "USB_INSERTED" });
-        else if (s === "rebooting") send({ type: "REBOOT_DONE" });
-        else if (s === "partitioning") send({ type: "PARTITION_DONE" });
-        else if (s === "live_welcome") send({ type: "LIVE_INSTALL" });
-        else if (s === "live_desktop") send({ type: "LIVE_INSTALL" });
-        else if (s === "create_vm") send({ type: "VM_CREATED" });
-        else if (s === "mount_iso") send({ type: "ISO_MOUNTED" });
-        else if (s === "vm_boot") send({ type: "VM_POWERED_ON" });
-        else if (s === "grub_menu") send({ type: "GRUB_DONE" });
-        else if (s === "first_boot") send({ type: "FIRST_BOOT_DONE" });
-        else if (s === "vm_close") send({ type: "VM_CLOSED" });
-      }, 15000);
+    if (current === "idle" || current === "complete") {
+      if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
+      return;
     }
+    autoAdvanceRef.current = setInterval(() => {
+      const s = String(state.value);
+      if (s === "searching") send({ type: "SEARCH_DONE" });
+      else if (s === "downloading") send({ type: "DOWNLOAD_DONE" });
+      else if (s === "flashing_usb") send({ type: "FLASH_DONE" });
+      else if (s === "usb_reinsert") send({ type: "USB_INSERTED" });
+      else if (s === "rebooting") send({ type: "REBOOT_DONE" });
+      else if (s === "partitioning") send({ type: "PARTITION_DONE" });
+      else if (s === "live_welcome") send({ type: "LIVE_INSTALL" });
+      else if (s === "live_desktop") send({ type: "LIVE_INSTALL" });
+      else if (s === "create_vm") send({ type: "VM_CREATED" });
+      else if (s === "mount_iso") send({ type: "ISO_MOUNTED" });
+      else if (s === "vm_boot") send({ type: "VM_POWERED_ON" });
+      else if (s === "grub_menu") send({ type: "GRUB_DONE" });
+      else if (s === "first_boot") send({ type: "FIRST_BOOT_DONE" });
+      else if (s === "vm_close") send({ type: "VM_CLOSED" });
+    }, 15000);
     return () => {
       if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
     };
-  }, [presentationMode, paused, state.value, send, current]);
+  }, [paused, state.value, send, current]);
 
-  // Exit presentation mode on Escape; Space to pause/resume
+  // Space to pause/resume auto-advance; Escape to exit presentation; N/B for navigator/notes
   useEffect(() => {
-    if (!presentationMode) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        setPresentationMode(false);
-        setPaused(false);
-        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        if (presentationMode) {
+          setPresentationMode(false);
+          if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        }
       }
       if (e.key === "n" || e.key === "N") {
         const active = document.activeElement;
@@ -401,9 +403,9 @@ function SimulationPageInner() {
     }
   }, [state.value, config, path, send]);
 
-  // ── Countdown timer for presentation mode ──
+  // Countdown timer — always visible, 15 seconds per scene
   useEffect(() => {
-    if (!presentationMode || paused || current === "idle" || current === "complete") {
+    if (current === "idle" || current === "complete" || paused) {
       setCountdown(0);
       return;
     }
@@ -418,7 +420,7 @@ function SimulationPageInner() {
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, [presentationMode, paused, current]);
+  }, [paused, current]);
 
   if (!config) {
     return (
@@ -944,13 +946,13 @@ function SimulationPageInner() {
           </div>
 
           <div className="mt-1.5 sm:mt-2 min-h-[1rem] sm:min-h-[1.25rem] text-xs sm:text-sm text-white/40" key={`status-${current}`}>
-            {presentationMode && !paused && countdown > 0 && current !== "complete" && (
+            {!paused && countdown > 0 && current !== "complete" && current !== "idle" && (
               <span className="inline-flex items-center gap-1.5 text-accent font-mono font-semibold mr-3">
                 <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
                 Next: {countdown}s
               </span>
             )}
-            {presentationMode && paused && (
+            {paused && (
               <span className="inline-flex items-center gap-1.5 text-amber-400 font-semibold mr-3">
                 <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
                 PAUSED
