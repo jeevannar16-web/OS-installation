@@ -4,17 +4,26 @@ import type { InstallPath, HostOS } from "../data/types";
 /**
  * OS simulation state machine — realistic installation flows:
  *
- * Physical path (dual-boot):
+ * Physical dual-boot (Ubuntu):
  *   idle → searching → downloading → flashing_usb → usb_reinsert → bios_setup
- *        → boot_prompt → boot_menu → windows_setup → partitioning
- *        → installing → grub_menu → oobe → complete
+ *        → rebooting → boot_prompt → boot_menu → partitioning → installing
+ *        → grub_menu → complete
  *
- * Physical path (live-usb):
+ * Physical dual-boot (Windows):
+ *   idle → searching → downloading → flashing_usb → usb_reinsert → disk_prep
+ *        → bios_setup → rebooting → boot_prompt → boot_menu → windows_setup
+ *        → partitioning → installing → grub_menu → oobe → complete
+ *
+ * Physical live-usb (Ubuntu):
  *   idle → searching → downloading → flashing_usb → usb_reinsert → bios_setup
- *        → boot_prompt → boot_menu → live_welcome → live_desktop
- *        → installing → grub_menu → oobe → complete
+ *        → rebooting → boot_prompt → boot_menu → live_welcome → live_desktop
+ *        → installing → grub_menu → complete
  *
- * VM path:
+ * VM (Ubuntu):
+ *   idle → select_host_os → searching → downloading → create_vm → mount_iso
+ *        → vm_boot → installing → complete
+ *
+ * VM (Windows):
  *   idle → select_host_os → searching → downloading → create_vm → mount_iso
  *        → vm_boot → windows_setup → partitioning → installing → vm_close → oobe → complete
  */
@@ -168,18 +177,22 @@ export const simulationMachine = setup({
       },
     },
 
-    /* ── Boot Menu (BIOS boot device selection) ── */
+    /* ── Boot Menu ── */
     boot_menu: {
       on: {
         LIVE_TRY: "live_welcome",
         BOOT_SELECTED: [
-          { guard: "isPhysical", target: "windows_setup" },
+          // Windows physical → windows_setup
+          { guard: "isWindows", target: "windows_setup" },
+          // Ubuntu dual-boot → partitioning
+          { guard: "isDualBoot", target: "partitioning" },
+          // Ubuntu live-usb → installing (shouldn't normally reach here, but safe fallback)
           { target: "installing" },
         ],
       },
     },
 
-    /* ── Windows Setup (Language → Install Now → Product Key → EULA → Install Type) ── */
+    /* ── Windows Setup (only for Windows) ── */
     windows_setup: {
       on: {
         SETUP_DONE: [
@@ -219,7 +232,14 @@ export const simulationMachine = setup({
     },
 
     vm_boot: {
-      on: { VM_POWERED_ON: "windows_setup" },
+      on: {
+        VM_POWERED_ON: [
+          // Windows VM → windows_setup
+          { guard: "isWindows", target: "windows_setup" },
+          // Ubuntu VM → installing directly
+          { target: "installing" },
+        ],
+      },
     },
 
     /* ── Installing ── */
@@ -232,18 +252,32 @@ export const simulationMachine = setup({
       },
     },
 
-    /* ── GRUB Menu (dual-boot) ── */
+    /* ── GRUB Menu ── */
     grub_menu: {
-      on: { GRUB_DONE: "oobe" },
+      on: {
+        GRUB_DONE: [
+          // Windows → OOBE
+          { guard: "isWindows", target: "oobe" },
+          // Ubuntu → complete (no OOBE)
+          { target: "complete" },
+        ],
+      },
     },
 
-    /* ── OOBE (Windows first-boot wizard) ── */
+    /* ── OOBE (Windows only) ── */
     oobe: {
       on: { OOBE_DONE: "complete" },
     },
 
     vm_close: {
-      on: { VM_CLOSED: "oobe" },
+      on: {
+        VM_CLOSED: [
+          // Windows → OOBE
+          { guard: "isWindows", target: "oobe" },
+          // Ubuntu → complete
+          { target: "complete" },
+        ],
+      },
     },
 
     complete: {},

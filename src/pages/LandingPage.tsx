@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Monitor, ArrowLeftRight, Usb, Check, Search, Info, ChevronRight, Cpu, Usb as UsbIcon, ArrowRightLeft } from "lucide-react";
+import { Monitor, ArrowLeftRight, Usb, Check, Search, Info, ChevronRight, ChevronDown, Cpu, Download, Settings, Play } from "lucide-react";
 import { PATHS, OS_LIST } from "../data";
 import type { InstallPath } from "../data/types";
 import Footer from "../components/Footer";
@@ -62,11 +62,10 @@ const item = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-/* ── Path Card ───────────────────────────────────────────────── */
 const PATH_ICONS: Record<string, React.ReactNode> = {
-  vm: <Monitor size={22} strokeWidth={1.5} />,
-  "dual-boot": <ArrowLeftRight size={22} strokeWidth={1.5} />,
-  "live-usb": <Usb size={22} strokeWidth={1.5} />,
+  vm: <Monitor size={20} strokeWidth={1.5} />,
+  "dual-boot": <ArrowLeftRight size={20} strokeWidth={1.5} />,
+  "live-usb": <Usb size={20} strokeWidth={1.5} />,
 };
 
 function PathCard({ p, active, onClick }: {
@@ -92,7 +91,7 @@ function PathCard({ p, active, onClick }: {
         }`}>
           {PATH_ICONS[p.id]}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="font-semibold text-sm text-white/90">{p.name}</div>
           <div className="text-[11px] text-white/40 truncate">{p.tagline}</div>
         </div>
@@ -106,7 +105,6 @@ function PathCard({ p, active, onClick }: {
   );
 }
 
-/* ── OS Card ─────────────────────────────────────────────────── */
 function OSCard({ o, active, onClick }: {
   o: (typeof OS_LIST)[number];
   active: boolean;
@@ -145,6 +143,92 @@ function OSCard({ o, active, onClick }: {
         {active ? <Check size={12} strokeWidth={3} /> : <ChevronRight size={12} />}
       </div>
     </motion.button>
+  );
+}
+
+/* ── Step Guide Dropdown ──────────────────────────────────────── */
+const GUIDE_STEPS = [
+  {
+    title: "Download the OS ISO",
+    icon: <Download size={16} />,
+    items: [
+      "Open the built-in browser simulation",
+      "Search for the official download page",
+      "Download the ISO file (disk image)",
+    ],
+  },
+  {
+    title: "Flash a bootable USB",
+    icon: <Usb size={16} />,
+    items: [
+      "Use Rufus, Ventoy, or BalenaEtcher",
+      "Select the ISO and your USB drive",
+      "Write the image to make the USB bootable",
+    ],
+  },
+  {
+    title: "Enter BIOS & boot from USB",
+    icon: <Settings size={16} />,
+    items: [
+      "Restart and press F2/F12/Del to enter BIOS",
+      "Enable USB Boot and set USB as first priority",
+      "Save and exit — boot from the USB stick",
+    ],
+  },
+  {
+    title: "Install the operating system",
+    icon: <Play size={16} />,
+    items: [
+      "Choose language, keyboard, and network",
+      "Partition your disk (or let the installer handle it)",
+      "Follow the wizard to complete installation",
+    ],
+  },
+];
+
+function StepGuide() {
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
+  return (
+    <div className="space-y-2">
+      {GUIDE_STEPS.map((step, i) => (
+        <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+          <button
+            onClick={() => setOpenIdx(openIdx === i ? null : i)}
+            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.03] transition-colors"
+          >
+            <span className="h-7 w-7 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0">
+              {step.icon}
+            </span>
+            <span className="font-semibold text-sm text-white/80 flex-1">{step.title}</span>
+            <motion.span animate={{ rotate: openIdx === i ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown size={16} className="text-white/30" />
+            </motion.span>
+          </button>
+          <AnimatePresence>
+            {openIdx === i && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 pb-3 pt-1 space-y-1.5">
+                  {step.items.map((item, j) => (
+                    <div key={j} className="flex items-start gap-2 text-xs text-white/45">
+                      <span className="h-4 w-4 rounded-full bg-white/[0.06] text-[9px] font-bold text-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                        {j + 1}
+                      </span>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -192,9 +276,9 @@ export default function LandingPage() {
       </svg>
       <div className="vignette-overlay" aria-hidden />
 
-      <div className="relative z-0">
+      <div className="relative z-0 flex-1 flex flex-col">
         {/* Header */}
-        <header className="mx-auto w-full max-w-5xl px-6 py-4 flex items-center justify-between">
+        <header className="w-full px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center">
               <Cpu size={16} className="text-accent" />
@@ -210,15 +294,15 @@ export default function LandingPage() {
           </div>
         </header>
 
-        {/* Hero — compact */}
-        <section className="mx-auto w-full max-w-5xl px-6 pt-6 pb-8">
-          <div className="text-center">
+        {/* Hero — compact centered */}
+        <section className="w-full px-6 pt-8 pb-10">
+          <div className="text-center max-w-2xl mx-auto">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-3 mb-4">
-              <img src="/logo.svg" alt="Logo" className="w-14 h-14" />
+              className="inline-flex items-center gap-4 mb-4">
+              <img src="/logo.svg" alt="Logo" className="w-16 h-16" />
               <div className="text-left">
-                <div className="text-2xl font-bold tracking-tight text-white/90">OS Install Simulator</div>
-                <div className="text-xs text-white/40">Practice installing an operating system — safely</div>
+                <div className="text-3xl font-bold tracking-tight text-white/90">OS Install Simulator</div>
+                <div className="text-sm text-white/40">Practice installing an operating system — safely</div>
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
@@ -228,11 +312,11 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Main content — two columns on desktop */}
-        <section className="mx-auto w-full max-w-5xl px-6 pb-8">
-          <div className="grid lg:grid-cols-2 gap-6">
-            {/* Left: Steps */}
-            <div className="space-y-5">
+        {/* Main content — full width, 3-column on desktop */}
+        <section className="w-full px-6 pb-10 flex-1">
+          <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-6">
+            {/* Left column: Path + OS selection */}
+            <div className="lg:col-span-5 space-y-5">
               {/* Step 1: Path */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
@@ -266,60 +350,40 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right: Preview + Start */}
-            <div className="flex flex-col">
-              {/* Preview card */}
-              <div className="glass rounded-xl p-5 flex-1">
-                <div className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">What you'll practice</div>
-                <div className="space-y-2">
-                  {[
-                    { icon: <Search size={14} />, label: "Search & download the OS ISO" },
-                    { icon: <UsbIcon size={14} />, label: "Flash a bootable USB drive" },
-                    { icon: <ArrowRightLeft size={14} />, label: "Enter BIOS & configure boot order" },
-                    { icon: <Monitor size={14} />, label: "Partition disks & run the installer" },
-                  ].map((step, i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2.5">
-                      <div className="h-7 w-7 rounded-md bg-accent/10 flex items-center justify-center text-accent shrink-0">
-                        {step.icon}
-                      </div>
-                      <span className="text-xs text-white/60">{step.label}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* What's included */}
-                <div className="mt-5 pt-4 border-t border-white/[0.06]">
-                  <div className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Includes</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {["BIOS/UEFI", "USB Boot", "Disk Part.", "Ubuntu", "Windows", "GRUB"].map((tag) => (
-                      <span key={tag} className="rounded-md bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 text-[10px] text-white/35">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+            {/* Center column: Step guide */}
+            <div className="lg:col-span-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="h-5 w-5 rounded-full bg-accent/20 text-accent text-[10px] font-bold flex items-center justify-center">
+                  <Play size={10} />
+                </span>
+                <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">How it works</span>
               </div>
+              <StepGuide />
+            </div>
 
-              {/* Start button */}
-              <div className="mt-4">
-                <motion.button
-                  whileTap={canStart ? { scale: 0.97 } : {}}
-                  disabled={!canStart}
-                  onClick={start}
-                  className={`w-full text-sm font-semibold rounded-xl px-6 py-3 transition-all ${
-                    canStart
-                      ? "bg-accent text-white shadow-[0_0_30px_-8px] shadow-accent hover:shadow-[0_0_40px_-6px] hover:shadow-accent"
-                      : "bg-white/[0.03] text-white/25 border border-white/[0.06] cursor-not-allowed"
-                  }`}
-                >
-                  {canStart ? `Start ${selectedOS?.branding.shortName} → ${selectedPath?.name}` : "Select a path and OS"}
-                </motion.button>
-              </div>
+            {/* Right column: Start button */}
+            <div className="lg:col-span-3 flex flex-col justify-end">
+              <motion.button
+                whileTap={canStart ? { scale: 0.97 } : {}}
+                disabled={!canStart}
+                onClick={start}
+                className={`w-full text-sm font-semibold rounded-xl px-6 py-4 transition-all ${
+                  canStart
+                    ? "bg-accent text-white shadow-[0_0_30px_-8px] shadow-accent hover:shadow-[0_0_40px_-6px] hover:shadow-accent"
+                    : "bg-white/[0.03] text-white/25 border border-white/[0.06] cursor-not-allowed"
+                }`}
+              >
+                {canStart ? `Start ${selectedOS?.branding.shortName} → ${selectedPath?.name}` : "Select a path and OS"}
+              </motion.button>
+              {!canStart && (
+                <p className="mt-2 text-[11px] text-white/25 text-center">
+                  Pick one method above and one OS
+                </p>
+              )}
             </div>
           </div>
         </section>
 
-        <div className="flex-1" />
         <Footer />
       </div>
 

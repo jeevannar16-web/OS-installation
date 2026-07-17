@@ -43,13 +43,13 @@ export default function BiosSetup({
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl relative" tabIndex={0} onKeyDown={(e) => {
+    <div className="mx-auto w-full max-w-5xl relative" tabIndex={0} onKeyDown={(e) => {
       if (e.key === "F10") handleSave();
     }}>
       {/* BIOS Window */}
-      <div className="rounded-lg overflow-hidden ring-1 ring-white/20 shadow-2xl font-mono text-sm">
+      <div className="rounded-xl overflow-hidden ring-2 ring-white/20 shadow-[0_0_60px_-15px_rgba(0,51,153,0.5)] font-mono text-sm">
         {/* Title bar */}
-        <div className="bg-[#003399] px-4 py-2 text-white font-bold text-center tracking-wider">
+        <div className="bg-[#003399] px-6 py-3 text-white font-bold text-center tracking-wider text-base">
           BIOS Setup Utility — Aptio Setup Utility (AMIBIOS)
         </div>
 
@@ -59,7 +59,7 @@ export default function BiosSetup({
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-5 py-2 text-xs font-bold tracking-wide transition-colors ${
+              className={`px-6 py-2.5 text-sm font-bold tracking-wide transition-colors ${
                 tab === t
                   ? "bg-[#cccccc] text-[#003399]"
                   : "text-[#cccccc] hover:bg-[#0044cc]"
@@ -71,7 +71,7 @@ export default function BiosSetup({
         </div>
 
         {/* Content */}
-        <div className="bg-[#cccccc] text-[#000000] min-h-[360px] p-4">
+        <div className="bg-[#cccccc] text-[#000000] min-h-[420px] p-6">
           {/* ── Main Tab ── */}
           {tab === "Main" && (
             <div className="space-y-1">

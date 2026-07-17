@@ -605,10 +605,23 @@ function SimulationPageInner() {
           <GrubMenu onComplete={() => send({ type: "GRUB_DONE" })} />
         );
       case "oobe":
+        if (cfg.id === "windows") {
+          return (
+            <WindowsOOBE
+              osName={cfg.branding.name}
+              onComplete={() => send({ type: "OOBE_DONE" })}
+            />
+          );
+        }
         return (
-          <WindowsOOBE
-            osName={cfg.branding.name}
-            onComplete={() => send({ type: "OOBE_DONE" })}
+          <Done
+            config={cfg}
+            path={path ?? ""}
+            onBack={() => {
+              historyRef.current.pop();
+              const prev = historyRef.current[historyRef.current.length - 1];
+              if (prev) jumpToScene(prev);
+            }}
           />
         );
       case "vm_close":
@@ -650,13 +663,16 @@ function SimulationPageInner() {
       if (PHYSICAL_ONLY.has(s)) return false;
       if (s === "partitioning") return false;
       if (s === "live_welcome" || s === "live_desktop") return false;
+      if (s === "windows_setup" && cfg.id !== "windows") return false;
+      if (s === "oobe" && cfg.id !== "windows") return false;
       return true;
     }
     if (VM_ONLY.has(s)) return false;
     if (s === "vm_close") return false;
     if (s === "disk_prep" && path !== "dual-boot") return false;
     if (s === "partitioning" && path !== "dual-boot") return false;
-    if (s === "windows_setup" && path === "live-usb") return false;
+    if (s === "windows_setup" && (path === "live-usb" || cfg.id !== "windows")) return false;
+    if (s === "oobe" && cfg.id !== "windows") return false;
     if (s === "live_welcome" && path !== "live-usb") return false;
     if (s === "live_desktop" && path !== "live-usb") return false;
     return true;
