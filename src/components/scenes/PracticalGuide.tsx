@@ -173,18 +173,48 @@ const ARCH_STEPS: GuideStep[] = [
 function getInstallerSteps(config: OSConfig): GuideStep[] {
   const os = config.branding.name;
   const short = config.branding.shortName;
-  const imgPrefix = config.id;
-  const imgExt = config.id === "ubuntu" ? "webp" : config.id === "mint" ? "webp" : "png";
 
-  const images = {
-    tryOrInstall: `/images/${imgPrefix}/01-try-or-install.${imgExt}`,
-    language: `/images/${imgPrefix}/02-language.${imgExt}`,
-    network: `/images/${imgPrefix}/04-network.webp`,
-    installType: `/images/${imgPrefix}/07-install-type.webp`,
-    createUser: `/images/${imgPrefix}/11-create-user.png`,
-    copying: `/images/${imgPrefix}/13-copying-files.png`,
-    restart: `/images/${imgPrefix}/11-restart.png`,
-    desktop: `/images/${imgPrefix}/12-welcome-desktop.png`,
+  // Each OS has different image naming — map directly to actual files
+  const imgs: Record<string, string> = {
+    ubuntu: {
+      language: "/images/ubuntu/02-language.png",
+      boot: "/images/ubuntu/01-try-or-install.png",
+      network: "/images/ubuntu/04-network.webp",
+      installType: "/images/ubuntu/07-install-type.webp",
+      createUser: "/images/ubuntu/08-create-user.webp",
+      copying: "/images/ubuntu/10-progress.png",
+      restart: "/images/ubuntu/11-restart.png",
+      desktop: "/images/ubuntu/12-welcome-desktop.png",
+    },
+    mint: {
+      language: "/images/mint/03-language-select.png",
+      boot: "/images/mint/01-grub-boot.png",
+      network: "/images/mint/04-keyboard-layout.png",
+      installType: "/images/mint/06-installation-type.png",
+      createUser: "/images/mint/09-user-creation.png",
+      copying: "/images/mint/10-installing.png",
+      restart: "/images/mint/11-install-complete.png",
+      desktop: "/images/mint/13-welcome-screen.png",
+    },
+    zorin: {
+      language: "/images/zorin/03-installer-welcome.png",
+      boot: "/images/zorin/01-grub-boot-menu.png",
+      network: "/images/zorin/03-installer-welcome.png",
+      installType: "/images/zorin/11-installer.png",
+      createUser: "/images/zorin/11-installer.png",
+      copying: "/images/zorin/11-installer.png",
+      restart: "/images/zorin/11-installer.png",
+      desktop: "/images/zorin/02-live-desktop.png",
+    },
+  }[config.id] || {
+    language: "/images/ubuntu/02-language.png",
+    boot: "/images/ubuntu/01-try-or-install.png",
+    network: "/images/ubuntu/04-network.webp",
+    installType: "/images/ubuntu/07-install-type.webp",
+    createUser: "/images/ubuntu/08-create-user.webp",
+    copying: "/images/ubuntu/10-progress.png",
+    restart: "/images/ubuntu/11-restart.png",
+    desktop: "/images/ubuntu/12-welcome-desktop.png",
   };
 
   const updateCmd = config.id === "arch" ? "sudo pacman -Syu" : "sudo apt update && sudo apt upgrade";
@@ -194,7 +224,7 @@ function getInstallerSteps(config: OSConfig): GuideStep[] {
       title: `Download ${short}`,
       description: `Get the desktop ISO from ${short.toLowerCase()}.com.`,
       kind: "info",
-      image: images.language,
+      image: imgs.language,
       tip: config.id === "ubuntu" ? "Choose the LTS (Long Term Support) version for stability." : undefined,
     },
     {
@@ -207,7 +237,7 @@ function getInstallerSteps(config: OSConfig): GuideStep[] {
       title: "Boot from USB",
       description: "Restart, enter BIOS (F2/Del/F12), set USB first, save & exit.",
       kind: "info",
-      image: images.tryOrInstall,
+      image: imgs.boot,
       tip: `Select 'Try or Install ${os}' from the GRUB menu.`,
     },
     {
@@ -215,21 +245,21 @@ function getInstallerSteps(config: OSConfig): GuideStep[] {
       description: "Choose your language and keyboard layout in the installer wizard.",
       kind: "gui",
       guiAction: "Select English → Continue → Keyboard: English (US) → Continue",
-      image: images.language,
+      image: imgs.language,
     },
     {
       title: "Network Connection",
       description: "Connect to WiFi or Ethernet. The installer will check for updates.",
       kind: "gui",
       guiAction: "Select your WiFi network → Enter password → Connect → Continue",
-      image: images.network,
+      image: imgs.network,
     },
     {
       title: "Installation Type",
       description: `Choose how to install ${os} on your disk.`,
       kind: "gui",
       guiAction: `Erase disk and install ${os} (clean install) — OR — Install alongside Windows (dual-boot)`,
-      image: images.installType,
+      image: imgs.installType,
       tip: "For dual-boot, the installer will automatically shrink your Windows partition.",
     },
     {
@@ -237,27 +267,27 @@ function getInstallerSteps(config: OSConfig): GuideStep[] {
       description: "Set your name, computer name, username, and password.",
       kind: "gui",
       guiAction: "Your name → Computer name → Username → Password → Continue",
-      image: images.createUser,
+      image: imgs.createUser,
     },
     {
       title: "Installation Progress",
       description: `Sit back while ${os} copies files and configures the system.`,
       kind: "info",
-      image: images.copying,
+      image: imgs.copying,
       tip: "This takes 5-15 minutes depending on your hardware.",
     },
     {
       title: "Restart",
       description: "Remove the USB when prompted, then press Enter to reboot.",
       kind: "info",
-      image: images.restart,
+      image: imgs.restart,
       tip: `${os} will show 'Please remove the installation medium, then press Enter'.`,
     },
     {
       title: "First Boot",
       description: `Log in with the user you created. Welcome to ${os}!`,
       kind: "info",
-      image: images.desktop,
+      image: imgs.desktop,
       tip: `Run '${updateCmd}' after first boot.`,
     },
   ];

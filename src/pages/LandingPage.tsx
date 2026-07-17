@@ -62,28 +62,28 @@ const GUIDE_STEPS: Record<string, { step: string; title: string; desc: string; i
     { step: "04", title: "Install Ubuntu", desc: "Follow the installer wizard — language, partition, user, done", img: "/images/ubuntu/07-install-type.webp" },
   ],
   arch: [
-    { step: "01", title: "Download the ISO", desc: "Get the latest Arch Linux image from archlinux.org/download", img: "/images/arch/02-boot-menu.png" },
-    { step: "02", title: "Flash to USB", desc: "Use Rufus, Ventoy, or dd to write the ISO to a USB drive", img: "/images/arch/02-boot-menu.png" },
-    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/arch/02-boot-menu.png" },
-    { step: "04", title: "Install Arch", desc: "Run archinstall and follow the guided installer", img: "/images/arch/04-archinstall.png" },
+    { step: "01", title: "Download the ISO", desc: "Get the latest Arch Linux image from archlinux.org/download", img: "/images/arch/07-boot-menu.png" },
+    { step: "02", title: "Flash to USB", desc: "Use Rufus, Ventoy, or dd to write the ISO to a USB drive", img: "/images/arch/07-boot-menu.png" },
+    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/arch/07-boot-menu.png" },
+    { step: "04", title: "Install Arch", desc: "Run archinstall and follow the guided installer", img: "/images/arch/09-archinstall-menu.png" },
   ],
   windows: [
     { step: "01", title: "Download the ISO", desc: "Get Windows 11 from microsoft.com/software-download", img: "/images/win11-setup/01-setup-language.webp" },
     { step: "02", title: "Flash to USB", desc: "Use Rufus or Microsoft Media Creation Tool", img: "/images/win11-setup/01-setup-language.webp" },
-    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/win11-setup/03-install-now.webp" },
-    { step: "04", title: "Install Windows", desc: "Follow the setup wizard — language, partition, account, done", img: "/images/win11-setup/05-install-progress.webp" },
+    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/win11-setup/03-install-option.webp" },
+    { step: "04", title: "Install Windows", desc: "Follow the setup wizard — language, partition, account, done", img: "/images/win11-setup/05-choose-edition.webp" },
   ],
   zorin: [
     { step: "01", title: "Download the ISO", desc: "Get Zorin OS Core from zorin.com os/download", img: "/images/zorin/02-live-desktop.png" },
     { step: "02", title: "Flash to USB", desc: "Use Rufus, Ventoy, or BalenaEtcher to write the ISO to a USB drive", img: "/images/zorin/02-live-desktop.png" },
-    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/zorin/03-install-welcome.png" },
-    { step: "04", title: "Install Zorin OS", desc: "Follow the installer wizard — language, partition, user, done", img: "/images/zorin/04-install-type.png" },
+    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/zorin/03-installer-welcome.png" },
+    { step: "04", title: "Install Zorin OS", desc: "Follow the installer wizard — language, partition, user, done", img: "/images/zorin/11-installer.png" },
   ],
   mint: [
     { step: "01", title: "Download the ISO", desc: "Get Linux Mint from linuxmint.com/download", img: "/images/mint/02-live-desktop.png" },
     { step: "02", title: "Flash to USB", desc: "Use Rufus, Ventoy, or BalenaEtcher to write the ISO to a USB drive", img: "/images/mint/02-live-desktop.png" },
-    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/mint/02-live-desktop.png" },
-    { step: "04", title: "Install Linux Mint", desc: "Follow the installer wizard — language, partition, user, done", img: "/images/mint/03-install-welcome.png" },
+    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/mint/01-grub-boot.png" },
+    { step: "04", title: "Install Linux Mint", desc: "Follow the installer wizard — language, partition, user, done", img: "/images/mint/06-installation-type.png" },
   ],
 };
 
