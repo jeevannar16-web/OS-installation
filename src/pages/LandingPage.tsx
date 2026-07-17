@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Monitor, ArrowLeftRight, Usb, ChevronDown, Lock, ExternalLink, Play, Check } from "lucide-react";
+import { Monitor, ArrowLeftRight, Usb, ChevronDown, Lock, ExternalLink, Play, Check, BookOpen } from "lucide-react";
 import { OS_LIST } from "../data";
 import Footer from "../components/Footer";
 import BootSequence from "../components/BootSequence";
@@ -106,7 +106,7 @@ function HowItWorksDropdown({ open }: { open: boolean }) {
 /* ═══════════════════════════════════════════════════════════════════
    OUTCOME CARDS — ways to install an OS
    ═══════════════════════════════════════════════════════════════════ */
-type Outcome = "live-usb" | "dual-boot" | "vm";
+type Outcome = "live-usb" | "dual-boot" | "vm" | "practical";
 type SelectedOS = "ubuntu" | "arch";
 
 interface OutcomeInfo {
@@ -160,6 +160,18 @@ const OS_OUTCOMES: Record<SelectedOS, OutcomeInfo[]> = {
       risk: "Zero risk",
       sceneCount: 10,
     },
+    {
+      id: "practical",
+      title: "Practical Guide",
+      tagline: "Real install on your PC",
+      description: "Step-by-step guide with real terminal commands you can follow on your actual hardware.",
+      icon: <BookOpen size={22} strokeWidth={1.5} />,
+      accent: "#f59e0b",
+      steps: ["Download", "Flash USB", "Boot", "Follow guide"],
+      time: "~15 min",
+      risk: "Real install",
+      sceneCount: 0,
+    },
   ],
   arch: [
     {
@@ -197,6 +209,18 @@ const OS_OUTCOMES: Record<SelectedOS, OutcomeInfo[]> = {
       time: "~5 min",
       risk: "Zero risk",
       sceneCount: 8,
+    },
+    {
+      id: "practical",
+      title: "Practical Guide",
+      tagline: "Real install on your PC",
+      description: "Step-by-step guide with real archinstall commands you can follow on your actual hardware.",
+      icon: <BookOpen size={22} strokeWidth={1.5} />,
+      accent: "#f59e0b",
+      steps: ["Download", "Flash USB", "Boot", "Follow guide"],
+      time: "~15 min",
+      risk: "Real install",
+      sceneCount: 0,
     },
   ],
 };
@@ -425,7 +449,7 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.25 }}
-                className="grid sm:grid-cols-3 gap-4"
+                className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
               >
                 {outcomes.map((o) => (
                   <OutcomeCard

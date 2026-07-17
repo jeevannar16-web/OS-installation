@@ -6,10 +6,10 @@
  * in (see src/data/*.ts) without writing new components.
  */
 
-export type InstallPath = "vm" | "dual-boot" | "live-usb";
+export type InstallPath = "vm" | "dual-boot" | "live-usb" | "practical";
 export type HostOS = "windows" | "macos" | "linux";
 
-export const ALL_PATHS: InstallPath[] = ["vm", "dual-boot", "live-usb"];
+export const ALL_PATHS: InstallPath[] = ["vm", "dual-boot", "live-usb", "practical"];
 
 export type PathInfo = {
   id: InstallPath;

@@ -29,6 +29,7 @@ import Done from "../components/scenes/Done";
 import GrubMenu from "../components/scenes/GrubMenu";
 import SelectHostOS from "../components/scenes/SelectHostOS";
 import DiskManagement from "../components/scenes/DiskManagement";
+import PracticalGuide from "../components/scenes/PracticalGuide";
 import { toggleMute, isMuted } from "../components/shared/sounds";
 import { useTheme } from "../components/shared/ThemeProvider";
 import { SceneAdvanceProvider, useSceneAdvance } from "../components/shared/SceneAdvance";
@@ -324,6 +325,43 @@ function SimulationPageInner() {
         <p className="text-white/60">Unknown OS: {os}</p>
         <Link to="/" className="text-sm text-accent hover:underline">← Back to home</Link>
       </div>
+    );
+  }
+
+  /* ── Practical path: bypass state machine, show real guide ── */
+  if (path === "practical") {
+    return (
+      <ToastProvider>
+        <div className="aurora-bg" aria-hidden>
+          <div className="aurora-blob" /><div className="aurora-blob" /><div className="aurora-blob" />
+        </div>
+        <div className="dot-grid" aria-hidden />
+        <div className="vignette-overlay" aria-hidden />
+        <div className="min-h-screen flex flex-col relative z-0">
+          {/* Header */}
+          <header className="w-full px-4 py-2 flex items-center justify-between border-b border-white/[0.04] bg-[#0d0d14]/60 backdrop-blur-md shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Link to="/" className="text-[11px] text-white/40 hover:text-white/70 transition-colors shrink-0">← Home</Link>
+              <div className="h-3 w-px bg-white/10 mx-0.5" />
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs">{config.branding.logo}</span>
+                <span className="text-[11px] font-semibold text-white/60">{config.branding.shortName}</span>
+                <span className="text-[9px] text-white/25">· practical guide</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <a href={config.branding.officialUrl} target="_blank" rel="noopener noreferrer"
+                className="rounded-md bg-white/5 border border-white/10 px-3 py-1.5 text-[11px] text-white/45 hover:bg-white/10 hover:text-white/65 transition-colors">
+                Download {config.branding.shortName} ↗
+              </a>
+            </div>
+          </header>
+          {/* Guide */}
+          <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
+            <PracticalGuide config={config} speed={speed} onComplete={() => navigate("/")} />
+          </div>
+        </div>
+      </ToastProvider>
     );
   }
 
