@@ -6,13 +6,14 @@ import type { InstallPath, HostOS } from "../data/types";
  *
  * Physical dual-boot (Ubuntu):
  *   idle → searching → downloading → flashing_usb → usb_reinsert → bios_setup
- *        → rebooting → boot_prompt → boot_menu → partitioning → installing
+ *        → rebooting → boot_prompt → boot_menu → installing
  *        → grub_menu → complete
+ *   (Partitioning is handled INSIDE the Install.tsx wizard when "Something else" is selected)
  *
  * Physical dual-boot (Windows):
  *   idle → searching → downloading → flashing_usb → usb_reinsert → disk_prep
  *        → bios_setup → rebooting → boot_prompt → boot_menu → windows_setup
- *        → partitioning → installing → grub_menu → oobe → complete
+ *        → installing → grub_menu → oobe → complete
  *
  * Physical live-usb (Ubuntu):
  *   idle → searching → downloading → flashing_usb → bios_setup
@@ -25,7 +26,7 @@ import type { InstallPath, HostOS } from "../data/types";
  *
  * VM (Windows):
  *   idle → select_host_os → searching → downloading → create_vm → mount_iso
- *        → vm_boot → windows_setup → partitioning → installing → vm_close → oobe → complete
+ *        → vm_boot → windows_setup → installing → vm_close → oobe → complete
  */
 
 export type SimEvent =
@@ -191,9 +192,9 @@ export const simulationMachine = setup({
         BOOT_SELECTED: [
           // Windows physical → windows_setup
           { guard: "isWindows", target: "windows_setup" },
-          // Ubuntu dual-boot → partitioning
-          { guard: "isDualBoot", target: "partitioning" },
-          // Ubuntu live-usb → installing (shouldn't normally reach here, but safe fallback)
+          // Ubuntu dual-boot → installing (partitioning is now inside Install.tsx)
+          { guard: "isDualBoot", target: "installing" },
+          // Ubuntu live-usb → installing
           { target: "installing" },
         ],
       },
@@ -203,7 +204,7 @@ export const simulationMachine = setup({
     windows_setup: {
       on: {
         SETUP_DONE: [
-          { guard: "isDualBoot", target: "partitioning" },
+          // Partitioning is now inside Install.tsx
           { target: "installing" },
         ],
       },
@@ -222,11 +223,6 @@ export const simulationMachine = setup({
         LIVE_INSTALL: "installing",
         POST_INSTALL: "grub_menu",
       },
-    },
-
-    /* ── Partitioning ── */
-    partitioning: {
-      on: { PARTITION_DONE: "installing" },
     },
 
     /* ── VM path ── */
@@ -305,7 +301,6 @@ export const SIM_SCENES = [
   "boot_prompt",
   "boot_menu",
   "windows_setup",
-  "partitioning",
   "live_welcome",
   "live_desktop",
   "create_vm",

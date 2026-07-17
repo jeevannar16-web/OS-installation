@@ -12,6 +12,7 @@ type InstallerStep =
   | "keyboard"
   | "network"
   | "install_type"
+  | "partition"
   | "install_option"
   | "third_party"
   | "app_selection"
@@ -19,8 +20,8 @@ type InstallerStep =
   | "create_user"
   | "review";
 
-// Real Ubuntu 24.04 installer order
-const STEP_ORDER: InstallerStep[] = [
+// Real Ubuntu 24.04 installer order — partition step is conditional
+const STEP_ORDER_BASE: InstallerStep[] = [
   "language", "keyboard", "network", "install_type", "install_option",
   "third_party", "app_selection", "timezone", "create_user", "review",
 ];
@@ -30,6 +31,7 @@ const SIDEBAR_LABELS: Record<InstallerStep, string> = {
   keyboard: "Keyboard",
   network: "Network",
   install_type: "Install Type",
+  partition: "Partitions",
   install_option: "Installation Method",
   third_party: "Third-Party",
   app_selection: "Applications",
@@ -44,6 +46,7 @@ const STEP_IMG: Record<InstallerStep, string> = {
   keyboard: "/images/ubuntu/03-keyboard.webp",
   network: "/images/ubuntu/04-network.webp",
   install_type: "/images/ubuntu/05-install-option.webp",
+  partition: "/images/ubuntu/16-manual-partition.webp",
   install_option: "/images/ubuntu/07-install-type.webp",
   third_party: "/images/ubuntu/06-third-party.webp",
   app_selection: "/images/ubuntu/21-app-selection.webp",
@@ -71,11 +74,11 @@ const INSTALL_SLIDES = [
   { title: "Built-in security", body: "Automatic updates, firewall, and full-disk encryption keep you safe." },
 ];
 
-function Sidebar({ current }: { current: InstallerStep }) {
-  const idx = STEP_ORDER.indexOf(current);
+function Sidebar({ current, stepOrder }: { current: InstallerStep; stepOrder: InstallerStep[] }) {
+  const idx = stepOrder.indexOf(current);
   return (
     <div className="hidden md:flex w-48 lg:w-56 shrink-0 flex-col border-r border-white/10 bg-[#1a1a24] p-3 gap-0.5">
-      {STEP_ORDER.map((s, i) => (
+      {stepOrder.map((s, i) => (
         <div key={s} className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
           s === current ? "bg-[#E95420]/10 text-[#E95420] font-semibold"
           : i < idx ? "text-white/40" : "text-white/25"
@@ -127,6 +130,32 @@ export default function Install({ config, speed, onComplete, path }: {
   const [showSparkle, setShowSparkle] = useState(false);
   const [fileIdx, setFileIdx] = useState(0);
   const [restartPhase, setRestartPhase] = useState<"countdown" | "done">("countdown");
+
+  // Partition editor state (shown when installType === "something")
+  type PartitionEntry = { device: string; type: string; fs: string; sizeGB: number; mount: string; flags: string[] };
+  const TOTAL_GB = 500;
+  const FILESYSTEMS = ["ext4", "xfs", "btrfs", "f2fs", "swap", "FAT32", "NTFS"];
+  const MOUNT_POINTS = ["/", "/boot", "/boot/efi", "/home", "/var", "/tmp", "[swap]", "none"];
+  const DEFAULT_PARTITIONS: PartitionEntry[] = [
+    { device: "/dev/sda1", type: "EFI System", fs: "FAT32", sizeGB: 0.5, mount: "/boot/efi", flags: ["boot", "esp"] },
+    { device: "/dev/sda2", type: "Microsoft reserved", fs: "", sizeGB: 0.1, mount: "", flags: [] },
+    { device: "/dev/sda3", type: "Basic Data", fs: "NTFS", sizeGB: 450, mount: "/mnt/windows", flags: [] },
+    { device: "/dev/sda4", type: "Linux swap", fs: "swap", sizeGB: 8, mount: "[swap]", flags: [] },
+  ];
+  const [partitions, setPartitions] = useState<PartitionEntry[]>(DEFAULT_PARTITIONS);
+  const [showPartDialog, setShowPartDialog] = useState(false);
+  const [editPartIdx, setEditPartIdx] = useState<number | null>(null);
+  const [partForm, setPartForm] = useState({ sizeGB: 50, fs: "ext4", mount: "/" });
+
+  const usedGB = partitions.reduce((sum, p) => sum + p.sizeGB, 0);
+  const freeGB = Math.max(0, TOTAL_GB - usedGB);
+  const canConfirmPart = partitions.some((p) => p.fs === "ext4" && p.mount === "/");
+
+  // Dynamic step order: insert partition step after install_type when "something else" is selected
+  const STEP_ORDER: InstallerStep[] = installType === "something"
+    ? ["language", "keyboard", "network", "install_type", "partition", "install_option",
+       "third_party", "app_selection", "timezone", "create_user", "review"]
+    : STEP_ORDER_BASE;
 
   const installDuration = speed === "fast" ? 2000 : 12000;
   const currentIdx = STEP_ORDER.indexOf(step);
@@ -197,6 +226,7 @@ export default function Install({ config, speed, onComplete, path }: {
       case "language": return !!values["language"];
       case "keyboard": return !!values["keyboard"];
       case "create_user": return !!(values["username"] || "").trim() && !!(values["password"] || "").trim();
+      case "partition": return canConfirmPart;
       default: return true;
     }
   }
@@ -417,7 +447,7 @@ export default function Install({ config, speed, onComplete, path }: {
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
       <div className="flex-1 flex overflow-hidden rounded-t-2xl border border-white/10 border-b-0">
-        <Sidebar current={step} />
+        <Sidebar current={step} stepOrder={STEP_ORDER} />
         <div className="flex-1 relative overflow-hidden bg-black">
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -512,7 +542,7 @@ export default function Install({ config, speed, onComplete, path }: {
                           [
                             { id: "erase", label: "Erase disk and install Ubuntu" },
                             { id: "alongside", label: "Install Ubuntu alongside existing OS" },
-                            { id: "manual", label: "Something else (manual partitioning)" },
+                            { id: "something", label: "Something else (manual partitioning)" },
                           ].map((opt) => (
                             <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
                               className={`w-full rounded-md px-3 py-2 text-[11px] text-left font-medium transition-all ${
@@ -522,6 +552,83 @@ export default function Install({ config, speed, onComplete, path }: {
                               }`}>{opt.label}</button>
                           ))
                         )}
+                      </div>
+                    )}
+
+                    {/* ── Manual partition editor (shown when "Something else" is selected) ── */}
+                    {step === "partition" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Manual partitioning</div>
+
+                        {/* Disk visual bar */}
+                        <div className="space-y-1">
+                          <div className="text-[10px] font-medium text-white/50">/dev/sda — {TOTAL_GB} GB</div>
+                          <div className="flex h-6 w-full overflow-hidden rounded border border-white/10 bg-white/[0.06]">
+                            {partitions.map((p, i) => {
+                              const pct = (p.sizeGB / TOTAL_GB) * 100;
+                              const colors: Record<string, string> = {
+                                FAT32: "bg-blue-200", NTFS: "bg-blue-300", ext4: "bg-emerald-300",
+                                swap: "bg-amber-200", xfs: "bg-purple-200", btrfs: "bg-cyan-200", f2fs: "bg-teal-200",
+                              };
+                              return (
+                                <div key={i} className={`${colors[p.fs] || "bg-white/10"} flex items-center justify-center text-[8px] font-medium text-white/80 border-r border-white/50 overflow-hidden`}
+                                  style={{ width: `${pct}%` }} title={`${p.device} — ${p.fs} — ${p.sizeGB} GB — ${p.mount}`}>
+                                  {pct > 5 && <span className="truncate px-0.5">{p.mount || p.fs}</span>}
+                                </div>
+                              );
+                            })}
+                            {freeGB > 0 && (
+                              <div className="flex items-center justify-center text-[8px] font-medium text-white/40 border-r border-white/50 border-dashed"
+                                style={{ width: `${(freeGB / TOTAL_GB) * 100}%` }}>
+                                {freeGB > 10 && <span className="truncate px-0.5">Free</span>}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Partition table */}
+                        <div className="rounded border border-white/10 overflow-hidden bg-[#12121a]/80 max-h-[120px] overflow-y-auto">
+                          <table className="w-full text-[9px]">
+                            <thead>
+                              <tr className="bg-white/[0.03] border-b border-white/10 text-left text-[8px] font-medium text-white/50 uppercase">
+                                <th className="px-2 py-1">Device</th>
+                                <th className="px-2 py-1">FS</th>
+                                <th className="px-2 py-1">Size</th>
+                                <th className="px-2 py-1">Mount</th>
+                                <th className="px-2 py-1 text-right">Act</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                              {partitions.map((p, i) => (
+                                <tr key={i} className={`${p.mount === "/" ? "bg-emerald-500/5" : ""} hover:bg-white/[0.05]`}>
+                                  <td className="px-2 py-0.5 font-mono text-white/60">{p.device}</td>
+                                  <td className="px-2 py-0.5">{p.fs ? <span className="rounded bg-white/[0.06] px-1 text-[8px] text-white/60">{p.fs}</span> : "—"}</td>
+                                  <td className="px-2 py-0.5 text-white/60">{p.sizeGB} GB</td>
+                                  <td className="px-2 py-0.5">
+                                    {p.mount ? <span className={`font-mono ${p.mount === "/" ? "text-emerald-400 font-semibold" : "text-white/60"}`}>{p.mount}</span> : "—"}
+                                  </td>
+                                  <td className="px-2 py-0.5 text-right">
+                                    <button onClick={() => { playClick(); setEditPartIdx(i); setPartForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" }); setShowPartDialog(true); }}
+                                      className="rounded px-1 text-[8px] text-white/50 hover:text-white/80">Edit</button>
+                                    <button onClick={() => { playClick(); setPartitions((prev) => prev.filter((_, j) => j !== i)); }}
+                                      className="rounded px-1 text-[8px] text-white/40 hover:text-red-500">Del</button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Add partition + confirm */}
+                        <div className="flex items-center justify-between">
+                          <button disabled={freeGB < 1} onClick={() => { playClick(); setEditPartIdx(null); setPartForm({ sizeGB: Math.min(50, Math.floor(freeGB)), fs: "ext4", mount: "/" }); setShowPartDialog(true); }}
+                            className={`rounded border px-2 py-1 text-[10px] font-medium transition-colors ${
+                              freeGB >= 1 ? "border-[#E95420]/30 bg-[#E95420]/5 text-[#E95420] hover:bg-[#E95420]/10" : "border-white/10 text-white/30 cursor-not-allowed"
+                            }`}>+ Add partition</button>
+                          {!canConfirmPart && (
+                            <div className="text-[9px] text-amber-400">Need ext4 mounted at /</div>
+                          )}
+                        </div>
                       </div>
                     )}
 
@@ -666,6 +773,66 @@ export default function Install({ config, speed, onComplete, path }: {
       <StepNav onBack={handleBack} onNext={handleNext}
         nextLabel={step === "review" ? "Install now →" : "Next →"}
         nextDisabled={!canAdvance()} showBack={currentIdx > 0} />
+
+      {/* ── Partition create/edit dialog ── */}
+      <AnimatePresence>
+        {showPartDialog && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowPartDialog(false)}>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }} onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-xl border border-white/10 bg-[#12121a] p-5 shadow-2xl">
+              <div className="rounded-lg overflow-hidden mb-4 border border-white/10">
+                <img src={partForm.mount === "/boot" ? "/images/ubuntu/17-boot-partition.png" : partForm.mount === "/home" ? "/images/ubuntu/19-home-partition.webp" : partForm.mount === "[swap]" ? "/images/ubuntu/20-swap-partition.webp" : "/images/ubuntu/18-root-partition.webp"}
+                  alt="Partition type" className="w-full h-24 object-cover" />
+              </div>
+              <h3 className="text-sm font-bold text-white/90 mb-3">{editPartIdx !== null ? "Edit partition" : "Create partition"}</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[10px] font-medium text-white/60 mb-1">Size (GB)</label>
+                  <input type="number" min={1} max={Math.floor(freeGB + (editPartIdx !== null ? partitions[editPartIdx].sizeGB : 0))}
+                    value={partForm.sizeGB} onChange={(e) => setPartForm((p) => ({ ...p, sizeGB: Number(e.target.value) }))}
+                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none focus:border-[#E95420] bg-[#1a1a24]" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-white/60 mb-1">Filesystem</label>
+                  <select value={partForm.fs} onChange={(e) => setPartForm((p) => ({ ...p, fs: e.target.value }))}
+                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none focus:border-[#E95420] bg-[#1a1a24]">
+                    {FILESYSTEMS.map((fs) => <option key={fs} value={fs}>{fs}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-white/60 mb-1">Mount point</label>
+                  <select value={partForm.mount} onChange={(e) => setPartForm((p) => ({ ...p, mount: e.target.value }))}
+                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none focus:border-[#E95420] bg-[#1a1a24]">
+                    {MOUNT_POINTS.map((mp) => <option key={mp} value={mp}>{mp}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <button onClick={() => { playClick(); setShowPartDialog(false); setEditPartIdx(null); }}
+                  className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white/60 hover:bg-white/[0.03] transition-colors">Cancel</button>
+                <button onClick={() => {
+                  playClick();
+                  const np: PartitionEntry = {
+                    device: `/dev/sda${partitions.length + 1}`,
+                    type: partForm.mount === "/" ? "Linux filesystem" : partForm.mount === "[swap]" ? "Linux swap" : "Linux filesystem",
+                    fs: partForm.fs, sizeGB: partForm.sizeGB, mount: partForm.mount,
+                    flags: partForm.mount === "/" ? ["root"] : partForm.mount === "/boot" ? ["boot"] : [],
+                  };
+                  if (editPartIdx !== null) setPartitions((prev) => prev.map((p, i) => (i === editPartIdx ? np : p)));
+                  else setPartitions((prev) => [...prev, np]);
+                  setShowPartDialog(false); setEditPartIdx(null);
+                }} disabled={partForm.sizeGB < 1}
+                  className="rounded-lg bg-[#E95420] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#c7441a] transition-colors disabled:opacity-40">
+                  {editPartIdx !== null ? "Save" : "Create"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

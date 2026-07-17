@@ -141,7 +141,7 @@ const OUTCOMES: OutcomeInfo[] = [
     description: "Install Ubuntu alongside Windows. Choose which OS to boot each time you start your PC.",
     icon: <ArrowLeftRight size={22} strokeWidth={1.5} />,
     accent: "#E95420",
-    steps: ["Download ISO", "Flash USB", "BIOS Setup", "Partition Disk", "Install Ubuntu", "GRUB Menu"],
+    steps: ["Download ISO", "Flash USB", "BIOS Setup", "Install Ubuntu", "GRUB Menu"],
     time: "~15 min",
     risk: "Low risk",
     sceneCount: 14,

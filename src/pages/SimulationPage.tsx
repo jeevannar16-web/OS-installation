@@ -15,7 +15,6 @@ import Reboot from "../components/scenes/Reboot";
 import BootMenu from "../components/scenes/BootMenu";
 import LiveWelcome from "../components/scenes/LiveWelcome";
 import LiveDesktop from "../components/scenes/LiveDesktop";
-import Partition from "../components/scenes/Partition";
 import Install from "../components/scenes/Install";
 import ArchInstall from "../components/scenes/ArchInstall";
 import CreateVM from "../components/scenes/CreateVM";
@@ -50,7 +49,6 @@ const SCENE_LABELS: Record<string, string> = {
   boot_prompt: "Boot from USB",
   boot_menu: "Boot Menu",
   windows_setup: "Windows Setup",
-  partitioning: "Partition",
   live_welcome: "Live Welcome",
   live_desktop: "Live Desktop",
   create_vm: "Create VM",
@@ -77,7 +75,6 @@ const STATUS_TEXT: Record<string, string> = {
   windows_setup: "Running Windows Setup…",
   live_welcome: "Choose between trying or installing…",
   live_desktop: "Exploring the live desktop environment…",
-  partitioning: "Allocating disk space for the new OS…",
   create_vm: "Setting up a new virtual machine…",
   mount_iso: "Attaching the installation ISO…",
   vm_boot: "Powering on the virtual machine…",
@@ -101,7 +98,6 @@ const SPEAKER_NOTES: Record<string, string> = {
   boot_prompt: "This is the 'Press any key to boot from USB' prompt. You have 5 seconds — if you miss it, the computer boots from the hard drive instead. Press any key!",
   boot_menu: "This is the BIOS boot device menu. Explain that you select the USB drive to boot from. On real hardware, pressing F12 during POST opens this on most PCs.",
   windows_setup: "Walk through the Windows Setup wizard: choose language/time/keyboard, click Install Now, enter a product key (or skip), accept the license, choose Custom install.",
-  partitioning: "This is the scariest part for beginners. Explain that you're shrinking Windows to make room for Linux. Emphasize: nothing is deleted — you're just resizing.",
   live_desktop: "Welcome to the live desktop! Everything runs from USB — nothing touches the hard drive. You can browse, open apps, test hardware compatibility.",
   live_welcome: "The installer asks: Try or Install? 'Try' boots into the live desktop. 'Install' goes straight to installation. For a first-timer, 'Try' is safer.",
   create_vm: "In VirtualBox, you create a virtual PC inside your real PC. Set RAM (4GB+), create a virtual hard disk, and attach the ISO as a virtual CD drive.",
@@ -127,7 +123,6 @@ const TRANSITIONS: Record<string, string> = {
   boot_prompt: "BOOT_KEY_PRESSED",
   boot_menu: "BOOT_SELECTED",
   windows_setup: "SETUP_DONE",
-  partitioning: "PARTITION_DONE",
   live_welcome: "LIVE_INSTALL",
   live_desktop: "LIVE_INSTALL",
   create_vm: "VM_CREATED",
@@ -173,7 +168,7 @@ function SimulationPageInner() {
   const jumpRef = useRef<string | null>(null);
   const historyRef = useRef<string[]>([]);
 
-  const [diskShrunk, setDiskShrunk] = useState(false);
+  const [, setDiskShrunk] = useState(false);
   const [secureBoot, setSecureBoot] = useState(true);
   const [vtEnabled, setVtEnabled] = useState(false);
   const [bootOrderUSB, setBootOrderUSB] = useState(false);
@@ -307,7 +302,6 @@ function SimulationPageInner() {
     if (s === "idle") return false;
     if (isVm) {
       if (PHYSICAL_ONLY.has(s)) return false;
-      if (s === "partitioning") return false;
       if (s === "live_welcome" || s === "live_desktop") return false;
       if (s === "windows_setup" && cfg.id !== "windows") return false;
       if (s === "oobe" && cfg.id !== "windows") return false;
@@ -317,7 +311,6 @@ function SimulationPageInner() {
     if (s === "vm_close") return false;
     if (s === "usb_reinsert" && path === "live-usb") return false;
     if (s === "disk_prep" && path !== "dual-boot") return false;
-    if (s === "partitioning" && path !== "dual-boot") return false;
     if (s === "windows_setup" && (path === "live-usb" || cfg.id !== "windows")) return false;
     if (s === "oobe" && cfg.id !== "windows") return false;
     if (s === "live_welcome" && path !== "live-usb") return false;
@@ -350,7 +343,6 @@ function SimulationPageInner() {
       case "windows_setup": return <WindowsSetup config={cfg} onComplete={() => send({ type: "SETUP_DONE" })} />;
       case "live_welcome": return <LiveWelcome config={cfg} onTry={() => send({ type: "LIVE_TRY" })} onInstall={() => send({ type: "LIVE_INSTALL" })} />;
       case "live_desktop": return <LiveDesktop config={cfg} onInstallClick={() => send({ type: "LIVE_INSTALL" })} />;
-      case "partitioning": return <Partition onComplete={() => send({ type: "PARTITION_DONE" })} diskShrunk={diskShrunk} onRebootWindows={() => send({ type: "RESET" })} />;
       case "create_vm": return <CreateVM config={cfg} onComplete={() => send({ type: "VM_CREATED" })} />;
       case "mount_iso": return <MountISO config={cfg} onComplete={() => send({ type: "ISO_MOUNTED" })} />;
       case "vm_boot": return <VmBoot config={cfg} speed={speed} onComplete={() => send({ type: "VM_POWERED_ON" })} vtEnabled={vtEnabled} onEnableVT={() => setVtEnabled(true)} />;
