@@ -1,0 +1,116 @@
+import type { OSConfig } from "./types";
+
+export const zorin: OSConfig = {
+  id: "zorin",
+  branding: {
+    name: "Zorin OS",
+    shortName: "Zorin",
+    accent: "#15A66E",
+    surface: "#1a1a2e",
+    logo: "Z",
+    officialUrl: "https://zorin.com/os/download/",
+  },
+  downloadPage: {
+    title: "Download Zorin OS",
+    searchTerm: "download zorin os",
+    host: "zorin.com",
+    url: "https://zorin.com/os/download/",
+    cta: "Download Zorin OS 17",
+    blurb:
+      "Zorin OS is designed to be easy, powerful, and familiar. It's the perfect alternative to Windows and macOS.",
+    versions: ["Zorin OS 17.3 Core", "Zorin OS 17.3 Pro", "Zorin OS 17.3 Lite"],
+    selectorLabel: "Choose your edition",
+  },
+  iso: { filename: "Zorin-OS-17.3-Core-64-bit.iso", size: "3.9 GB" },
+  flashers: [
+    { id: "balena", name: "BalenaEtcher", note: "Simplest — flash & done" },
+    { id: "rufus", name: "Rufus", note: "Fast, Windows-friendly" },
+    { id: "ventoy", name: "Ventoy", note: "Multi-ISO on one stick" },
+  ],
+  wizard: [
+    { kind: "language", title: "Welcome", options: ["English", "Español", "Français", "Deutsch", "中文", "Português (Brasil)"] },
+    { kind: "keyboard", title: "Keyboard layout", layouts: ["English (US)", "English (UK)", "Dvorak", "Colemak"] },
+    {
+      kind: "network",
+      title: "Connect to a network",
+      interfaces: [
+        { id: "wifi-home", label: "HomeWiFi", signal: 4 },
+        { id: "wifi-neighbors", label: "Neighbor_5G", signal: 3 },
+        { id: "wifi-guest", label: "GuestNetwork", signal: 2 },
+        { id: "ethernet", label: "Wired Ethernet", signal: 5 },
+      ],
+    },
+    {
+      kind: "timezone",
+      title: "Select your timezone",
+      zones: ["UTC (London)", "EST (New York)", "CST (Chicago)", "MST (Denver)", "PST (Los Angeles)", "IST (Mumbai)", "JST (Tokyo)", "AEST (Sydney)"],
+    },
+    {
+      kind: "disk",
+      title: "Installation type",
+      choices: [
+        { id: "erase", label: "Erase disk and install Zorin OS", hint: "Wipes the whole drive. Use for VMs." },
+        { id: "alongside", label: "Install Zorin OS alongside", hint: "Shrinks Windows and dual-boots." },
+        { id: "something", label: "Something else", hint: "Manual partitions (advanced)." },
+      ],
+    },
+    {
+      kind: "account",
+      title: "Who are you?",
+      prompts: [
+        { label: "Your name", placeholder: "Ada Lovelace" },
+        { label: "Your computer's name", placeholder: "ada-zorin" },
+        { label: "Pick a username", placeholder: "ada" },
+        { label: "Choose a password", placeholder: "••••••••", secret: true },
+      ],
+    },
+    {
+      kind: "confirm",
+      title: "Ready to install",
+      body: "You will be able to review your choices before the installation begins.",
+    },
+  ],
+  installTips: [
+    "Installing the base system…",
+    "Configuring hardware drivers…",
+    "Setting up the Zorin desktop…",
+    "Creating your user account…",
+    "Almost there — finishing up…",
+  ],
+  installFiles: [
+    "Copying /cdrom/casper/filesystem.squashfs…",
+    "Unsquashing /target…",
+    "Copying /usr/lib/x86_64-linux-gnu/libc.so.6…",
+    "Copying /usr/lib/x86_64-linux-gnu/libm.so.6…",
+    "Copying /boot/vmlinuz-6.8.0-40-generic…",
+    "Copying /boot/initrd.img-6.8.0-40-generic…",
+    "Installing linux-image-6.8.0-40-generic…",
+    "Installing linux-headers-6.8.0-40-generic…",
+    "Installing grub-pc…",
+    "Configuring network-manager…",
+    "Configuring zorin-desktop…",
+    "Running 'grub-install /dev/sda'…",
+    "Running 'update-grub'…",
+    "Removing extra packages…",
+    "Generating initramfs…",
+    "Cleaning up temporary files…",
+  ],
+  searchKeywords: [
+    "zorin os",
+    "download zorin os",
+    "zorin os iso",
+    "zorin linux",
+    "zorin os download",
+    "zorin 17",
+  ],
+  completion: {
+    headline: "You just simulated installing Zorin OS! 🎉",
+    sub: "That was the full installation flow. You're ready to try it on real hardware.",
+  },
+  vmConfig: {
+    osType: "Linux",
+    osVersion: "Ubuntu (64-bit)",
+    defaultMemoryMB: 4096,
+    defaultDiskGB: 25,
+  },
+};

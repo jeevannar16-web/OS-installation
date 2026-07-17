@@ -107,7 +107,7 @@ function HowItWorksDropdown({ open }: { open: boolean }) {
    OUTCOME CARDS — ways to install an OS
    ═══════════════════════════════════════════════════════════════════ */
 type Outcome = "live-usb" | "dual-boot" | "vm" | "practical";
-type SelectedOS = "ubuntu" | "arch" | "windows";
+type SelectedOS = "ubuntu" | "arch" | "windows" | "zorin" | "mint";
 
 interface OutcomeInfo {
   id: Outcome;
@@ -273,6 +273,106 @@ const OS_OUTCOMES: Record<SelectedOS, OutcomeInfo[]> = {
       sceneCount: 0,
     },
   ],
+  zorin: [
+    {
+      id: "vm",
+      title: "Virtual Machine",
+      tagline: "Safest first try",
+      description: "Run Zorin OS inside VirtualBox — no risk to your real files. Perfect for a first rehearsal.",
+      icon: <Monitor size={22} strokeWidth={1.5} />,
+      accent: "#15A66E",
+      steps: ["Download ISO", "Create VM", "Boot VM", "Install Zorin"],
+      time: "~10 min",
+      risk: "Zero risk",
+      sceneCount: 10,
+    },
+    {
+      id: "dual-boot",
+      title: "Dual Boot",
+      tagline: "Zorin + Windows",
+      description: "Install Zorin OS alongside Windows. Choose which OS to boot each time you start your PC.",
+      icon: <ArrowLeftRight size={22} strokeWidth={1.5} />,
+      accent: "#15A66E",
+      steps: ["Download ISO", "Flash USB", "BIOS Setup", "Install Zorin", "GRUB Menu"],
+      time: "~15 min",
+      risk: "Low risk",
+      sceneCount: 14,
+    },
+    {
+      id: "live-usb",
+      title: "Try Zorin Live",
+      tagline: "No install needed",
+      description: "Boot from USB into a full Zorin OS desktop. Try it without touching your hard drive.",
+      icon: <Usb size={22} strokeWidth={1.5} />,
+      accent: "#22c55e",
+      steps: ["Download ISO", "Flash USB", "Boot from USB", "Try Zorin"],
+      time: "~5 min",
+      risk: "Zero risk",
+      sceneCount: 11,
+    },
+    {
+      id: "practical",
+      title: "Practical Guide",
+      tagline: "Real install on your PC",
+      description: "Step-by-step guide with real terminal commands for an actual installation on your hardware.",
+      icon: <BookOpen size={22} strokeWidth={1.5} />,
+      accent: "#f59e0b",
+      steps: ["Download", "Flash USB", "Boot", "Follow guide"],
+      time: "~15 min",
+      risk: "Real install",
+      sceneCount: 0,
+    },
+  ],
+  mint: [
+    {
+      id: "vm",
+      title: "Virtual Machine",
+      tagline: "Safest first try",
+      description: "Run Linux Mint inside VirtualBox — no risk to your real files. Perfect for a first rehearsal.",
+      icon: <Monitor size={22} strokeWidth={1.5} />,
+      accent: "#88C999",
+      steps: ["Download ISO", "Create VM", "Boot VM", "Install Mint"],
+      time: "~10 min",
+      risk: "Zero risk",
+      sceneCount: 10,
+    },
+    {
+      id: "dual-boot",
+      title: "Dual Boot",
+      tagline: "Mint + Windows",
+      description: "Install Linux Mint alongside Windows. Choose which OS to boot each time you start your PC.",
+      icon: <ArrowLeftRight size={22} strokeWidth={1.5} />,
+      accent: "#88C999",
+      steps: ["Download ISO", "Flash USB", "BIOS Setup", "Install Mint", "GRUB Menu"],
+      time: "~15 min",
+      risk: "Low risk",
+      sceneCount: 14,
+    },
+    {
+      id: "live-usb",
+      title: "Try Mint Live",
+      tagline: "No install needed",
+      description: "Boot from USB into a full Linux Mint desktop. Try it without touching your hard drive.",
+      icon: <Usb size={22} strokeWidth={1.5} />,
+      accent: "#22c55e",
+      steps: ["Download ISO", "Flash USB", "Boot from USB", "Try Mint"],
+      time: "~5 min",
+      risk: "Zero risk",
+      sceneCount: 11,
+    },
+    {
+      id: "practical",
+      title: "Practical Guide",
+      tagline: "Real install on your PC",
+      description: "Step-by-step guide with real terminal commands for an actual installation on your hardware.",
+      icon: <BookOpen size={22} strokeWidth={1.5} />,
+      accent: "#f59e0b",
+      steps: ["Download", "Flash USB", "Boot", "Follow guide"],
+      time: "~15 min",
+      risk: "Real install",
+      sceneCount: 0,
+    },
+  ],
 };
 
 function OutcomeCard({ outcome, selected, onSelect }: {
@@ -347,6 +447,7 @@ export default function LandingPage() {
   const [selectedOS, setSelectedOS] = useState<SelectedOS>("ubuntu");
   const [showHelp, setShowHelp] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [bootSkipped, setBootSkipped] = useState(() => !!sessionStorage.getItem("boot_skipped"));
   const guideRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -358,8 +459,15 @@ export default function LandingPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [showGuide]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleBootReady = useCallback((_ready?: boolean) => {}, []);
+  useEffect(() => {
+    const skip = sessionStorage.getItem("boot_skipped");
+    if (skip) setBootSkipped(true);
+  }, []);
+
+  const handleBootReady = useCallback(() => {
+    sessionStorage.setItem("boot_skipped", "1");
+    setBootSkipped(true);
+  }, []);
 
   const activeOS = OS_LIST.find((o) => o.id === selectedOS);
   const outcomes = OS_OUTCOMES[selectedOS];
@@ -376,7 +484,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-full flex flex-col relative overflow-hidden">
-      <BootSequence onReady={handleBootReady} />
+      {!bootSkipped && <BootSequence onReady={handleBootReady} />}
 
       {/* Background */}
       <div className="aurora-bg" aria-hidden>
@@ -490,7 +598,11 @@ export default function LandingPage() {
                   ? "Four ways to install Arch Linux — from practical guide to bare metal dual-boot"
                   : selectedOS === "windows"
                     ? "Four ways to install Windows 11 — from safest VM to bare metal clean install"
-                    : "Four ways to experience Ubuntu — pick one and start the simulation"}
+                    : selectedOS === "zorin"
+                      ? "Four ways to install Zorin OS — from practical guide to bare metal dual-boot"
+                      : selectedOS === "mint"
+                        ? "Four ways to install Linux Mint — from practical guide to bare metal dual-boot"
+                        : "Four ways to experience Ubuntu — pick one and start the simulation"}
               </p>
             </motion.div>
 
@@ -545,7 +657,7 @@ export default function LandingPage() {
                 {OS_LIST.map((o) => {
                   const disabled = !!o.stub;
                   const isActive = o.id === selectedOS;
-                  const available = o.id === "ubuntu" || o.id === "arch" || o.id === "windows";
+                  const available = o.id === "ubuntu" || o.id === "arch" || o.id === "windows" || o.id === "zorin" || o.id === "mint";
                   return (
                     <button
                       key={o.id}

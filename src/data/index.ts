@@ -2,6 +2,8 @@ import type { InstallPath, PathInfo, OSData } from "./types";
 import { ubuntu } from "./ubuntu";
 import { windows } from "./windows";
 import { arch } from "./arch";
+import { zorin } from "./zorin";
+import { mint } from "./mint";
 import { debian } from "./debian";
 import { fedora } from "./fedora";
 
@@ -9,6 +11,8 @@ export const OS_REGISTRY: OSData = {
   ubuntu,
   windows,
   arch,
+  zorin,
+  mint,
   debian,
   fedora,
 };

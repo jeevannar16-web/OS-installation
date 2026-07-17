@@ -55,6 +55,60 @@ const STEP_IMG: Record<InstallerStep, string> = {
   review: "/images/ubuntu/09-review.png",
 };
 
+const ZORIN_STEP_IMG: Record<InstallerStep, string> = {
+  language: "/images/zorin/03-installer-welcome.png",
+  keyboard: "/images/zorin/03-installer-welcome.png",
+  network: "/images/zorin/03-installer-welcome.png",
+  install_type: "/images/zorin/11-installer.png",
+  partition: "/images/zorin/11-installer.png",
+  install_option: "/images/zorin/11-installer.png",
+  third_party: "/images/zorin/11-installer.png",
+  app_selection: "/images/zorin/11-installer.png",
+  timezone: "/images/zorin/11-installer.png",
+  create_user: "/images/zorin/11-installer.png",
+  review: "/images/zorin/11-installer.png",
+};
+
+const MINT_STEP_IMG: Record<InstallerStep, string> = {
+  language: "/images/mint/18-mint-install-language.webp",
+  keyboard: "/images/mint/19-mint-keyboard.webp",
+  network: "/images/mint/21-mint-something-else.webp",
+  install_type: "/images/mint/06-installation-type.png",
+  partition: "/images/mint/22-mint-partition.webp",
+  install_option: "/images/mint/21-mint-something-else.webp",
+  third_party: "/images/mint/05-multimedia-codecs.png",
+  app_selection: "/images/mint/06-installation-type.png",
+  timezone: "/images/mint/08-timezone.png",
+  create_user: "/images/mint/09-user-creation.png",
+  review: "/images/mint/10-installing.png",
+};
+
+function getStepImg(osId: string, step: InstallerStep): string {
+  if (osId === "zorin") return ZORIN_STEP_IMG[step];
+  if (osId === "mint") return MINT_STEP_IMG[step];
+  return STEP_IMG[step];
+}
+
+function getAccent(osId: string): string {
+  if (osId === "zorin") return "#15A66E";
+  if (osId === "mint") return "#88C999";
+  return "#E95420";
+}
+
+function getSurface(osId: string): string {
+  if (osId === "windows") return "#002060";
+  if (osId === "zorin") return "#1a1a2e";
+  if (osId === "mint") return "#1a1a2e";
+  return "#2c001e";
+}
+
+function getOSName(osId: string): string {
+  if (osId === "windows") return "Windows 11";
+  if (osId === "zorin") return "Zorin OS";
+  if (osId === "mint") return "Linux Mint";
+  return "Ubuntu";
+}
+
 const LANGUAGES = [
   "English", "Español", "Français", "Deutsch", "Português (Brasil)",
   "Italiano", "中文 (简体)", "日本語", "한국어", "Русский",
@@ -74,18 +128,18 @@ const INSTALL_SLIDES = [
   { title: "Built-in security", body: "Automatic updates, firewall, and full-disk encryption keep you safe." },
 ];
 
-function Sidebar({ current, stepOrder }: { current: InstallerStep; stepOrder: InstallerStep[] }) {
+function Sidebar({ current, stepOrder, accent }: { current: InstallerStep; stepOrder: InstallerStep[]; accent: string }) {
   const idx = stepOrder.indexOf(current);
   return (
     <div className="hidden md:flex w-48 lg:w-56 shrink-0 flex-col border-r border-white/10 bg-[#1a1a24] p-3 gap-0.5">
       {stepOrder.map((s, i) => (
         <div key={s} className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
-          s === current ? "bg-[#E95420]/10 text-[#E95420] font-semibold"
+          s === current ? `bg-[${accent}]/10 text-[${accent}] font-semibold`
           : i < idx ? "text-white/40" : "text-white/25"
-        }`}>
+        }`} style={s === current ? { background: `${accent}10`, color: accent } : {}}>
           <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-            i < idx || s === current ? "bg-[#E95420] text-white" : "bg-white/10 text-white/30"
-          }`}>{i < idx ? "✓" : i + 1}</div>
+            i < idx || s === current ? "text-white" : "bg-white/10 text-white/30"
+          }`} style={i < idx || s === current ? { background: accent } : {}}>{i < idx ? "✓" : i + 1}</div>
           <span className="truncate">{SIDEBAR_LABELS[s]}</span>
         </div>
       ))}
@@ -93,8 +147,8 @@ function Sidebar({ current, stepOrder }: { current: InstallerStep; stepOrder: In
   );
 }
 
-function StepNav({ onBack, onNext, nextLabel, nextDisabled, showBack }: {
-  onBack: () => void; onNext: () => void; nextLabel: string; nextDisabled?: boolean; showBack?: boolean;
+function StepNav({ onBack, onNext, nextLabel, nextDisabled, showBack, accent }: {
+  onBack: () => void; onNext: () => void; nextLabel: string; nextDisabled?: boolean; showBack?: boolean; accent: string;
 }) {
   return (
     <div className="flex items-center justify-between border-t border-white/10 bg-[#1a1a24] px-4 py-2.5 shrink-0">
@@ -105,9 +159,9 @@ function StepNav({ onBack, onNext, nextLabel, nextDisabled, showBack }: {
         </button>
       ) : <div />}
       <button disabled={nextDisabled} onClick={() => { playClick(); onNext(); }}
-        className={`rounded-lg px-5 py-2 text-xs font-semibold transition-colors ${
-          nextDisabled ? "bg-white/10 text-white/30 cursor-not-allowed" : "bg-[#E95420] text-white hover:bg-[#c7441a]"
-        }`}>{nextLabel}</button>
+        className={`rounded-lg px-5 py-2 text-xs font-semibold transition-colors text-white ${
+          nextDisabled ? "bg-white/10 text-white/30 cursor-not-allowed" : "hover:opacity-90"
+        }`} style={!nextDisabled ? { background: accent } : {}}>{nextLabel}</button>
     </div>
   );
 }
@@ -116,7 +170,11 @@ export default function Install({ config, speed, onComplete, path }: {
   config: OSConfig; speed: "normal" | "fast"; onComplete: () => void; path?: string;
 }) {
   const { register: registerAdvance } = useSceneAdvance();
-  const [phase, setPhase] = useState<WizardPhase>("boot");
+  const isWindows = config.id === "windows";
+  const accent = getAccent(config.id);
+  const surface = getSurface(config.id);
+  const osName = getOSName(config.id);
+  const [phase, setPhase] = useState<WizardPhase>(isWindows ? "installing" : "boot");
   const [bootSplash, setBootSplash] = useState(false);
   const [step, setStep] = useState<InstallerStep>("language");
   const [values, setValues] = useState<Record<string, string>>({});
@@ -258,8 +316,7 @@ export default function Install({ config, speed, onComplete, path }: {
     if (bootSplash) {
       return (
         <div className="mx-auto w-full max-w-5xl flex flex-col items-center justify-center rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-          style={{ height: "min(600px, 70vh)", background: "#2c001e" }}>
-          {/* Ubuntu purple boot splash */}
+          style={{ height: "min(600px, 70vh)", background: surface }}>
           <div className="flex flex-col items-center gap-6">
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
               <svg width="72" height="72" viewBox="0 0 32 32" fill="none">
@@ -286,26 +343,25 @@ export default function Install({ config, speed, onComplete, path }: {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black">
-          {/* Real Ubuntu "Try or Install" screenshot */}
-          <img src="/images/ubuntu/01-try-or-install.png" alt="Try or Install Ubuntu"
-            className="absolute inset-0 w-full h-full object-contain bg-[#2c001e]" />
+          <img src="/images/ubuntu/01-try-or-install.png" alt={`Try or Install ${osName}`}
+            className="absolute inset-0 w-full h-full object-contain" style={{ background: surface }} />
 
-          {/* Interactive overlay — buttons on top of the real screenshot */}
           <div className="absolute inset-x-0 bottom-0">
             <div className="bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/60 to-transparent pt-24 pb-4 px-6">
               <div className="max-w-md mx-auto space-y-3 text-center">
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                   <p className="text-xs text-white/50 mb-3">
-                    Select your language and click <strong className="text-white/80">Install Ubuntu</strong> to begin.
+                    Select your language and click <strong className="text-white/80">Install {osName}</strong> to begin.
                   </p>
                   <div className="flex gap-3 justify-center">
                     <button onClick={() => { playClick(); setBootSplash(true); }}
-                      className="rounded-lg bg-[#E95420] px-6 py-3 text-sm font-bold text-white hover:bg-[#c7441a] transition-all hover:scale-[1.02] shadow-lg shadow-[#E95420]/30">
-                      Install Ubuntu
+                      className="rounded-lg px-6 py-3 text-sm font-bold text-white hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
+                      style={{ background: accent, boxShadow: `0 10px 25px -5px ${accent}40` }}>
+                      Install {osName}
                     </button>
                     <button onClick={() => { playClick(); setBootSplash(true); }}
                       className="rounded-lg border border-white/20 bg-white/10 px-6 py-3 text-sm font-medium text-white/70 hover:bg-white/15 transition-all hover:scale-[1.02]">
-                      Try Ubuntu
+                      Try {osName}
                     </button>
                   </div>
                 </motion.div>
@@ -322,51 +378,50 @@ export default function Install({ config, speed, onComplete, path }: {
      Shows the actual progress screenshot with real-time file copy
      ═══════════════════════════════════════════════════════════════ */
   if (phase === "installing") {
+    const installImg = isWindows ? "/images/win11-setup/08-clean-install.webp" : "/images/ubuntu/10-progress.png";
     return (
       <div className="mx-auto w-full max-w-5xl">
         <SparkleBurst trigger={showSparkle} />
         <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
-          {/* Real Ubuntu installer progress screenshot as background */}
-          <img src="/images/ubuntu/10-progress.png" alt="Installing Ubuntu" className="w-full h-auto" />
+          <img src={installImg} alt={`Installing ${osName}`} className="w-full h-auto" />
 
-          {/* Overlay: progress bar + file copy log — like real Ubuntu installer */}
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/80 to-transparent pt-24 pb-5 px-6">
             <div className="max-w-lg mx-auto space-y-3">
-              {/* Status text */}
               <div className="text-center">
-                <h3 className="text-sm font-bold text-white">Installing Ubuntu 24.04 LTS</h3>
+                <h3 className="text-sm font-bold text-white">Installing {osName}</h3>
                 <p className="text-[11px] text-white/50 mt-0.5">{config.installTips[tipIdx]}</p>
               </div>
 
-              {/* Progress bar — matches real Ubuntu installer */}
               <div className="space-y-1.5">
                 <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
                   <motion.div
-                    className="h-full rounded-full bg-[#E95420]"
+                    className="h-full rounded-full"
+                    style={{ background: accent }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.15 }}
                   />
                 </div>
                 <div className="flex justify-between text-[10px] text-white/40 font-mono">
                   <span>{Math.floor(progress)}% complete</span>
-                  <span className="text-white/25">{INSTALL_SLIDES[slideIdx].title}</span>
+                  <span className="text-white/25">{isWindows ? config.installTips[tipIdx] : INSTALL_SLIDES[slideIdx].title}</span>
                   <span>{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>
                 </div>
               </div>
 
-              {/* Feature slide — rotates like real Ubuntu installer */}
-              <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-center">
-                <div className="text-xs font-semibold text-white/70 mb-0.5">{INSTALL_SLIDES[slideIdx].title}</div>
-                <div className="text-[10px] text-white/35 leading-relaxed">{INSTALL_SLIDES[slideIdx].body}</div>
-              </div>
+              {!isWindows && (
+                <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-center">
+                  <div className="text-xs font-semibold text-white/70 mb-0.5">{INSTALL_SLIDES[slideIdx].title}</div>
+                  <div className="text-[10px] text-white/35 leading-relaxed">{INSTALL_SLIDES[slideIdx].body}</div>
+                </div>
+              )}
 
-              {/* File copy log — like real Ubuntu installer terminal */}
               <div className="h-14 overflow-hidden rounded border border-white/10 bg-black/40 p-2 font-mono text-[9px] text-white/40">
                 {config.installFiles.slice(Math.max(0, fileIdx - 3), fileIdx + 1).map((file, i) => {
                   const actualIdx = Math.max(0, fileIdx - 3) + i;
                   const isCurrent = actualIdx === fileIdx;
                   return (
-                    <div key={fileIdx - 3 + i} className={`truncate leading-relaxed ${isCurrent ? "text-[#E95420]" : "opacity-40"}`}>
+                    <div key={fileIdx - 3 + i} className={`truncate leading-relaxed ${isCurrent ? "text-white/70" : "opacity-40"}`}
+                      style={isCurrent ? { color: accent } : {}}>
                       {isCurrent && "▸ "}{file}
                     </div>
                   );
@@ -385,7 +440,7 @@ export default function Install({ config, speed, onComplete, path }: {
   if (phase === "remove_media") {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-[#2c001e]">
+        <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0" style={{ background: surface }}>
           <img src="/images/ubuntu/11-restart.png" alt="Restart needed"
             className="absolute inset-0 w-full h-full object-contain" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/40 to-transparent pt-24 pb-6 px-6 flex items-end">
@@ -398,7 +453,8 @@ export default function Install({ config, speed, onComplete, path }: {
                     Unplug the USB drive or eject the installation media, then press <strong className="text-white/70">Continue</strong> to restart.
                   </p>
                   <button onClick={() => { playClick(); setPhase("done"); }}
-                    className="rounded-lg bg-[#E95420] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#c7441a] transition-all hover:scale-[1.02] shadow-lg shadow-[#E95420]/30">
+                    className="rounded-lg px-6 py-2.5 text-sm font-bold text-white hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
+                    style={{ background: accent, boxShadow: `0 10px 25px -5px ${accent}40` }}>
                     Continue →
                   </button>
                 </div>
@@ -411,7 +467,7 @@ export default function Install({ config, speed, onComplete, path }: {
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     RESTART — Real Ubuntu restart screen
+     RESTART — Real restart screen
      ═══════════════════════════════════════════════════════════════ */
   if (phase === "done") {
     return (
@@ -428,7 +484,8 @@ export default function Install({ config, speed, onComplete, path }: {
               </p>
               {restartPhase === "done" ? (
                 <button onClick={() => { playSuccess(); onComplete(); }}
-                  className="rounded-lg bg-[#E95420] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#c7441a] transition-colors shadow-lg shadow-[#E95420]/20">
+                  className="rounded-lg px-6 py-2.5 text-sm font-bold text-white hover:opacity-90 transition-colors shadow-lg"
+                  style={{ background: accent, boxShadow: `0 10px 25px -5px ${accent}30` }}>
                   Restart Now →
                 </button>
               ) : (
@@ -447,33 +504,30 @@ export default function Install({ config, speed, onComplete, path }: {
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
       <div className="flex-1 flex overflow-hidden rounded-t-2xl border border-white/10 border-b-0">
-        <Sidebar current={step} stepOrder={STEP_ORDER} />
+        <Sidebar current={step} stepOrder={STEP_ORDER} accent={accent} />
         <div className="flex-1 relative overflow-hidden bg-black">
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }} className="absolute inset-0">
 
-              {/* Full background screenshot */}
-              <img src={STEP_IMG[step]} alt={SIDEBAR_LABELS[step]}
-                className="absolute inset-0 w-full h-full object-contain bg-[#1a1a24]" />
+              <img src={getStepImg(config.id, step)} alt={SIDEBAR_LABELS[step]}
+                className="absolute inset-0 w-full h-full object-contain" style={{ background: surface }} />
 
-              {/* Interactive overlay */}
               <div className="absolute inset-x-0 bottom-0">
                 <div className="bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/60 to-transparent pt-16 pb-4 px-6">
                   <div className="max-w-md mx-auto space-y-3">
 
-                    {/* ── Language selector ── */}
                     {step === "language" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Select your language</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Select your language</div>
                         <div className="flex flex-wrap gap-1.5">
                           {LANGUAGES.map((lang) => (
                             <button key={lang} onClick={() => { playClick(); setVal("language", lang); }}
                               className={`rounded-md px-3 py-1.5 text-[11px] transition-all ${
                                 values["language"] === lang
-                                  ? "bg-[#E95420] text-white font-semibold shadow-lg shadow-[#E95420]/30"
+                                  ? "text-white font-semibold shadow-lg"
                                   : "bg-white/10 text-white/70 hover:bg-white/15 hover:text-white"
-                              }`}>{lang}</button>
+                              }`} style={values["language"] === lang ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>{lang}</button>
                           ))}
                         </div>
                       </div>
@@ -482,7 +536,7 @@ export default function Install({ config, speed, onComplete, path }: {
                     {/* ── Keyboard selector ── */}
                     {step === "keyboard" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Keyboard layout</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Keyboard layout</div>
                         <div className="grid grid-cols-2 gap-1.5 max-h-[140px] overflow-y-auto">
                           {KEYBOARD_LAYOUTS.map((layout) => (
                             <button key={layout} onClick={() => { playClick(); setVal("keyboard", layout); }}
@@ -533,7 +587,7 @@ export default function Install({ config, speed, onComplete, path }: {
                               ✓ In a VM, "Erase disk" only affects the virtual disk — your host OS is safe.
                             </div>
                             <button onClick={() => { playClick(); setInstallType("erase"); }}
-                              className="w-full rounded-md px-3 py-2 text-[11px] text-left font-medium bg-[#E95420] text-white shadow-lg shadow-[#E95420]/20">
+                              className="w-full rounded-md px-3 py-2 text-[11px] text-left font-medium bg-[#E95420] text-white shadow-lg shadow-[#E95420]">
                               Erase disk and install Ubuntu
                             </button>
                           </>
@@ -547,7 +601,7 @@ export default function Install({ config, speed, onComplete, path }: {
                             <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
                               className={`w-full rounded-md px-3 py-2 text-[11px] text-left font-medium transition-all ${
                                 installType === opt.id
-                                  ? "bg-[#E95420] text-white shadow-lg shadow-[#E95420]/20"
+                                  ? "bg-[#E95420] text-white shadow-lg shadow-[#E95420]"
                                   : "bg-white/10 text-white/70 hover:bg-white/15"
                               }`}>{opt.label}</button>
                           ))
@@ -772,7 +826,7 @@ export default function Install({ config, speed, onComplete, path }: {
       </div>
       <StepNav onBack={handleBack} onNext={handleNext}
         nextLabel={step === "review" ? "Install now →" : "Next →"}
-        nextDisabled={!canAdvance()} showBack={currentIdx > 0} />
+        nextDisabled={!canAdvance()} showBack={currentIdx > 0} accent={accent} />
 
       {/* ── Partition create/edit dialog ── */}
       <AnimatePresence>

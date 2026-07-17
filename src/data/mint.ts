@@ -1,0 +1,117 @@
+import type { OSConfig } from "./types";
+
+export const mint: OSConfig = {
+  id: "mint",
+  branding: {
+    name: "Linux Mint",
+    shortName: "Mint",
+    accent: "#88C999",
+    surface: "#1a1a2e",
+    logo: "M",
+    officialUrl: "https://linuxmint.com/download.php",
+  },
+  downloadPage: {
+    title: "Download Linux Mint",
+    searchTerm: "download linux mint",
+    host: "linuxmint.com",
+    url: "https://linuxmint.com/download.php",
+    cta: "Download Linux Mint 22",
+    blurb:
+      "Linux Mint is an elegant, easy to use, up to date and comfortable GNU/Linux desktop distribution.",
+    versions: ["Linux Mint 22.1 Cinnamon", "Linux Mint 22.1 MATE", "Linux Mint 22.1 Xfce"],
+    selectorLabel: "Choose your desktop",
+  },
+  iso: { filename: "linuxmint-22.1-cinnamon-64bit.iso", size: "2.6 GB" },
+  flashers: [
+    { id: "balena", name: "BalenaEtcher", note: "Simplest — flash & done" },
+    { id: "rufus", name: "Rufus", note: "Fast, Windows-friendly" },
+    { id: "ventoy", name: "Ventoy", note: "Multi-ISO on one stick" },
+  ],
+  wizard: [
+    { kind: "language", title: "Welcome", options: ["English", "Español", "Français", "Deutsch", "中文", "Português (Brasil)"] },
+    { kind: "keyboard", title: "Keyboard layout", layouts: ["English (US)", "English (UK)", "Dvorak", "Colemak"] },
+    {
+      kind: "network",
+      title: "Connect to a network",
+      interfaces: [
+        { id: "wifi-home", label: "HomeWiFi", signal: 4 },
+        { id: "wifi-neighbors", label: "Neighbor_5G", signal: 3 },
+        { id: "wifi-guest", label: "GuestNetwork", signal: 2 },
+        { id: "ethernet", label: "Wired Ethernet", signal: 5 },
+      ],
+    },
+    {
+      kind: "timezone",
+      title: "Select your timezone",
+      zones: ["UTC (London)", "EST (New York)", "CST (Chicago)", "MST (Denver)", "PST (Los Angeles)", "IST (Mumbai)", "JST (Tokyo)", "AEST (Sydney)"],
+    },
+    {
+      kind: "disk",
+      title: "Installation type",
+      choices: [
+        { id: "erase", label: "Erase disk and install Linux Mint", hint: "Wipes the whole drive. Use for VMs." },
+        { id: "alongside", label: "Install Linux Mint alongside", hint: "Shrinks Windows and dual-boots." },
+        { id: "something", label: "Something else", hint: "Manual partitions (advanced)." },
+      ],
+    },
+    {
+      kind: "account",
+      title: "Who are you?",
+      prompts: [
+        { label: "Your name", placeholder: "Ada Lovelace" },
+        { label: "Your computer's name", placeholder: "ada-mint" },
+        { label: "Pick a username", placeholder: "ada" },
+        { label: "Choose a password", placeholder: "••••••••", secret: true },
+      ],
+    },
+    {
+      kind: "confirm",
+      title: "Ready to install",
+      body: "You will be able to review your choices before the installation begins.",
+    },
+  ],
+  installTips: [
+    "Installing the base system…",
+    "Configuring hardware drivers…",
+    "Setting up the Cinnamon desktop…",
+    "Installing multimedia codecs…",
+    "Creating your user account…",
+    "Almost there — finishing up…",
+  ],
+  installFiles: [
+    "Copying /cdrom/casper/filesystem.squashfs…",
+    "Unsquashing /target…",
+    "Copying /usr/lib/x86_64-linux-gnu/libc.so.6…",
+    "Copying /usr/lib/x86_64-linux-gnu/libm.so.6…",
+    "Copying /boot/vmlinuz-6.8.0-40-generic…",
+    "Copying /boot/initrd.img-6.8.0-40-generic…",
+    "Installing linux-image-6.8.0-40-generic…",
+    "Installing linux-headers-6.8.0-40-generic…",
+    "Installing grub-pc…",
+    "Configuring network-manager…",
+    "Configuring cinnamon-desktop…",
+    "Running 'grub-install /dev/sda'…",
+    "Running 'update-grub'…",
+    "Removing extra packages…",
+    "Generating initramfs…",
+    "Cleaning up temporary files…",
+  ],
+  searchKeywords: [
+    "linux mint",
+    "download linux mint",
+    "linux mint iso",
+    "mint linux",
+    "linux mint download",
+    "mint 22",
+  ],
+  completion: {
+    headline: "You just simulated installing Linux Mint! 🎉",
+    sub: "That was the full installation flow. You're ready to try it on real hardware.",
+  },
+  vmConfig: {
+    osType: "Linux",
+    osVersion: "Ubuntu (64-bit)",
+    defaultMemoryMB: 4096,
+    defaultDiskGB: 25,
+  },
+};
