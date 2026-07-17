@@ -353,10 +353,10 @@ function SimulationPageInner() {
       case "partitioning": return <Partition onComplete={() => send({ type: "PARTITION_DONE" })} diskShrunk={diskShrunk} onRebootWindows={() => send({ type: "RESET" })} />;
       case "create_vm": return <CreateVM config={cfg} onComplete={() => send({ type: "VM_CREATED" })} />;
       case "mount_iso": return <MountISO config={cfg} onComplete={() => send({ type: "ISO_MOUNTED" })} />;
-      case "vm_boot": return <VmBoot config={cfg} speed={speed} onComplete={() => send({ type: "VM_POWERED_ON" })} vtEnabled={vtEnabled} />;
+      case "vm_boot": return <VmBoot config={cfg} speed={speed} onComplete={() => send({ type: "VM_POWERED_ON" })} vtEnabled={vtEnabled} onEnableVT={() => setVtEnabled(true)} />;
       case "installing": return cfg.id === "arch"
         ? <ArchInstall config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} />
-        : <Install config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} />;
+        : <Install config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} path={path} />;
       case "grub_menu": return <GrubMenu onComplete={() => send({ type: "GRUB_DONE" })} />;
       case "oobe": return cfg.id === "windows"
         ? <WindowsOOBE osName={cfg.branding.name} onComplete={() => send({ type: "OOBE_DONE" })} />

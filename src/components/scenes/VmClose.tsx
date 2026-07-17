@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
-import { playClick } from "../shared/sounds";
 import { useSceneAdvance } from "../shared/SceneAdvance";
 
 export default function VmClose({
@@ -18,54 +17,35 @@ export default function VmClose({
   }, [registerAdvance, onComplete]);
 
   return (
-    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl space-y-6">
-      {/* VM Window */}
-      <motion.div
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 1 }}
-        className="overflow-hidden rounded-xl border border-white/10 shadow-2xl"
-      >
-        {/* VM title bar */}
-        <div className="flex items-center gap-2 bg-[#323234] px-3 py-2">
-          <div className="flex gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-            <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-            <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-          </div>
-          <div className="flex items-center gap-2 mx-auto text-xs text-white/50">
-            <span>VirtualBox</span>
-            <span>—</span>
-            <span>{config.branding.name} [Running]</span>
-          </div>
-          <button
-            onClick={() => {
-              playClick();
-              onComplete();
-            }}
-            className="text-white/40 hover:text-red-400 text-sm font-bold transition-colors"
-            title="Close VM"
-          >
-            ×
-          </button>
-        </div>
+    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black">
+        {/* Real Ubuntu running in VirtualBox screenshot */}
+        <img src="/images/virtualbox/12-ubuntu-running.jpg" alt="Ubuntu running in VirtualBox"
+          className="absolute inset-0 w-full h-full object-contain bg-[#2a2a2b]" />
 
-        {/* Guest OS screen content */}
-        <div
-          className="flex h-[420px] lg:h-[520px] xl:h-[600px] items-center justify-center"
-          style={{
-            background: `linear-gradient(135deg, ${config.branding.surface} 0%, #0a0a1a 100%)`,
-          }}
-        >
-          <div className="text-center">
-            <div className="text-6xl mb-4">{config.branding.logo}</div>
-            <div className="text-lg font-bold text-white/80">{config.branding.name}</div>
-            <div className="mt-2 text-sm text-white/50">Installation complete!</div>
-          </div>
+        {/* Success overlay */}
+        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            className="text-center space-y-3 bg-black/60 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+            <div className="text-3xl">🎉</div>
+            <h2 className="text-lg font-bold text-white">Installation complete!</h2>
+            <p className="text-xs text-white/50 max-w-xs mx-auto">
+              {config.branding.name} is now installed and running inside VirtualBox.
+            </p>
+            <p className="text-[10px] text-white/30">
+              Close the VM window or click <strong className="text-white/50">Next →</strong> to continue.
+            </p>
+          </motion.div>
         </div>
-      </motion.div>
+      </div>
 
-      <div className="text-center text-sm text-white/50">
-        Click the <span className="text-red-400">×</span> to close the VM window and return to your host.
+      {/* Bottom nav */}
+      <div className="flex items-center justify-between border-t border-white/10 bg-[#1a1a24] px-4 py-2.5 rounded-b-2xl shrink-0">
+        <div className="text-xs text-white/30">✓ Ubuntu installed successfully in VirtualBox</div>
+        <button onClick={onComplete}
+          className="rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent/80 transition-colors">
+          Close VM →
+        </button>
       </div>
     </div>
   );

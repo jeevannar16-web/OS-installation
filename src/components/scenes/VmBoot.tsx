@@ -26,13 +26,13 @@ export default function VmBoot({
   speed,
   onComplete,
   vtEnabled,
-  onHostReboot,
+  onEnableVT,
 }: {
   config: OSConfig;
   speed: "normal" | "fast";
   onComplete: () => void;
   vtEnabled: boolean;
-  onHostReboot?: () => void;
+  onEnableVT?: () => void;
 }) {
   const { register: registerAdvance } = useSceneAdvance();
   const [phase, setPhase] = useState<Phase>("off");
@@ -259,15 +259,29 @@ export default function VmBoot({
                       Fix: Restart your computer, enter your motherboard BIOS/UEFI Setup (F2/Del), go to CPU settings, and enable "Intel Virtualization Technology" (VT-x) or "SVM Mode".
                     </p>
                   </div>
-                  <div className="flex justify-end pt-2">
+                  <div className="flex gap-2 justify-end pt-2">
                     <button
                       onClick={() => {
                         playClick();
-                        onHostReboot?.();
+                        setPhase("off");
+                        setBiosLine(0);
+                        setTimeout(() => setPhase("bios"), 200);
+                      }}
+                      className="rounded bg-white/10 hover:bg-white/20 px-4 py-2 text-xs font-medium text-white/70 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        playClick();
+                        onEnableVT?.();
+                        setPhase("off");
+                        setBiosLine(0);
+                        setTimeout(() => setPhase("bios"), 200);
                       }}
                       className="rounded bg-red-600 hover:bg-red-700 px-4 py-2 text-xs font-bold text-white shadow-lg transition-colors"
                     >
-                      🔌 Shut Down & Reboot Host to BIOS
+                      ✓ Enable VT-x &amp; Retry Boot
                     </button>
                   </div>
                 </div>

@@ -109,14 +109,14 @@ function StepNav({ onBack, onNext, nextLabel, nextDisabled, showBack }: {
   );
 }
 
-export default function Install({ config, speed, onComplete }: {
-  config: OSConfig; speed: "normal" | "fast"; onComplete: () => void;
+export default function Install({ config, speed, onComplete, path }: {
+  config: OSConfig; speed: "normal" | "fast"; onComplete: () => void; path?: string;
 }) {
   const { register: registerAdvance } = useSceneAdvance();
   const [phase, setPhase] = useState<WizardPhase>("wizard");
   const [step, setStep] = useState<InstallerStep>("language");
   const [values, setValues] = useState<Record<string, string>>({});
-  const [installType, setInstallType] = useState<string>("erase");
+  const [installType, setInstallType] = useState<string>(path === "vm" ? "erase" : "erase");
   const [installMethod, setInstallMethod] = useState<string>("interactive");
   const [thirdParty, setThirdParty] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -388,18 +388,32 @@ export default function Install({ config, speed, onComplete }: {
                     {step === "install_type" && (
                       <div className="space-y-2">
                         <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Type of installation</div>
-                        {[
-                          { id: "erase", label: "Erase disk and install Ubuntu" },
-                          { id: "alongside", label: "Install Ubuntu alongside existing OS" },
-                          { id: "manual", label: "Something else (manual partitioning)" },
-                        ].map((opt) => (
-                          <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
-                            className={`w-full rounded-md px-3 py-2 text-[11px] text-left font-medium transition-all ${
-                              installType === opt.id
-                                ? "bg-[#E95420] text-white shadow-lg shadow-[#E95420]/20"
-                                : "bg-white/10 text-white/70 hover:bg-white/15"
-                            }`}>{opt.label}</button>
-                        ))}
+                        {path === "vm" ? (
+                          /* VM path: only Erase disk makes sense (virtual disk) */
+                          <>
+                            <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-[10px] text-emerald-300">
+                              ✓ In a VM, "Erase disk" only affects the virtual disk — your host OS is safe.
+                            </div>
+                            <button onClick={() => { playClick(); setInstallType("erase"); }}
+                              className="w-full rounded-md px-3 py-2 text-[11px] text-left font-medium bg-[#E95420] text-white shadow-lg shadow-[#E95420]/20">
+                              Erase disk and install Ubuntu
+                            </button>
+                          </>
+                        ) : (
+                          /* Dual-boot / physical: show all options */
+                          [
+                            { id: "erase", label: "Erase disk and install Ubuntu" },
+                            { id: "alongside", label: "Install Ubuntu alongside existing OS" },
+                            { id: "manual", label: "Something else (manual partitioning)" },
+                          ].map((opt) => (
+                            <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
+                              className={`w-full rounded-md px-3 py-2 text-[11px] text-left font-medium transition-all ${
+                                installType === opt.id
+                                  ? "bg-[#E95420] text-white shadow-lg shadow-[#E95420]/20"
+                                  : "bg-white/10 text-white/70 hover:bg-white/15"
+                              }`}>{opt.label}</button>
+                          ))
+                        )}
                       </div>
                     )}
 
