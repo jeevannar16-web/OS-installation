@@ -15,12 +15,14 @@ type InstallerStep =
   | "install_option"
   | "third_party"
   | "install_type"
+  | "timezone"
+  | "app_selection"
   | "create_user"
   | "review";
 
 const STEP_ORDER: InstallerStep[] = [
   "try_or_install", "language", "keyboard", "network", "install_option",
-  "third_party", "install_type", "create_user", "review",
+  "third_party", "install_type", "timezone", "app_selection", "create_user", "review",
 ];
 
 const SIDEBAR_LABELS: Record<InstallerStep, string> = {
@@ -31,6 +33,8 @@ const SIDEBAR_LABELS: Record<InstallerStep, string> = {
   install_option: "Install Option",
   third_party: "Third-Party",
   install_type: "Install Type",
+  timezone: "Timezone",
+  app_selection: "Applications",
   create_user: "Create User",
   review: "Review",
 };
@@ -43,6 +47,8 @@ const STEP_IMG: Record<InstallerStep, string> = {
   install_option: "/images/ubuntu/05-install-option.webp",
   third_party: "/images/ubuntu/06-third-party.webp",
   install_type: "/images/ubuntu/07-install-type.webp",
+  timezone: "/images/ubuntu/23-timezone.png",
+  app_selection: "/images/ubuntu/21-app-selection.webp",
   create_user: "/images/ubuntu/08-create-user.webp",
   review: "/images/ubuntu/09-review.png",
 };
@@ -402,6 +408,53 @@ export default function Install({ config, speed, onComplete }: {
                                 : "bg-white/10 text-white/70 hover:bg-white/15"
                             }`}>{opt.label}</button>
                         ))}
+                      </div>
+                    )}
+
+                    {/* ── Timezone selector ── */}
+                    {step === "timezone" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Select your timezone</div>
+                        <div className="grid grid-cols-2 gap-1.5 max-h-[140px] overflow-y-auto">
+                          {["UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+                            "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Tokyo", "Australia/Sydney",
+                          ].map((tz) => (
+                            <button key={tz} onClick={() => { playClick(); setVal("timezone", tz); }}
+                              className={`rounded-md px-3 py-1.5 text-[11px] text-left transition-all ${
+                                values["timezone"] === tz
+                                  ? "bg-[#E95420] text-white font-semibold"
+                                  : "bg-white/10 text-white/70 hover:bg-white/15"
+                              }`}>{tz}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── App selection ── */}
+                    {step === "app_selection" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Choose applications to install</div>
+                        {/* Show the customize screenshot as a preview */}
+                        <div className="rounded-lg overflow-hidden border border-white/10 bg-black/30">
+                          <img src="/images/ubuntu/22-customize.png" alt="Software selection" className="w-full h-auto max-h-[100px] object-cover object-top" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {[
+                            { id: "normal", label: "Normal installation" },
+                            { id: "minimal", label: "Minimal installation" },
+                          ].map((opt) => (
+                            <button key={opt.id} onClick={() => { playClick(); setVal("apps", opt.id); }}
+                              className={`rounded-md px-3 py-2 text-[11px] text-left font-medium transition-all ${
+                                values["apps"] === opt.id
+                                  ? "bg-[#E95420] text-white"
+                                  : "bg-white/10 text-white/70 hover:bg-white/15"
+                              }`}>{opt.label}</button>
+                          ))}
+                        </div>
+                        <label className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 cursor-pointer hover:bg-white/15 transition-all">
+                          <input type="checkbox" defaultChecked className="accent-[#E95420]" />
+                          <span className="text-[11px] text-white/80">Install multimedia codecs</span>
+                        </label>
                       </div>
                     )}
 

@@ -67,50 +67,53 @@ export default function LiveDesktop({
   return (
     <div
       className="relative min-h-[400px] sm:h-[680px] lg:h-[75vh] overflow-hidden rounded-2xl border border-white/10"
-      style={{
-        background: `linear-gradient(135deg, ${config.branding.surface} 0%, #0a0a1a 100%)`,
-      }}
     >
-      {/* Desktop icons */}
-      <div className="absolute inset-0 p-6">
+      {/* Real Ubuntu desktop background */}
+      <img
+        src="/images/ubuntu/12-welcome-desktop.png"
+        alt={`${config.branding.name} desktop`}
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      {/* Desktop icons overlay */}
+      <div className="absolute inset-0 p-6 z-10">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <button
             onClick={() => { playClick(); setOpenApp("terminal"); }}
-            className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors"
+            className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-black/30 backdrop-blur-sm transition-colors"
           >
             <div className="text-3xl">💻</div>
-            <div className="text-xs sm:text-sm text-white/70">Terminal</div>
+            <div className="text-xs sm:text-sm text-white/90 drop-shadow-lg">Terminal</div>
           </button>
           <button
             onClick={() => { playClick(); setOpenApp("files"); }}
-            className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors"
+            className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-black/30 backdrop-blur-sm transition-colors"
           >
             <div className="text-3xl">📁</div>
-            <div className="text-xs sm:text-sm text-white/70">Files</div>
+            <div className="text-xs sm:text-sm text-white/90 drop-shadow-lg">Files</div>
           </button>
           <button
             onClick={() => { playClick(); setOpenApp("browser"); }}
-            className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors"
+            className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-black/30 backdrop-blur-sm transition-colors"
           >
             <div className="text-3xl">🌐</div>
-            <div className="text-xs sm:text-sm text-white/70">Browser</div>
+            <div className="text-xs sm:text-sm text-white/90 drop-shadow-lg">Browser</div>
           </button>
           <button
             onClick={() => { playClick(); setOpenApp("settings"); }}
-            className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors"
+            className="flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-black/30 backdrop-blur-sm transition-colors"
           >
             <div className="text-3xl">⚙️</div>
-            <div className="text-xs sm:text-sm text-white/70">Settings</div>
+            <div className="text-xs sm:text-sm text-white/90 drop-shadow-lg">Settings</div>
           </button>
         </div>
 
         {/* Install icon */}
         <button
           onClick={() => { playClick(); onInstallClick(); }}
-          className="absolute bottom-20 left-6 flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-white/10 transition-colors"
+          className="absolute bottom-20 left-6 flex flex-col items-center gap-1 rounded-lg p-3 text-center hover:bg-black/30 backdrop-blur-sm transition-colors"
         >
           <div className="text-3xl">💿</div>
-          <div className="text-xs sm:text-sm text-white/70">Install {name}</div>
+          <div className="text-xs sm:text-sm text-white/90 drop-shadow-lg">Install {name}</div>
         </button>
       </div>
 

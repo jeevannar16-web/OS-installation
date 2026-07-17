@@ -830,6 +830,46 @@ export default function Done({
           {hardwareScene}
         </div>
 
+        {/* Real Ubuntu screenshots — post-install flow */}
+        {config.id === "ubuntu" && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="space-y-3 max-w-2xl mx-auto"
+          >
+            <div className="text-[10px] text-white/30 uppercase tracking-wider">Post-install screenshots</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { src: "/images/ubuntu/15-login.png", label: "Login screen" },
+                { src: "/images/ubuntu/14-finish.webp", label: "Welcome wizard" },
+                { src: "/images/ubuntu/24-neofetch.webp", label: "System info" },
+              ].map((img) => (
+                <motion.div
+                  key={img.src}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="rounded-xl overflow-hidden border border-white/10 bg-black"
+                >
+                  <img src={img.src} alt={img.label} className="w-full h-auto" />
+                  <div className="text-[10px] text-white/40 text-center py-1.5 bg-white/5">{img.label}</div>
+                </motion.div>
+              ))}
+            </div>
+            {/* Ubuntu Pro notice */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="rounded-xl overflow-hidden border border-white/10 bg-black max-w-md mx-auto"
+            >
+              <img src="/images/ubuntu/13-ubuntu-pro.png" alt="Ubuntu Pro" className="w-full h-auto" />
+              <div className="text-[10px] text-white/40 text-center py-1.5 bg-white/5">Ubuntu Pro — security updates for 10 years</div>
+            </motion.div>
+          </motion.div>
+        )}
+
         <motion.h1
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

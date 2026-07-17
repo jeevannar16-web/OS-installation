@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Monitor, ArrowLeftRight, Usb, Check, Search, Info, ChevronRight, ChevronDown, Cpu, Download, Settings, Play } from "lucide-react";
+import { Monitor, ArrowLeftRight, Usb, Check, Info, ChevronDown, Cpu, Lock } from "lucide-react";
 import { PATHS, OS_LIST } from "../data";
 import type { InstallPath } from "../data/types";
 import Footer from "../components/Footer";
@@ -46,7 +46,7 @@ function TypingEffect() {
   }, [textIndex, charIndex, isDeleting]);
 
   return (
-    <span className="text-white/50 font-medium inline-block min-w-[160px]">
+    <span className="text-white/40 font-medium inline-block min-w-[140px]">
       {text}
       <span className="inline-block w-0.5 h-[0.9em] bg-accent ml-0.5 align-middle animate-pulse" />
     </span>
@@ -55,17 +55,17 @@ function TypingEffect() {
 
 const container = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.05 } },
+  show: { transition: { staggerChildren: 0.04 } },
 };
 const item = {
-  hidden: { opacity: 0, y: 12 },
+  hidden: { opacity: 0, y: 8 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
 const PATH_ICONS: Record<string, React.ReactNode> = {
-  vm: <Monitor size={20} strokeWidth={1.5} />,
-  "dual-boot": <ArrowLeftRight size={20} strokeWidth={1.5} />,
-  "live-usb": <Usb size={20} strokeWidth={1.5} />,
+  vm: <Monitor size={16} strokeWidth={1.5} />,
+  "dual-boot": <ArrowLeftRight size={16} strokeWidth={1.5} />,
+  "live-usb": <Usb size={16} strokeWidth={1.5} />,
 };
 
 function PathCard({ p, active, onClick }: {
@@ -77,29 +77,26 @@ function PathCard({ p, active, onClick }: {
     <motion.button
       variants={item}
       onClick={onClick}
-      whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
-      className={`glass rounded-xl p-4 text-left transition-all relative ${
+      className={`flex items-center gap-3 rounded-xl p-3 text-left transition-all border ${
         active
-          ? "ring-2 ring-accent shadow-[0_0_30px_-10px] shadow-accent bg-accent/[0.06]"
-          : "hover:border-white/[0.12]"
+          ? "border-accent/40 bg-accent/[0.08] shadow-[0_0_20px_-8px] shadow-accent"
+          : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.04]"
       }`}
     >
-      <div className="flex items-center gap-3">
-        <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
-          active ? "bg-accent/20 text-accent" : "bg-white/5 text-white/50"
-        }`}>
-          {PATH_ICONS[p.id]}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="font-semibold text-sm text-white/90">{p.name}</div>
-          <div className="text-[11px] text-white/40 truncate">{p.tagline}</div>
-        </div>
-        <div className={`ml-auto shrink-0 h-5 w-5 rounded-full flex items-center justify-center ${
-          active ? "bg-accent text-white" : "bg-white/10 text-white/30"
-        }`}>
-          {active ? <Check size={12} strokeWidth={3} /> : <ChevronRight size={12} />}
-        </div>
+      <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+        active ? "bg-accent/20 text-accent" : "bg-white/5 text-white/40"
+      }`}>
+        {PATH_ICONS[p.id]}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-xs text-white/80">{p.name}</div>
+        <div className="text-[10px] text-white/35">{p.tagline}</div>
+      </div>
+      <div className={`shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${
+        active ? "bg-accent text-white" : "bg-white/10 text-white/25"
+      }`}>
+        {active ? <Check size={10} strokeWidth={3} /> : <div className="h-1.5 w-1.5 rounded-full bg-white/15" />}
       </div>
     </motion.button>
   );
@@ -115,32 +112,33 @@ function OSCard({ o, active, onClick }: {
     <motion.button
       variants={item}
       onClick={() => !disabled && onClick()}
-      whileHover={!disabled ? { y: -2 } : {}}
       whileTap={!disabled ? { scale: 0.98 } : {}}
-      className={`glass rounded-xl p-4 flex items-center gap-3 text-left transition-all relative ${
+      className={`flex items-center gap-3 rounded-xl p-3 text-left transition-all border ${
         disabled
-          ? "opacity-40 cursor-not-allowed"
-          : `hover:border-white/[0.14] ${active ? "ring-2 ring-accent bg-accent/[0.08]" : ""}`
+          ? "border-white/[0.04] bg-white/[0.01] opacity-50 cursor-not-allowed"
+          : active
+            ? "border-accent/40 bg-accent/[0.08]"
+            : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.04]"
       }`}
     >
       <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0"
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
         style={{
-          background: disabled ? "rgba(255,255,255,0.05)" : `${o.branding.accent}20`,
-          color: disabled ? "rgba(255,255,255,0.2)" : o.branding.accent,
-          border: `1px solid ${disabled ? "rgba(255,255,255,0.05)" : `${o.branding.accent}30`}`,
+          background: disabled ? "rgba(255,255,255,0.03)" : `${o.branding.accent}15`,
+          color: disabled ? "rgba(255,255,255,0.15)" : o.branding.accent,
+          border: `1px solid ${disabled ? "rgba(255,255,255,0.04)" : `${o.branding.accent}25`}`,
         }}
       >
-        {o.branding.logo}
+        {disabled ? <Lock size={12} /> : o.branding.logo}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="font-semibold text-sm text-white/90 truncate">{o.branding.name}</div>
-        {disabled && <div className="text-[10px] text-white/30 uppercase tracking-wider">Coming soon</div>}
+        <div className="font-semibold text-xs text-white/80 truncate">{o.branding.name}</div>
+        {disabled && <div className="text-[9px] text-white/25 uppercase tracking-wider">Coming soon</div>}
       </div>
-      <div className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center ${
-        active ? "bg-accent text-white" : "bg-white/10 text-white/30"
+      <div className={`shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${
+        active ? "bg-accent text-white" : "bg-white/10 text-white/25"
       }`}>
-        {active ? <Check size={12} strokeWidth={3} /> : <ChevronRight size={12} />}
+        {active ? <Check size={10} strokeWidth={3} /> : <div className="h-1.5 w-1.5 rounded-full bg-white/15" />}
       </div>
     </motion.button>
   );
@@ -149,83 +147,44 @@ function OSCard({ o, active, onClick }: {
 /* ── Step Guide Dropdown ──────────────────────────────────────── */
 const GUIDE_STEPS = [
   {
-    title: "Download the OS ISO",
-    icon: <Download size={16} />,
-    items: [
-      "Open the built-in browser simulation",
-      "Search for the official download page",
-      "Download the ISO file (disk image)",
-    ],
+    title: "Download the Ubuntu ISO",
+    desc: "Search the official site and download the desktop ISO",
   },
   {
     title: "Flash a bootable USB",
-    icon: <Usb size={16} />,
-    items: [
-      "Use Rufus, Ventoy, or BalenaEtcher",
-      "Select the ISO and your USB drive",
-      "Write the image to make the USB bootable",
-    ],
+    desc: "Use Rufus, Ventoy, or BalenaEtcher to write the ISO to USB",
   },
   {
     title: "Enter BIOS & boot from USB",
-    icon: <Settings size={16} />,
-    items: [
-      "Restart and press F2/F12/Del to enter BIOS",
-      "Enable USB Boot and set USB as first priority",
-      "Save and exit — boot from the USB stick",
-    ],
+    desc: "Restart, press F2/F12, enable USB boot, set USB as first priority",
   },
   {
-    title: "Install the operating system",
-    icon: <Play size={16} />,
-    items: [
-      "Choose language, keyboard, and network",
-      "Partition your disk (or let the installer handle it)",
-      "Follow the wizard to complete installation",
-    ],
+    title: "Install Ubuntu",
+    desc: "Choose language, keyboard, partition disk, create user, done",
   },
 ];
 
 function StepGuide() {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {GUIDE_STEPS.map((step, i) => (
-        <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+        <div key={i} className="rounded-lg border border-white/[0.06] bg-white/[0.02] overflow-hidden">
           <button
             onClick={() => setOpenIdx(openIdx === i ? null : i)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.03] transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-white/[0.03] transition-colors"
           >
-            <span className="h-7 w-7 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0">
-              {step.icon}
+            <span className="h-6 w-6 rounded-md bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center shrink-0">
+              {i + 1}
             </span>
-            <span className="font-semibold text-sm text-white/80 flex-1">{step.title}</span>
-            <motion.span animate={{ rotate: openIdx === i ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown size={16} className="text-white/30" />
+            <div className="min-w-0 flex-1">
+              <span className="font-semibold text-xs text-white/75">{step.title}</span>
+              {openIdx === i && <p className="text-[10px] text-white/35 mt-0.5">{step.desc}</p>}
+            </div>
+            <motion.span animate={{ rotate: openIdx === i ? 180 : 0 }} transition={{ duration: 0.15 }}>
+              <ChevronDown size={14} className="text-white/25" />
             </motion.span>
           </button>
-          <AnimatePresence>
-            {openIdx === i && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <div className="px-4 pb-3 pt-1 space-y-1.5">
-                  {step.items.map((item, j) => (
-                    <div key={j} className="flex items-start gap-2 text-xs text-white/45">
-                      <span className="h-4 w-4 rounded-full bg-white/[0.06] text-[9px] font-bold text-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                        {j + 1}
-                      </span>
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       ))}
     </div>
@@ -236,17 +195,11 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [path, setPath] = useState<InstallPath | null>(null);
   const [os, setOs] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [showHelp, setShowHelp] = useState(false);
 
   const canStart = path && os;
   const selectedOS = os ? OS_LIST.find((x) => x.id === os) : null;
   const selectedPath = path ? PATHS.find((x) => x.id === path) : null;
-
-  const filteredOS = OS_LIST.filter((o) =>
-    o.branding.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    o.branding.shortName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleBootReady = useCallback((_ready?: boolean) => {}, []);
@@ -278,108 +231,94 @@ export default function LandingPage() {
 
       <div className="relative z-0 flex-1 flex flex-col">
         {/* Header */}
-        <header className="w-full px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center">
-              <Cpu size={16} className="text-accent" />
+        <header className="w-full px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-md bg-accent/20 flex items-center justify-center">
+              <Cpu size={14} className="text-accent" />
             </div>
-            <span className="font-semibold text-white/90 tracking-tight">OS Install Simulator</span>
+            <span className="font-semibold text-sm text-white/80 tracking-tight">OS Install Simulator</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowHelp(true)}
-              className="flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-white/50 hover:bg-white/10 hover:text-white/70 transition-colors">
-              <Info size={13} /> Help
+              className="flex items-center gap-1 rounded-md bg-white/5 border border-white/10 px-2.5 py-1 text-[11px] text-white/45 hover:bg-white/10 hover:text-white/65 transition-colors">
+              <Info size={12} /> Help
             </button>
             <ThemePicker />
           </div>
         </header>
 
-        {/* Hero — compact centered */}
-        <section className="w-full px-6 pt-8 pb-10">
-          <div className="text-center max-w-2xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-4 mb-4">
-              <img src="/logo.svg" alt="Logo" className="w-16 h-16" />
+        {/* Hero — minimal centered */}
+        <section className="w-full px-6 pt-6 pb-6">
+          <div className="text-center max-w-xl mx-auto">
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-3 mb-3">
+              <img src="/logo.svg" alt="Logo" className="w-12 h-12" />
               <div className="text-left">
-                <div className="text-3xl font-bold tracking-tight text-white/90">OS Install Simulator</div>
-                <div className="text-sm text-white/40">Practice installing an operating system — safely</div>
+                <div className="text-xl font-bold tracking-tight text-white/90">OS Install Simulator</div>
+                <div className="text-xs text-white/35">Practice installing an OS — safely</div>
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-              className="text-sm text-white/50">
+              className="text-xs text-white/40">
               <TypingEffect />
             </motion.div>
           </div>
         </section>
 
-        {/* Main content — full width, 3-column on desktop */}
-        <section className="w-full px-6 pb-10 flex-1">
-          <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-6">
-            {/* Left column: Path + OS selection */}
-            <div className="lg:col-span-5 space-y-5">
-              {/* Step 1: Path */}
+        {/* Main content — everything in one section */}
+        <section className="w-full px-6 pb-8 flex-1">
+          <div className="max-w-5xl mx-auto">
+            {/* How it works */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">How it works</span>
+              </div>
+              <StepGuide />
+            </div>
+
+            {/* Selection grid: Path (vertical 3) | OS (vertical 5) */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Path selection */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="h-5 w-5 rounded-full bg-accent/20 text-accent text-[10px] font-bold flex items-center justify-center">1</span>
-                  <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">Choose install method</span>
+                  <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Install method</span>
                 </div>
-                <motion.div variants={container} initial="hidden" animate="show" className="space-y-2">
+                <motion.div variants={container} initial="hidden" animate="show" className="space-y-1.5">
                   {PATHS.map((p) => (
                     <PathCard key={p.id} p={p} active={path === p.id} onClick={() => setPath(p.id)} />
                   ))}
                 </motion.div>
               </div>
 
-              {/* Step 2: OS */}
+              {/* OS selection */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="h-5 w-5 rounded-full bg-accent/20 text-accent text-[10px] font-bold flex items-center justify-center">2</span>
-                  <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">Pick an operating system</span>
+                  <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Operating system</span>
                 </div>
-                <div className="mb-2 relative">
-                  <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25" />
-                  <input type="text" placeholder="Search OS..." value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-lg bg-white/5 border border-white/10 pl-8 pr-3 py-1.5 text-xs text-white/80 outline-none focus:border-accent placeholder:text-white/20 transition-colors" />
-                </div>
-                <motion.div variants={container} initial="hidden" animate="show" className="space-y-2">
-                  {filteredOS.map((o) => (
+                <motion.div variants={container} initial="hidden" animate="show" className="space-y-1.5">
+                  {OS_LIST.map((o) => (
                     <OSCard key={o.id} o={o} active={os === o.id} onClick={() => setOs(o.id)} />
                   ))}
                 </motion.div>
               </div>
             </div>
 
-            {/* Center column: Step guide */}
-            <div className="lg:col-span-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="h-5 w-5 rounded-full bg-accent/20 text-accent text-[10px] font-bold flex items-center justify-center">
-                  <Play size={10} />
-                </span>
-                <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">How it works</span>
-              </div>
-              <StepGuide />
-            </div>
-
-            {/* Right column: Start button */}
-            <div className="lg:col-span-3 flex flex-col justify-end">
+            {/* Start button */}
+            <div className="mt-6 text-center">
               <motion.button
                 whileTap={canStart ? { scale: 0.97 } : {}}
                 disabled={!canStart}
                 onClick={start}
-                className={`w-full text-sm font-semibold rounded-xl px-6 py-4 transition-all ${
+                className={`text-sm font-semibold rounded-xl px-10 py-3 transition-all ${
                   canStart
                     ? "bg-accent text-white shadow-[0_0_30px_-8px] shadow-accent hover:shadow-[0_0_40px_-6px] hover:shadow-accent"
-                    : "bg-white/[0.03] text-white/25 border border-white/[0.06] cursor-not-allowed"
+                    : "bg-white/[0.03] text-white/20 border border-white/[0.06] cursor-not-allowed"
                 }`}
               >
-                {canStart ? `Start ${selectedOS?.branding.shortName} → ${selectedPath?.name}` : "Select a path and OS"}
+                {canStart ? `Start ${selectedOS?.branding.shortName} — ${selectedPath?.name}` : "Select a method and OS above"}
               </motion.button>
-              {!canStart && (
-                <p className="mt-2 text-[11px] text-white/25 text-center">
-                  Pick one method above and one OS
-                </p>
-              )}
             </div>
           </div>
         </section>
@@ -398,42 +337,23 @@ export default function LandingPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md rounded-2xl border border-white/10 bg-[#12121a] p-6 shadow-2xl">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-bold text-white/90">How it works</h2>
+                <h2 className="text-lg font-bold text-white/90">Keyboard shortcuts</h2>
                 <button onClick={() => setShowHelp(false)} className="text-white/40 hover:text-white/70 text-xl">×</button>
               </div>
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-[11px]">
                 {[
-                  { n: "1", title: "Choose your path", desc: "Virtual Machine (safest), Dual Boot (real hardware), or Live USB (try without installing)." },
-                  { n: "2", title: "Pick an OS", desc: "Ubuntu, Windows, Arch, and more." },
-                  { n: "3", title: "Follow the steps", desc: "Search for the ISO, flash a USB, enter BIOS, partition disks, and run the installer." },
-                  { n: "4", title: "Learn as you go", desc: "Press B for speaker notes, N for scene navigator, S for speed mode." },
-                ].map((s) => (
-                  <div key={s.title} className="flex gap-3">
-                    <span className="h-6 w-6 rounded-full bg-accent/20 text-accent text-xs font-bold flex items-center justify-center shrink-0">{s.n}</span>
-                    <div>
-                      <div className="text-sm font-semibold text-white/80">{s.title}</div>
-                      <div className="text-xs text-white/40 mt-0.5">{s.desc}</div>
-                    </div>
+                  ["Enter", "Next step"],
+                  ["Backspace", "Go back"],
+                  ["N", "Scene navigator"],
+                  ["B", "Speaker notes"],
+                  ["S", "Speed mode"],
+                  ["T", "Change theme"],
+                ].map(([key, desc]) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <kbd className="rounded bg-white/10 px-2 py-1 text-[10px] font-mono text-white/50">{key}</kbd>
+                    <span className="text-white/40">{desc}</span>
                   </div>
                 ))}
-                <div className="border-t border-white/10 pt-4">
-                  <div className="text-xs font-semibold text-white/60 mb-2">Keyboard shortcuts</div>
-                  <div className="grid grid-cols-2 gap-2 text-[11px]">
-                    {[
-                      ["Enter", "Next step"],
-                      ["Backspace", "Go back"],
-                      ["N", "Scene navigator"],
-                      ["B", "Speaker notes"],
-                      ["S", "Speed mode"],
-                      ["T", "Change theme"],
-                    ].map(([key, desc]) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-mono text-white/60">{key}</kbd>
-                        <span className="text-white/40">{desc}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
               <button onClick={() => setShowHelp(false)}
                 className="mt-5 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
