@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Search, Lock, ArrowLeft, ArrowRight, RotateCcw, FileText, CheckCircle2, Download } from "lucide-react";
 import type { OSConfig } from "../../data/types";
 import GhostCursor from "../shared/GhostCursor";
 import { useSceneAdvance } from "../shared/SceneAdvance";
@@ -99,16 +100,14 @@ export default function FakeBrowser({
 
   const relevant = isRelevant(query, config.searchKeywords);
   const results = relevant ? buildRelevant(config) : buildIrrelevant();
-  const didYouMean = `download ${config.branding.shortName.toLowerCase()}`;
+  const didYouMean = dp.searchTerm;
 
-  // Register advance when download timer is running
   useEffect(() => {
     if (phase === "downloading") {
       registerAdvance(() => onComplete());
     }
   }, [phase, registerAdvance, onComplete]);
 
-  // Drive the fake download progress.
   useEffect(() => {
     if (phase !== "downloading") return;
     const duration = speed === "fast" ? 900 : 3800;
@@ -125,11 +124,7 @@ export default function FakeBrowser({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, speed]);
-
-  // No auto-triggering: user must click "Show me again" manually
-  // Removed auto-trigger useEffect
+  }, [phase, speed, onComplete]);
 
   const demoSteps: Array<{
     type: "move" | "click" | "drag";
@@ -151,6 +146,11 @@ export default function FakeBrowser({
     setPhase("search");
   }
 
+  function useSearchTerm() {
+    setQuery(dp.searchTerm);
+    setNudge(null);
+  }
+
   const addressUrl =
     phase === "address"
       ? "about:blank"
@@ -163,18 +163,39 @@ export default function FakeBrowser({
       <GhostCursor
         isVisible={showDemo}
         steps={demoSteps}
-        onComplete={() => {
-          setShowDemo(false);
-        }}
+        onComplete={() => setShowDemo(false)}
       />
+
+      {/* Instruction banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 flex items-center gap-3"
+      >
+        <div className="shrink-0 h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+          <Download size={16} className="text-accent" />
+        </div>
+        <div className="flex-1">
+          <div className="text-xs font-semibold text-white/80">Download the OS installer</div>
+          <div className="text-[11px] text-white/40 mt-0.5">
+            Search for <span className="text-accent font-medium">"{dp.searchTerm}"</span> and click the official {config.branding.name} download page
+          </div>
+        </div>
+        <button
+          onClick={useSearchTerm}
+          className="shrink-0 rounded-lg bg-accent/10 border border-accent/20 px-3 py-1.5 text-[11px] font-medium text-accent hover:bg-accent/20 transition-colors"
+        >
+          Auto-fill
+        </button>
+      </motion.div>
+
       <button
-        onClick={() => {
-          setShowDemo(true);
-        }}
+        onClick={() => setShowDemo(true)}
         className="absolute top-4 right-4 z-10 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
       >
         Show guide
       </button>
+
       {/* Browser window */}
       <div className="overflow-hidden rounded-xl bg-[#202124] shadow-2xl ring-1 ring-white/10">
         {/* Tab strip */}
@@ -192,13 +213,10 @@ export default function FakeBrowser({
         {/* Toolbar */}
         <div className="flex items-center gap-2 bg-[#323639] px-3 py-2">
           <div className="flex gap-3 text-white/50">
-            <span className="hover:text-white">‹</span>
-            <span className="hover:text-white">›</span>
-            <button
-              onClick={() => phase !== "address" && setPhase("address")}
-              className="hover:text-white"
-            >
-              ↻
+            <button className="hover:text-white"><ArrowLeft size={16} /></button>
+            <button className="hover:text-white"><ArrowRight size={16} /></button>
+            <button onClick={() => phase !== "address" && setPhase("address")} className="hover:text-white">
+              <RotateCcw size={14} />
             </button>
           </div>
           <form
@@ -208,7 +226,7 @@ export default function FakeBrowser({
               submitSearch();
             }}
           >
-            <span className="text-emerald-400">🔒</span>
+            <Lock size={14} className="text-emerald-400 shrink-0" />
             {phase === "address" || phase === "search" ? (
               <input
                 ref={inputRef}
@@ -217,15 +235,15 @@ export default function FakeBrowser({
                   setQuery(e.target.value);
                   setNudge(null);
                 }}
-                placeholder="Search or enter a URL"
+                placeholder={`Search for "${dp.searchTerm}"...`}
                 className="w-full bg-transparent text-white/90 outline-none placeholder:text-white/30"
                 autoFocus
               />
             ) : (
               <span className="w-full truncate text-white/80">{addressUrl}</span>
             )}
-            <button type="submit" className="text-white/40 hover:text-white" aria-label="Search">
-              🔍
+            <button type="submit" className="text-white/40 hover:text-white shrink-0" aria-label="Search">
+              <Search size={16} />
             </button>
           </form>
           <div className="h-7 w-7 rounded-full bg-white/10" />
@@ -234,21 +252,25 @@ export default function FakeBrowser({
         {/* Body */}
         <div className="relative h-[460px] lg:h-[560px] xl:h-[640px] overflow-hidden bg-white text-[#202124]">
           {phase === "address" && (
-            <div
-              className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"
-            >
-              <div className="text-6xl">{config.branding.logo}</div>
-              <div className="text-lg text-white/60">New Tab</div>
-              <p className="text-sm text-[#5f6368]">
-                Try searching for what you'd actually type.
+            <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center text-3xl font-bold text-accent">
+                {config.branding.logo}
+              </div>
+              <div className="text-lg font-semibold text-[#202124]">{config.branding.name} Download</div>
+              <p className="text-sm text-[#5f6368] max-w-sm">
+                Type <span className="font-medium text-[#202124]">"{dp.searchTerm}"</span> in the search bar above to find the official download page
               </p>
+              <button
+                onClick={useSearchTerm}
+                className="mt-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+              >
+                Search for {dp.searchTerm}
+              </button>
             </div>
           )}
 
           {phase === "search" && (
-            <div
-              className="h-full overflow-y-auto px-8 py-6"
-            >
+            <div className="h-full overflow-y-auto px-8 py-6">
               {!relevant && (
                 <button
                   onClick={() => {
@@ -278,12 +300,15 @@ export default function FakeBrowser({
                     className={`block w-full text-left ${r.official ? "rounded-lg ring-2 ring-accent/60 bg-accent/5 p-2" : ""}`}
                   >
                     <div className="text-xs text-[#5f6368]">{r.url}</div>
-                    <div
-                      className={`text-lg ${r.official ? "text-accent" : "text-[#1a0dab]"} hover:underline`}
-                    >
+                    <div className={`text-lg ${r.official ? "text-accent" : "text-[#1a0dab]"} hover:underline`}>
                       {r.title}
                     </div>
                     <div className="text-sm text-[#4d5156]">{r.snippet}</div>
+                    {r.official && (
+                      <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
+                        <CheckCircle2 size={10} /> Official source
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -295,7 +320,7 @@ export default function FakeBrowser({
               className="flex h-full flex-col items-center justify-center gap-6 px-6 text-center"
               style={{ background: `linear-gradient(180deg, ${config.branding.surface}, #0b0b0f)` }}
             >
-              <div className="text-7xl drop-shadow-[0_0_24px_rgba(255,255,255,0.25)]">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/20 flex items-center justify-center text-4xl font-bold text-accent shadow-lg shadow-accent/20">
                 {config.branding.logo}
               </div>
               <h1 className="text-3xl font-bold text-white">{dp.title}</h1>
@@ -310,9 +335,7 @@ export default function FakeBrowser({
                     className="rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white outline-none"
                   >
                     {dp.versions.map((v) => (
-                      <option key={v} className="text-black">
-                        {v}
-                      </option>
+                      <option key={v} className="text-black">{v}</option>
                     ))}
                   </select>
                 </div>
@@ -347,9 +370,9 @@ export default function FakeBrowser({
                 className="absolute bottom-4 left-4 w-80 rounded-lg bg-white/95 p-3 shadow-xl ring-1 ring-black/10 text-left"
               >
                 <div className="flex items-center gap-2 text-sm font-medium text-[#202124]">
-                  <span>📄</span>
+                  <FileText size={16} className="text-[#5f6368] shrink-0" />
                   <span className="truncate">{config.iso.filename}</span>
-                  {progress >= 100 && <span className="ml-auto text-emerald-600">✓</span>}
+                  {progress >= 100 && <CheckCircle2 size={16} className="ml-auto text-emerald-600 shrink-0" />}
                 </div>
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded bg-gray-200">
                   <div
