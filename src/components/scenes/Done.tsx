@@ -723,16 +723,20 @@ function AchievementBadge({
 /* ── Interactive Checklist ────────────────────────────────────── */
 function StepChecklist({ path }: { path: string }) {
   const steps = [
-    { label: "Downloaded ISO", done: true },
-    ...(path === "vm" ? [{ label: "Created VirtualBox VM", done: true }] : []),
-    { label: "Flashed bootable USB", done: true },
-    { label: "Entered BIOS / Boot Menu", done: true },
-    ...(path === "dual-boot" ? [{ label: "Partitioned disk", done: true }] : []),
-    ...(path === "live-usb" ? [{ label: "Tried live environment", done: true }] : []),
-    ...(path === "vm" ? [{ label: "Mounted ISO in VM", done: true }] : []),
+    { label: "Downloaded ISO from official website", done: true },
+    ...(path === "vm" ? [{ label: "Created VirtualBox VM with proper resources", done: true }] : []),
+    ...(path !== "vm" ? [{ label: "Flashed bootable USB with Rufus/Ventoy", done: true }] : []),
+    ...(path !== "vm" ? [{ label: "Entered BIOS and set USB as boot device", done: true }] : []),
+    ...(path === "dual-boot" ? [{ label: "Shrank Windows partition to create space", done: true }] : []),
+    ...(path === "live-usb" ? [{ label: "Tried Ubuntu in live mode from USB", done: true }] : []),
+    ...(path === "vm" ? [{ label: "Mounted ISO and powered on VM", done: true }] : []),
+    { label: "Selected language, keyboard, and network", done: true },
+    ...(path === "vm" ? [{ label: "Chose 'Erase disk' (virtual disk only)", done: true }] : []),
+    ...(path === "dual-boot" ? [{ label: "Created root, swap, and EFI partitions", done: true }] : []),
     { label: "Installed operating system", done: true },
-    { label: "Booted into new OS", done: true },
-    ...(path === "vm" ? [{ label: "Opened GitHub in VM browser", done: true }] : []),
+    { label: "GRUB bootloader configured", done: true },
+    { label: "Created user account", done: true },
+    { label: "Booted into new OS successfully", done: true },
   ];
 
   return (
@@ -745,7 +749,7 @@ function StepChecklist({ path }: { path: string }) {
           key={i}
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 + i * 0.1 }}
+          transition={{ delay: 0.3 + i * 0.08 }}
           className="flex items-center gap-2 text-xs sm:text-sm"
         >
           <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/20 text-xs text-emerald-400 shrink-0">
@@ -798,20 +802,44 @@ export default function Done({
     }
   })();
 
-  const achievements = [
-    { icon: "🔥", label: "First install" },
-    { icon: path === "dual-boot" ? "🔀" : path === "vm" ? "🖥️" : "💿", label: path === "dual-boot" ? "Dual-boot pro" : path === "vm" ? "Virtual master" : "Live explorer" },
-    { icon: "🛡️", label: "Zero risk taken" },
-    { icon: "⚡", label: "No data lost" },
-  ];
-
-  const links = [
-    { name: "Ubuntu", url: "https://ubuntu.com/download/desktop" },
-    { name: "Windows", url: "https://microsoft.com/software-download/windows11" },
-    { name: "Arch", url: "https://archlinux.org/download/" },
-    { name: "Debian", url: "https://www.debian.org/distrib/" },
-    { name: "Fedora", url: "https://fedoraproject.org/workstation/download" },
-  ];
+  const completionData = (() => {
+    switch (path) {
+      case "vm":
+        return {
+          headline: `${config.branding.name} is running inside VirtualBox!`,
+          sub: "Your virtual machine is up and running. You can close VirtualBox or keep exploring.",
+          achievements: [
+            { icon: "🖥️", label: "Virtual master" },
+            { icon: "🔒", label: "Zero risk" },
+            { icon: "⚡", label: "No data affected" },
+            { icon: "🚀", label: "VM wizard" },
+          ],
+        };
+      case "live-usb":
+        return {
+          headline: `You're running ${config.branding.name} from USB!`,
+          sub: "Nothing was changed on your hard drive. When you're ready, install it for real or just keep exploring.",
+          achievements: [
+            { icon: "💿", label: "Live explorer" },
+            { icon: "🛡️", label: "Risk-free trial" },
+            { icon: "⚡", label: "Zero changes made" },
+            { icon: "🌐", label: "USB wizard" },
+          ],
+        };
+      case "dual-boot":
+      default:
+        return {
+          headline: `${config.branding.name} and Windows now coexist on your machine!`,
+          sub: "Dual boot is set up. Every time you start your PC, you'll choose which OS to use.",
+          achievements: [
+            { icon: "🔀", label: "Dual-boot pro" },
+            { icon: "🔥", label: "First install" },
+            { icon: "🛡️", label: "Data preserved" },
+            { icon: "⚡", label: "Partition master" },
+          ],
+        };
+    }
+  })();
 
   return (
     <div className="mx-auto w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl px-4 sm:px-6 space-y-8">
@@ -877,7 +905,7 @@ export default function Done({
           className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold"
         >
           <span className="bg-gradient-to-r from-accent-soft to-accent bg-clip-text text-transparent">
-            {config.completion.headline}
+            {completionData.headline}
           </span>
         </motion.h1>
         <motion.p
@@ -886,7 +914,7 @@ export default function Done({
           transition={{ delay: 0.6 }}
           className="text-sm sm:text-base lg:text-lg text-white/50 max-w-md mx-auto"
         >
-          {config.completion.sub}
+          {completionData.sub}
         </motion.p>
       </div>
 
@@ -911,7 +939,7 @@ export default function Done({
             Achievements unlocked
           </div>
           <div className="flex flex-wrap gap-2">
-            {achievements.map((a, i) => (
+            {completionData.achievements.map((a, i) => (
               <AchievementBadge key={i} icon={a.icon} label={a.label} delay={0.8 + i * 0.15} />
             ))}
           </div>
@@ -1055,29 +1083,63 @@ export default function Done({
         </motion.div>
       )}
 
-      {/* ── Download links ── */}
+      {/* ── Path-specific next steps ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="space-y-3"
+        className="rounded-xl border border-white/10 bg-white/5 p-4 sm:p-5"
       >
-        <div className="text-center text-xs sm:text-sm uppercase tracking-widest text-white/30">
-          Try it for real
+        <div className="text-xs sm:text-sm uppercase tracking-widest text-white/30 mb-3">
+          {path === "vm" ? "Keep exploring" : path === "live-usb" ? "Ready for the real thing?" : "Try it for real"}
         </div>
-        <div className="flex flex-wrap justify-center gap-2">
-          {links.map((link) => (
-            <a
-              key={link.name}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg bg-white/5 border border-white/10 px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 lg:py-2.5 text-xs sm:text-sm lg:text-base text-white/60 hover:bg-white/10 hover:text-white transition-colors"
-            >
-              {link.name} →
-            </a>
-          ))}
-        </div>
+        {path === "vm" && (
+          <div className="space-y-2 text-xs text-white/50">
+            <p>Your VM is ready. Here's what you can do next:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <a href="https://ubuntu.com/download/desktop" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
+                <span>💿</span> Download Ubuntu ISO
+              </a>
+              <a href="https://www.virtualbox.org/wiki/Downloads" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
+                <span>🖥️</span> Get VirtualBox
+              </a>
+            </div>
+          </div>
+        )}
+        {path === "live-usb" && (
+          <div className="space-y-2 text-xs text-white/50">
+            <p>You tried Ubuntu without changing anything. When you're ready:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <a href="https://ubuntu.com/download/desktop" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
+                <span>💿</span> Download Ubuntu ISO
+              </a>
+              <a href="https://ubuntu.com/tutorials/install-ubuntu-desktop" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
+                <span>📖</span> Real installation guide
+              </a>
+            </div>
+          </div>
+        )}
+        {path === "dual-boot" && (
+          <div className="space-y-2 text-xs text-white/50">
+            <p>Dual boot is set up. Every time you start your PC, GRUB will let you choose between Ubuntu and Windows.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {[
+                { name: "Ubuntu", url: "https://ubuntu.com/download/desktop", icon: "🐧" },
+                { name: "Windows", url: "https://microsoft.com/software-download/windows11", icon: "🪟" },
+                { name: "Arch", url: "https://archlinux.org/download/", icon: "🏔️" },
+              ].map((link) => (
+                <a key={link.name} href={link.url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
+                  <span>{link.icon}</span> {link.name} →
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </motion.div>
 
       {/* ── GitHub CTA ── */}

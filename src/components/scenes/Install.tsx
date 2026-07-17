@@ -5,7 +5,7 @@ import { playClick, playKeyClick, playSuccess } from "../shared/sounds";
 import { SparkleBurst } from "../shared/InteractiveEffects";
 import { useSceneAdvance } from "../shared/SceneAdvance";
 
-type WizardPhase = "wizard" | "installing" | "done";
+type WizardPhase = "boot" | "wizard" | "installing" | "remove_media" | "done";
 
 type InstallerStep =
   | "language"
@@ -113,7 +113,8 @@ export default function Install({ config, speed, onComplete, path }: {
   config: OSConfig; speed: "normal" | "fast"; onComplete: () => void; path?: string;
 }) {
   const { register: registerAdvance } = useSceneAdvance();
-  const [phase, setPhase] = useState<WizardPhase>("wizard");
+  const [phase, setPhase] = useState<WizardPhase>("boot");
+  const [bootSplash, setBootSplash] = useState(false);
   const [step, setStep] = useState<InstallerStep>("language");
   const [values, setValues] = useState<Record<string, string>>({});
   const [installType, setInstallType] = useState<string>(path === "vm" ? "erase" : "erase");
@@ -161,7 +162,7 @@ export default function Install({ config, speed, onComplete, path }: {
       setElapsed(Math.floor((now - start) / 1000));
       setFileIdx(Math.min(files.length - 1, Math.floor((pct / 100) * files.length)));
       if (pct < 100) raf = requestAnimationFrame(tick);
-      else { setShowSparkle(true); setTimeout(() => setShowSparkle(false), 1500); setPhase("done"); }
+      else { setShowSparkle(true); setTimeout(() => setShowSparkle(false), 1500); setPhase("remove_media"); }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -176,6 +177,13 @@ export default function Install({ config, speed, onComplete, path }: {
     }, speed === "fast" ? 600 : 3000);
     return () => clearInterval(iv);
   }, [phase, config.installTips.length, speed]);
+
+  useEffect(() => {
+    if (bootSplash) {
+      const t = setTimeout(() => { setBootSplash(false); setPhase("wizard"); }, speed === "fast" ? 800 : 2000);
+      return () => clearTimeout(t);
+    }
+  }, [bootSplash, speed]);
 
   useEffect(() => {
     if (phase === "done" && restartPhase === "countdown") {
@@ -195,6 +203,8 @@ export default function Install({ config, speed, onComplete, path }: {
 
   function handleNext() {
     if (phase === "done") { playSuccess(); onComplete(); return; }
+    if (phase === "boot") { playClick(); setPhase("wizard"); return; }
+    if (phase === "remove_media") { playClick(); setPhase("done"); return; }
     if (!canAdvance()) return;
     playClick();
     if (step === "review") { setPhase("installing"); return; }
@@ -209,6 +219,73 @@ export default function Install({ config, speed, onComplete, path }: {
   }
 
   function setVal(field: string, val: string) { setValues((p) => ({ ...p, [field]: val })); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     BOOT — "Try or Install Ubuntu" screen with real screenshot
+     User clicks "Install Ubuntu" to begin the wizard
+     ═══════════════════════════════════════════════════════════════ */
+  if (phase === "boot") {
+    if (bootSplash) {
+      return (
+        <div className="mx-auto w-full max-w-5xl flex flex-col items-center justify-center rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
+          style={{ height: "min(600px, 70vh)", background: "#2c001e" }}>
+          {/* Ubuntu purple boot splash */}
+          <div className="flex flex-col items-center gap-6">
+            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
+              <svg width="72" height="72" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="15" stroke="white" strokeWidth="1.5" fill="none" />
+                <circle cx="16" cy="5.5" r="2.5" fill="white" />
+                <circle cx="7" cy="20.5" r="2.5" fill="white" />
+                <circle cx="25" cy="20.5" r="2.5" fill="white" />
+              </svg>
+            </motion.div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+              className="flex gap-1.5">
+              {[0, 1, 2].map(i => (
+                <motion.div key={i}
+                  className="h-2 w-2 rounded-full bg-white/60"
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
+              ))}
+            </motion.div>
+            <div className="text-xs text-white/40 font-mono">Loading installer…</div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+        <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black">
+          {/* Real Ubuntu "Try or Install" screenshot */}
+          <img src="/images/ubuntu/01-try-or-install.png" alt="Try or Install Ubuntu"
+            className="absolute inset-0 w-full h-full object-contain bg-[#2c001e]" />
+
+          {/* Interactive overlay — buttons on top of the real screenshot */}
+          <div className="absolute inset-x-0 bottom-0">
+            <div className="bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/60 to-transparent pt-24 pb-4 px-6">
+              <div className="max-w-md mx-auto space-y-3 text-center">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                  <p className="text-xs text-white/50 mb-3">
+                    Select your language and click <strong className="text-white/80">Install Ubuntu</strong> to begin.
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <button onClick={() => { playClick(); setBootSplash(true); }}
+                      className="rounded-lg bg-[#E95420] px-6 py-3 text-sm font-bold text-white hover:bg-[#c7441a] transition-all hover:scale-[1.02] shadow-lg shadow-[#E95420]/30">
+                      Install Ubuntu
+                    </button>
+                    <button onClick={() => { playClick(); setBootSplash(true); }}
+                      className="rounded-lg border border-white/20 bg-white/10 px-6 py-3 text-sm font-medium text-white/70 hover:bg-white/15 transition-all hover:scale-[1.02]">
+                      Try Ubuntu
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   /* ═══════════════════════════════════════════════════════════════
      INSTALLING — Real Ubuntu installer progress screen
@@ -265,6 +342,37 @@ export default function Install({ config, speed, onComplete, path }: {
                   );
                 })}
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     REMOVE MEDIA — Prompt to remove USB before restart
+     ═══════════════════════════════════════════════════════════════ */
+  if (phase === "remove_media") {
+    return (
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+        <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-[#2c001e]">
+          <img src="/images/ubuntu/11-restart.png" alt="Restart needed"
+            className="absolute inset-0 w-full h-full object-contain" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/40 to-transparent pt-24 pb-6 px-6 flex items-end">
+            <div className="max-w-md mx-auto space-y-3 text-center w-full">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <div className="bg-black/60 backdrop-blur-sm rounded-xl p-5 border border-white/10 space-y-3">
+                  <div className="text-2xl">🔌</div>
+                  <h3 className="text-sm font-bold text-white">Remove installation media</h3>
+                  <p className="text-xs text-white/50 leading-relaxed">
+                    Unplug the USB drive or eject the installation media, then press <strong className="text-white/70">Continue</strong> to restart.
+                  </p>
+                  <button onClick={() => { playClick(); setPhase("done"); }}
+                    className="rounded-lg bg-[#E95420] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#c7441a] transition-all hover:scale-[1.02] shadow-lg shadow-[#E95420]/30">
+                    Continue →
+                  </button>
+                </div>
+              </motion.div>
             </div>
           </div>
         </div>
