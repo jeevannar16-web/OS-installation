@@ -16,23 +16,11 @@ type InstallerStep =
   | "third_party"
   | "install_type"
   | "create_user"
-  | "review"
-  | "installing"
-  | "restart"
-  | "welcome_desktop"
-  | "ubuntu_pro"
-  | "finish";
+  | "review";
 
 const STEP_ORDER: InstallerStep[] = [
-  "try_or_install",
-  "language",
-  "keyboard",
-  "network",
-  "install_option",
-  "third_party",
-  "install_type",
-  "create_user",
-  "review",
+  "try_or_install", "language", "keyboard", "network", "install_option",
+  "third_party", "install_type", "create_user", "review",
 ];
 
 const SIDEBAR_LABELS: Record<InstallerStep, string> = {
@@ -45,11 +33,18 @@ const SIDEBAR_LABELS: Record<InstallerStep, string> = {
   install_type: "Install Type",
   create_user: "Create User",
   review: "Review",
-  installing: "Installing",
-  restart: "Restart",
-  welcome_desktop: "Welcome",
-  ubuntu_pro: "Ubuntu Pro",
-  finish: "Finish",
+};
+
+const STEP_IMG: Record<InstallerStep, string> = {
+  try_or_install: "/images/ubuntu/01-try-or-install.png",
+  language: "/images/ubuntu/02-language.png",
+  keyboard: "/images/ubuntu/03-keyboard.webp",
+  network: "/images/ubuntu/04-network.webp",
+  install_option: "/images/ubuntu/05-install-option.webp",
+  third_party: "/images/ubuntu/06-third-party.webp",
+  install_type: "/images/ubuntu/07-install-type.webp",
+  create_user: "/images/ubuntu/08-create-user.webp",
+  review: "/images/ubuntu/09-review.png",
 };
 
 const LANGUAGES = [
@@ -68,29 +63,20 @@ const SLIDES = [
   { title: "Software Centre", body: "Thousands of free applications available at your fingertips." },
   { title: "Customise your desktop", body: "Themes, fonts, dock position, widgets — make it yours." },
   { title: "Built-in security", body: "Automatic updates, firewall, and full-disk encryption keep you safe." },
-  { title: "Community support", body: "Millions of users and developers ready to help on askubuntu.com." },
 ];
 
 function Sidebar({ current }: { current: InstallerStep }) {
   const idx = STEP_ORDER.indexOf(current);
   return (
-    <div className="hidden md:flex w-52 lg:w-60 flex-col border-r border-white/10 bg-white/[0.03] p-4 gap-1">
+    <div className="hidden md:flex w-48 lg:w-56 shrink-0 flex-col border-r border-white/10 bg-[#1a1a24] p-3 gap-0.5">
       {STEP_ORDER.map((s, i) => (
-        <div
-          key={s}
-          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-            s === current ? "bg-[#E95420]/10 text-[#E95420] font-semibold"
-            : i < idx ? "text-white/50"
-            : "text-white/30"
-          }`}
-        >
-          <div
-            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-              i < idx || s === current ? "bg-[#E95420] text-white" : "bg-white/10 text-white/30"
-            }`}
-          >
-            {i < idx ? "✓" : i + 1}
-          </div>
+        <div key={s} className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
+          s === current ? "bg-[#E95420]/10 text-[#E95420] font-semibold"
+          : i < idx ? "text-white/40" : "text-white/25"
+        }`}>
+          <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+            i < idx || s === current ? "bg-[#E95420] text-white" : "bg-white/10 text-white/30"
+          }`}>{i < idx ? "✓" : i + 1}</div>
           <span className="truncate">{SIDEBAR_LABELS[s]}</span>
         </div>
       ))}
@@ -98,56 +84,27 @@ function Sidebar({ current }: { current: InstallerStep }) {
   );
 }
 
-function StepNav({
-  onBack, onNext, nextLabel, nextDisabled, showBack,
-}: {
-  onBack: () => void;
-  onNext: () => void;
-  nextLabel: string;
-  nextDisabled?: boolean;
-  showBack?: boolean;
+function StepNav({ onBack, onNext, nextLabel, nextDisabled, showBack }: {
+  onBack: () => void; onNext: () => void; nextLabel: string; nextDisabled?: boolean; showBack?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between border-t border-white/10 bg-white/[0.03] px-6 py-3">
+    <div className="flex items-center justify-between border-t border-white/10 bg-[#1a1a24] px-4 py-2.5 shrink-0">
       {showBack !== false ? (
         <button onClick={() => { playClick(); onBack(); }}
-          className="rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-colors">
+          className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/60 hover:bg-white/10 transition-colors">
           ← Back
         </button>
       ) : <div />}
       <button disabled={nextDisabled} onClick={() => { playClick(); onNext(); }}
-        className={`rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors ${
+        className={`rounded-lg px-5 py-2 text-xs font-semibold transition-colors ${
           nextDisabled ? "bg-white/10 text-white/30 cursor-not-allowed" : "bg-[#E95420] text-white hover:bg-[#c7441a]"
-        }`}>
-        {nextLabel}
-      </button>
+        }`}>{nextLabel}</button>
     </div>
   );
 }
 
-function ScreenshotStep({ src, alt, children }: { src: string; alt: string; children?: React.ReactNode }) {
-  return (
-    <div className="space-y-4">
-      <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black">
-        <img src={src} alt={alt} className="w-full h-auto" loading="eager" />
-        {children && (
-          <div className="absolute inset-0 flex items-end justify-center p-4 bg-gradient-to-t from-black/60 to-transparent">
-            <div className="w-full">{children}</div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export default function Install({
-  config,
-  speed,
-  onComplete,
-}: {
-  config: OSConfig;
-  speed: "normal" | "fast";
-  onComplete: () => void;
+export default function Install({ config, speed, onComplete }: {
+  config: OSConfig; speed: "normal" | "fast"; onComplete: () => void;
 }) {
   const { register: registerAdvance } = useSceneAdvance();
   const [phase, setPhase] = useState<WizardPhase>("wizard");
@@ -186,9 +143,7 @@ export default function Install({
 
   useEffect(() => {
     if (phase !== "installing") return;
-    setProgress(0);
-    setFileIdx(0);
-    setElapsed(0);
+    setProgress(0); setFileIdx(0); setElapsed(0);
     const start = performance.now();
     let raf = 0;
     const files = config.installFiles;
@@ -198,12 +153,7 @@ export default function Install({
       setElapsed(Math.floor((now - start) / 1000));
       setFileIdx(Math.min(files.length - 1, Math.floor((pct / 100) * files.length)));
       if (pct < 100) raf = requestAnimationFrame(tick);
-      else {
-        setShowSparkle(true);
-        setTimeout(() => setShowSparkle(false), 1500);
-        setStep("restart");
-        setRestartPhase("countdown");
-      }
+      else { setShowSparkle(true); setTimeout(() => setShowSparkle(false), 1500); setStep("review" as never); setPhase("done"); }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -219,55 +169,26 @@ export default function Install({
   }, [phase, config.installTips.length, speed]);
 
   useEffect(() => {
-    if (step === "restart" && restartPhase === "countdown") {
-      const dur = speed === "fast" ? 2000 : 5000;
-      const t = setTimeout(() => setRestartPhase("done"), dur);
+    if (phase === "done" && restartPhase === "countdown") {
+      const t = setTimeout(() => setRestartPhase("done"), speed === "fast" ? 2000 : 4000);
       return () => clearTimeout(t);
     }
-  }, [step, restartPhase, speed]);
+  }, [phase, restartPhase, speed]);
 
   function canAdvance(): boolean {
     switch (step) {
-      case "try_or_install": return true;
       case "language": return !!values["language"];
       case "keyboard": return !!values["keyboard"];
-      case "network": return true;
-      case "install_option": return true;
-      case "third_party": return true;
-      case "install_type": return !!installType;
       case "create_user": return !!(values["username"] || "").trim() && !!(values["password"] || "").trim();
-      case "review": return true;
       default: return true;
     }
   }
 
   function handleNext() {
+    if (phase === "done") { playSuccess(); onComplete(); return; }
     if (!canAdvance()) return;
     playClick();
-
-    if (step === "review") {
-      setPhase("installing");
-      setStep("installing");
-      return;
-    }
-    if (step === "restart") {
-      setStep("welcome_desktop");
-      return;
-    }
-    if (step === "welcome_desktop") {
-      setStep("ubuntu_pro");
-      return;
-    }
-    if (step === "ubuntu_pro") {
-      setStep("finish");
-      return;
-    }
-    if (step === "finish") {
-      playSuccess();
-      onComplete();
-      return;
-    }
-
+    if (step === "review") { setPhase("installing"); return; }
     const nextIdx = currentIdx + 1;
     if (nextIdx < STEP_ORDER.length) setStep(STEP_ORDER[nextIdx]);
   }
@@ -278,47 +199,38 @@ export default function Install({
     if (prevIdx >= 0) setStep(STEP_ORDER[prevIdx]);
   }
 
-  function setVal(field: string, val: string) {
-    setValues((p) => ({ ...p, [field]: val }));
-  }
+  function setVal(field: string, val: string) { setValues((p) => ({ ...p, [field]: val })); }
 
-  /* ── Installing / Progress phase ── */
+  /* ═══════════════════════════════════════════════════════════════
+     INSTALLING — Full screenshot background + progress overlay
+     ═══════════════════════════════════════════════════════════════ */
   if (phase === "installing") {
     return (
-      <div className="mx-auto w-full max-w-3xl lg:max-w-4xl">
+      <div className="mx-auto w-full max-w-5xl">
         <SparkleBurst trigger={showSparkle} />
-        <div className="rounded-2xl border border-white/10 bg-[#12121a] shadow-2xl overflow-hidden">
-          <div className="bg-[#E95420] px-6 py-4 text-white font-semibold text-lg">
-            Installing Ubuntu 24.04 LTS…
-          </div>
-          <div className="p-6 space-y-4">
-            <div className="rounded-xl overflow-hidden border border-white/10">
-              <img src="/images/ubuntu/10-progress.png" alt="Installing Ubuntu" className="w-full h-auto" />
-            </div>
-            <div className="space-y-2">
-              <div className="h-3 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
+          <img src="/images/ubuntu/10-progress.png" alt="Installing Ubuntu" className="w-full h-auto" />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent pt-20 pb-6 px-6 space-y-4">
+            <div className="max-w-lg mx-auto space-y-3">
+              <div className="text-center">
+                <h3 className="text-base font-bold text-white">Installing Ubuntu 24.04 LTS…</h3>
+                <p className="text-[11px] text-white/50 mt-0.5">{config.installTips[tipIdx]}</p>
+              </div>
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/15">
                 <motion.div className="h-full rounded-full bg-[#E95420]" animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }} />
               </div>
-              <div className="flex justify-between text-xs text-white/40">
+              <div className="flex justify-between text-[10px] text-white/40 font-mono">
                 <span>{Math.floor(progress)}%</span>
-                <span>{config.installTips[tipIdx]}</span>
+                <span>{SLIDES[slideIdx].title}</span>
                 <span>{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>
               </div>
-            </div>
-            <AnimatePresence mode="wait">
-              <motion.div key={slideIdx} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                className="rounded-xl bg-[#E95420]/5 border border-[#E95420]/10 p-4">
-                <h3 className="font-semibold text-white/80 text-sm">{SLIDES[slideIdx].title}</h3>
-                <p className="text-xs text-white/40 mt-1">{SLIDES[slideIdx].body}</p>
-              </motion.div>
-            </AnimatePresence>
-            <div className="h-20 overflow-hidden rounded-lg border border-white/10 bg-black/30 p-3 font-mono text-xs text-white/50">
-              {config.installFiles.slice(0, fileIdx + 1).map((file, i) => (
-                <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: i === fileIdx ? 1 : 0.4 }} className="leading-relaxed truncate">
-                  {i === fileIdx && <span className="text-[#E95420] mr-1">▸</span>}
-                  {file}
-                </motion.div>
-              ))}
+              <div className="h-16 overflow-hidden rounded border border-white/10 bg-black/50 p-2 font-mono text-[9px] text-white/50">
+                {config.installFiles.slice(0, fileIdx + 1).map((file, i) => (
+                  <div key={i} className={`truncate leading-relaxed ${i === fileIdx ? "text-[#E95420]" : "opacity-40"}`}>
+                    {i === fileIdx && "▸ "}{file}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -326,389 +238,232 @@ export default function Install({
     );
   }
 
-  /* ── Restart phase ── */
-  if (step === "restart") {
+  /* ═══════════════════════════════════════════════════════════════
+     RESTART — Full screenshot background
+     ═══════════════════════════════════════════════════════════════ */
+  if (phase === "done") {
     return (
-      <div className="mx-auto w-full max-w-3xl lg:max-w-4xl">
-        <div className="rounded-2xl border border-white/10 bg-[#12121a] shadow-2xl overflow-hidden">
-          <ScreenshotStep src="/images/ubuntu/11-restart.png" alt="Restart system" />
-          <div className="p-6 text-center space-y-4">
-            <h2 className="text-xl font-bold text-white/90">Installation complete!</h2>
-            <p className="text-sm text-white/50">Remove the installation media and press Enter to restart.</p>
-            {restartPhase === "done" ? (
-              <button onClick={() => { playClick(); setStep("welcome_desktop"); }}
-                className="rounded-lg bg-[#E95420] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#c7441a] transition-colors">
-                Restart Now →
-              </button>
-            ) : (
-              <div className="text-sm text-white/40 font-mono">Restarting in a moment…</div>
-            )}
+      <div className="mx-auto w-full max-w-5xl">
+        <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
+          <img src="/images/ubuntu/11-restart.png" alt="Restart" className="w-full h-auto" />
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <div className="text-center space-y-4 bg-black/60 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+              <SparkleBurst trigger={showSparkle} />
+              <div className="text-3xl">🎉</div>
+              <h2 className="text-lg font-bold text-white">Installation complete!</h2>
+              <p className="text-xs text-white/50 max-w-xs mx-auto">Remove the installation media and restart your computer.</p>
+              {restartPhase === "done" ? (
+                <button onClick={() => { playSuccess(); onComplete(); }}
+                  className="rounded-lg bg-[#E95420] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#c7441a] transition-colors shadow-lg shadow-[#E95420]/20">
+                  Restart Now →
+                </button>
+              ) : (
+                <div className="text-xs text-white/40 font-mono">Restarting…</div>
+              )}
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  /* ── Welcome Desktop (post-install) ── */
-  if (step === "welcome_desktop") {
-    return (
-      <div className="mx-auto w-full max-w-3xl lg:max-w-4xl">
-        <div className="rounded-2xl border border-white/10 bg-[#12121a] shadow-2xl overflow-hidden">
-          <ScreenshotStep src="/images/ubuntu/12-welcome-desktop.png" alt="Welcome to Ubuntu" />
-          <div className="p-6 text-center">
-            <p className="text-sm text-white/50 mb-4">Welcome to Ubuntu 24.04 LTS — your system is ready to use.</p>
-            <button onClick={() => { playClick(); setStep("ubuntu_pro"); }}
-              className="rounded-lg bg-[#E95420] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#c7441a] transition-colors">
-              Continue →
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  /* ── Ubuntu Pro ── */
-  if (step === "ubuntu_pro") {
-    return (
-      <div className="mx-auto w-full max-w-3xl lg:max-w-4xl">
-        <div className="rounded-2xl border border-white/10 bg-[#12121a] shadow-2xl overflow-hidden">
-          <ScreenshotStep src="/images/ubuntu/13-ubuntu-pro.png" alt="Ubuntu Pro" />
-          <div className="p-6 flex items-center justify-between">
-            <button onClick={() => { playClick(); setStep("welcome_desktop"); }}
-              className="rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-colors">
-              ← Back
-            </button>
-            <button onClick={() => { playClick(); setStep("finish"); }}
-              className="rounded-lg bg-[#E95420] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#c7441a] transition-colors">
-              Skip for now →
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  /* ── Finish ── */
-  if (step === "finish") {
-    return (
-      <div className="mx-auto w-full max-w-3xl lg:max-w-4xl">
-        <div className="rounded-2xl border border-white/10 bg-[#12121a] shadow-2xl overflow-hidden">
-          <ScreenshotStep src="/images/ubuntu/14-finish.webp" alt="Finish" />
-          <div className="p-6 text-center space-y-4">
-            <h2 className="text-xl font-bold text-white/90">You're all set!</h2>
-            <p className="text-sm text-white/50">Ubuntu 24.04 LTS is installed and ready. Click below to start using your new system.</p>
-            <button onClick={() => { playClick(); playSuccess(); onComplete(); }}
-              className="rounded-lg bg-[#E95420] px-8 py-3 text-sm font-bold text-white hover:bg-[#c7441a] transition-colors shadow-lg shadow-[#E95420]/20">
-              ✓ Start Using Ubuntu →
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  /* ── Wizard steps ── */
+  /* ═══════════════════════════════════════════════════════════════
+     WIZARD STEPS — Full screenshot background + overlay controls
+     ═══════════════════════════════════════════════════════════════ */
   return (
-    <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
-      <div className="rounded-2xl border border-white/10 bg-[#12121a] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[500px] lg:min-h-[600px]">
+    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="flex-1 flex overflow-hidden rounded-t-2xl border border-white/10 border-b-0">
         <Sidebar current={step} />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 relative overflow-hidden bg-black">
           <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.2 }} className="flex-1 p-6 lg:p-8 overflow-y-auto">
+            <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }} className="absolute inset-0">
 
-              {/* ── Step: Try or Install ── */}
-              {step === "try_or_install" && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold text-white/90">Try or Install Ubuntu</h2>
-                  <p className="text-sm text-white/50">Boot from the USB to start the installer.</p>
-                  <ScreenshotStep src="/images/ubuntu/01-try-or-install.png" alt="Choose Try or Install Ubuntu" />
-                </div>
-              )}
+              {/* Full background screenshot */}
+              <img src={STEP_IMG[step]} alt={SIDEBAR_LABELS[step]}
+                className="absolute inset-0 w-full h-full object-contain bg-[#1a1a24]" />
 
-              {/* ── Step: Language ── */}
-              {step === "language" && (
-                <div className="space-y-4">
-                  <div className="flex gap-4 flex-col lg:flex-row">
-                    <div className="flex-1 space-y-3">
-                      <h2 className="text-xl font-bold text-white/90">Select your language</h2>
-                      <div className="max-h-[320px] overflow-y-auto space-y-1">
-                        {LANGUAGES.map((lang) => (
-                          <button key={lang} onClick={() => { playClick(); setVal("language", lang); }}
-                            className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                              values["language"] === lang
-                                ? "bg-[#E95420]/10 text-[#E95420] ring-1 ring-[#E95420]/40 font-medium"
-                                : "text-white/60 hover:bg-white/5"
-                            }`}>
-                            {lang}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="rounded-xl overflow-hidden border border-white/10">
-                        <img src="/images/ubuntu/02-language.png" alt="Language selection" className="w-full h-auto" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Interactive overlay — transparent, positioned at the bottom */}
+              <div className="absolute inset-x-0 bottom-0">
+                <div className="bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/60 to-transparent pt-16 pb-4 px-6">
+                  <div className="max-w-md mx-auto space-y-3">
 
-              {/* ── Step: Keyboard ── */}
-              {step === "keyboard" && (
-                <div className="space-y-4">
-                  <div className="flex gap-4 flex-col lg:flex-row">
-                    <div className="flex-1 space-y-3">
-                      <h2 className="text-xl font-bold text-white/90">Keyboard layout</h2>
-                      <div className="max-h-[320px] overflow-y-auto space-y-1">
-                        {KEYBOARD_LAYOUTS.map((layout) => (
-                          <button key={layout} onClick={() => { playClick(); setVal("keyboard", layout); }}
-                            className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                              values["keyboard"] === layout
-                                ? "bg-[#E95420]/10 text-[#E95420] ring-1 ring-[#E95420]/40 font-medium"
-                                : "text-white/60 hover:bg-white/5"
-                            }`}>
-                            {layout}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="rounded-xl overflow-hidden border border-white/10">
-                        <img src="/images/ubuntu/03-keyboard.webp" alt="Keyboard layout" className="w-full h-auto" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Step: Network ── */}
-              {step === "network" && (
-                <div className="space-y-4">
-                  <div className="flex gap-4 flex-col lg:flex-row">
-                    <div className="flex-1 space-y-3">
-                      <h2 className="text-xl font-bold text-white/90">Connect to a network</h2>
-                      <p className="text-xs text-white/40">Get online to download updates during installation.</p>
-                      <div className="space-y-1">
-                        {[
-                          { id: "wifi-home", label: "HomeWiFi", icon: "📶" },
-                          { id: "wifi-neighbors", label: "Neighbor_5G", icon: "📶" },
-                          { id: "ethernet", label: "Wired Ethernet", icon: "🔌" },
-                        ].map((iface) => (
-                          <button key={iface.id} onClick={() => { playClick(); setVal("network", iface.id); }}
-                            className={`w-full flex items-center gap-3 rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
-                              values["network"] === iface.id
-                                ? "bg-[#E95420]/10 text-[#E95420] ring-1 ring-[#E95420]/40"
-                                : "text-white/60 hover:bg-white/5"
-                            }`}>
-                            <span>{iface.icon}</span>
-                            <span className="flex-1 font-medium">{iface.label}</span>
-                          </button>
-                        ))}
-                        <button onClick={() => { playClick(); setVal("network", "skip"); }}
-                          className={`w-full rounded-lg px-4 py-2.5 text-left text-sm transition-colors ${
-                            values["network"] === "skip" ? "bg-[#E95420]/10 text-[#E95420]" : "text-white/40 hover:bg-white/5"
-                          }`}>
-                          I don't want to connect now
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="rounded-xl overflow-hidden border border-white/10">
-                        <img src="/images/ubuntu/04-network.webp" alt="Network connection" className="w-full h-auto" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Step: Install Option ── */}
-              {step === "install_option" && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold text-white/90">What would you like to do?</h2>
-                  <div className="flex gap-4 flex-col lg:flex-row">
-                    <div className="flex-1 space-y-3">
-                      {[
-                        { id: "interactive", label: "Interactive installation", desc: "Go through the setup wizard with all options.", icon: "📋" },
-                        { id: "automated", label: "Automated installation", desc: "Use a preseed file for unattended installation.", icon: "🤖" },
-                      ].map((opt) => (
-                        <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
-                          className={`w-full rounded-xl border px-5 py-4 text-left transition-colors ${
-                            installType === opt.id
-                              ? "border-[#E95420] bg-[#E95420]/5 ring-1 ring-[#E95420]/30"
-                              : "border-white/10 hover:bg-white/5"
-                          }`}>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl">{opt.icon}</span>
-                            <div>
-                              <div className="text-sm font-semibold text-white/80">{opt.label}</div>
-                              <div className="text-xs text-white/40 mt-0.5">{opt.desc}</div>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex-1">
-                      <div className="rounded-xl overflow-hidden border border-white/10">
-                        <img src="/images/ubuntu/05-install-option.webp" alt="Install option" className="w-full h-auto" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Step: Third Party ── */}
-              {step === "third_party" && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold text-white/90">Optimise your computer</h2>
-                  <div className="flex gap-4 flex-col lg:flex-row">
-                    <div className="flex-1 space-y-3">
-                      {[
-                        { key: "thirdParty", label: "Install third-party software for graphics and Wi-Fi hardware", desc: "Proprietary drivers for NVIDIA, Broadcom, etc." },
-                        { key: "codecs", label: "Download and install support for additional media formats", desc: "MP3, MP4, and other restricted formats" },
-                      ].map((opt) => (
-                        <button key={opt.key} onClick={() => { playClick(); if (opt.key === "thirdParty") setThirdParty(!thirdParty); }}
-                          className={`w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors ${
-                            (opt.key === "thirdParty" ? thirdParty : true)
-                              ? "border-[#E95420]/40 bg-[#E95420]/5"
-                              : "border-white/10 hover:bg-white/5"
-                          }`}>
-                          <div className="flex-1 pr-4">
-                            <div className="text-sm font-medium text-white/80">{opt.label}</div>
-                            <div className="text-xs text-white/40 mt-0.5">{opt.desc}</div>
-                          </div>
-                          <div className={`h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
-                            (opt.key === "thirdParty" ? thirdParty : true) ? "border-[#E95420] bg-[#E95420]" : "border-white/20"
-                          }`}>
-                            {(opt.key === "thirdParty" ? thirdParty : true) && (
-                              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex-1">
-                      <div className="rounded-xl overflow-hidden border border-white/10">
-                        <img src="/images/ubuntu/06-third-party.webp" alt="Third-party software" className="w-full h-auto" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Step: Install Type ── */}
-              {step === "install_type" && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold text-white/90">Type of installation</h2>
-                  <div className="flex gap-4 flex-col lg:flex-row">
-                    <div className="flex-1 space-y-3">
-                      {[
-                        { id: "erase", label: "Erase disk and install Ubuntu", desc: "Deletes all data and installs a fresh copy." },
-                        { id: "alongside", label: "Install Ubuntu alongside them", desc: "Dual-boot with existing operating systems." },
-                        { id: "manual", label: "Manual installation (advanced)", desc: "Create or modify partitions manually." },
-                      ].map((opt) => (
-                        <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
-                          className={`w-full rounded-xl border px-5 py-4 text-left transition-colors ${
-                            installType === opt.id
-                              ? "border-[#E95420] bg-[#E95420]/5 ring-1 ring-[#E95420]/30"
-                              : "border-white/10 hover:bg-white/5"
-                          }`}>
-                          <div className="text-sm font-semibold text-white/80">{opt.label}</div>
-                          <div className="text-xs text-white/40 mt-1">{opt.desc}</div>
-                        </button>
-                      ))}
-                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
-                        <div className="text-xs font-medium text-white/50">Detected disk</div>
-                        <div className="text-xs text-white/40">/dev/sda — 500 GB WDC WD5000</div>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="rounded-xl overflow-hidden border border-white/10">
-                        <img src="/images/ubuntu/07-install-type.webp" alt="Installation type" className="w-full h-auto" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Step: Create User ── */}
-              {step === "create_user" && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold text-white/90">Who are you?</h2>
-                  <div className="flex gap-4 flex-col lg:flex-row">
-                    <div className="flex-1 space-y-3">
-                      {[
-                        { key: "name", label: "Your name", placeholder: "Jeevan", type: "text" },
-                        { key: "computer_name", label: "Your computer's name", placeholder: "jeevan-ubuntu", type: "text" },
-                        { key: "username", label: "Pick a username", placeholder: "jeevan", type: "text" },
-                        { key: "password", label: "Choose a password", placeholder: "••••••••", type: "password" },
-                        { key: "confirm", label: "Confirm your password", placeholder: "••••••••", type: "password" },
-                      ].map((field) => (
-                        <div key={field.key}>
-                          <label className="block text-xs font-medium text-white/50 mb-1">{field.label}</label>
-                          <input type={field.type} value={values[field.key] ?? ""} placeholder={field.placeholder}
-                            onChange={(e) => { setVal(field.key, e.target.value); playKeyClick(); }}
-                            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/90 outline-none focus:border-[#E95420] focus:ring-1 focus:ring-[#E95420]/30 transition-colors placeholder:text-white/20" />
+                    {/* ── Language selector ── */}
+                    {step === "language" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Select your language</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {LANGUAGES.map((lang) => (
+                            <button key={lang} onClick={() => { playClick(); setVal("language", lang); }}
+                              className={`rounded-md px-3 py-1.5 text-[11px] transition-all ${
+                                values["language"] === lang
+                                  ? "bg-[#E95420] text-white font-semibold shadow-lg shadow-[#E95420]/30"
+                                  : "bg-white/10 text-white/70 hover:bg-white/15 hover:text-white"
+                              }`}>{lang}</button>
+                          ))}
                         </div>
-                      ))}
-                      <label className="flex items-center gap-2 text-xs text-white/40 cursor-pointer">
-                        <input type="checkbox" defaultChecked className="accent-[#E95420] w-3 h-3" />
-                        Log in automatically
-                      </label>
-                    </div>
-                    <div className="flex-1">
-                      <div className="rounded-xl overflow-hidden border border-white/10">
-                        <img src="/images/ubuntu/08-create-user.webp" alt="Create user" className="w-full h-auto" />
                       </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+                    )}
 
-              {/* ── Step: Review ── */}
-              {step === "review" && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold text-white/90">Review your choices</h2>
-                  <div className="flex gap-4 flex-col lg:flex-row">
-                    <div className="flex-1">
-                      <div className="rounded-xl border border-white/10 divide-y divide-white/5">
+                    {/* ── Keyboard selector ── */}
+                    {step === "keyboard" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Keyboard layout</div>
+                        <div className="grid grid-cols-2 gap-1.5 max-h-[140px] overflow-y-auto">
+                          {KEYBOARD_LAYOUTS.map((layout) => (
+                            <button key={layout} onClick={() => { playClick(); setVal("keyboard", layout); }}
+                              className={`rounded-md px-3 py-1.5 text-[11px] text-left transition-all ${
+                                values["keyboard"] === layout
+                                  ? "bg-[#E95420] text-white font-semibold"
+                                  : "bg-white/10 text-white/70 hover:bg-white/15"
+                              }`}>{layout}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Network selector ── */}
+                    {step === "network" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Connect to network</div>
+                        <div className="space-y-1">
+                          {[{ id: "wifi-home", label: "HomeWiFi", icon: "📶" },
+                            { id: "wifi-5g", label: "Neighbor_5G", icon: "📶" },
+                            { id: "ethernet", label: "Wired Ethernet", icon: "🔌" },
+                          ].map((n) => (
+                            <button key={n.id} onClick={() => { playClick(); setVal("network", n.id); }}
+                              className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-[11px] transition-all ${
+                                values["network"] === n.id
+                                  ? "bg-[#E95420] text-white"
+                                  : "bg-white/10 text-white/70 hover:bg-white/15"
+                              }`}>
+                              <span>{n.icon}</span><span className="font-medium">{n.label}</span>
+                            </button>
+                          ))}
+                          <button onClick={() => { playClick(); setVal("network", "skip"); }}
+                            className={`w-full rounded-md px-3 py-2 text-[11px] transition-all ${
+                              values["network"] === "skip" ? "bg-[#E95420] text-white" : "bg-white/5 text-white/40 hover:bg-white/10"
+                            }`}>I don't want to connect now</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Install option ── */}
+                    {step === "install_option" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">What would you like to do?</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { id: "interactive", label: "Interactive installation", icon: "📋" },
+                            { id: "automated", label: "Automated installation", icon: "🤖" },
+                          ].map((opt) => (
+                            <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
+                              className={`rounded-lg border p-3 text-left transition-all ${
+                                installType === opt.id
+                                  ? "border-[#E95420] bg-[#E95420]/10 text-white"
+                                  : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                              }`}>
+                              <span className="text-lg">{opt.icon}</span>
+                              <div className="text-[11px] font-semibold mt-1">{opt.label}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Third party ── */}
+                    {step === "third_party" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Additional software</div>
+                        <label className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 cursor-pointer hover:bg-white/15 transition-all">
+                          <input type="checkbox" checked={thirdParty} onChange={() => setThirdParty(!thirdParty)} className="accent-[#E95420]" />
+                          <span className="text-[11px] text-white/80">Install third-party software for graphics and Wi-Fi</span>
+                        </label>
+                        <label className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 cursor-pointer hover:bg-white/15 transition-all">
+                          <input type="checkbox" defaultChecked className="accent-[#E95420]" />
+                          <span className="text-[11px] text-white/80">Download additional media formats</span>
+                        </label>
+                      </div>
+                    )}
+
+                    {/* ── Install type ── */}
+                    {step === "install_type" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Type of installation</div>
                         {[
-                          ["Language", values["language"] ?? "English"],
-                          ["Keyboard", values["keyboard"] ?? "English (US)"],
-                          ["Network", values["network"] === "skip" ? "Skipped" : values["network"] ?? "HomeWiFi"],
-                          ["Installation type", installType === "erase" ? "Erase disk" : installType === "alongside" ? "Dual boot" : "Interactive"],
-                          ["Third-party software", thirdParty ? "Yes" : "No"],
-                          ["Username", values["username"] ?? "user"],
-                          ["Computer name", values["computer_name"] ?? "ubuntu"],
-                        ].map(([label, value]) => (
-                          <div key={label} className="flex items-center justify-between px-4 py-2.5 text-sm">
-                            <span className="text-white/50">{label}</span>
-                            <span className="font-medium text-white/80">{value}</span>
-                          </div>
+                          { id: "erase", label: "Erase disk and install Ubuntu" },
+                          { id: "alongside", label: "Install alongside existing OS" },
+                          { id: "manual", label: "Something else (manual)" },
+                        ].map((opt) => (
+                          <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
+                            className={`w-full rounded-md px-3 py-2 text-[11px] text-left font-medium transition-all ${
+                              installType === opt.id
+                                ? "bg-[#E95420] text-white shadow-lg shadow-[#E95420]/20"
+                                : "bg-white/10 text-white/70 hover:bg-white/15"
+                            }`}>{opt.label}</button>
                         ))}
                       </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="rounded-xl overflow-hidden border border-white/10">
-                        <img src="/images/ubuntu/09-review.png" alt="Review changes" className="w-full h-auto" />
+                    )}
+
+                    {/* ── Create user ── */}
+                    {step === "create_user" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Who are you?</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { key: "name", placeholder: "Your name" },
+                            { key: "computer_name", placeholder: "Computer name" },
+                            { key: "username", placeholder: "Username" },
+                            { key: "password", placeholder: "Password", secret: true },
+                          ].map((f) => (
+                            <input key={f.key} type={f.secret ? "password" : "text"}
+                              value={values[f.key] ?? ""} placeholder={f.placeholder}
+                              onChange={(e) => { setVal(f.key, e.target.value); playKeyClick(); }}
+                              className="rounded-md bg-white/10 border border-white/10 px-3 py-2 text-[11px] text-white/90 outline-none focus:border-[#E95420] placeholder:text-white/25 transition-colors" />
+                          ))}
+                        </div>
+                        <label className="flex items-center gap-1.5 text-[10px] text-white/40 cursor-pointer">
+                          <input type="checkbox" defaultChecked className="accent-[#E95420] w-3 h-3" />Log in automatically
+                        </label>
                       </div>
-                    </div>
+                    )}
+
+                    {/* ── Try or Install (no controls, just show the image) ── */}
+                    {step === "try_or_install" && (
+                      <div className="text-center text-[11px] text-white/30">The real Ubuntu boot menu — press Enter to continue</div>
+                    )}
+
+                    {/* ── Review ── */}
+                    {step === "review" && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Ready to install</div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 bg-white/5 rounded-lg p-3 border border-white/10">
+                          {[
+                            ["Language", values["language"] ?? "English"],
+                            ["Keyboard", values["keyboard"] ?? "English (US)"],
+                            ["Network", values["network"] === "skip" ? "Skipped" : values["network"] ?? "HomeWiFi"],
+                            ["Install type", installType === "erase" ? "Erase disk" : installType === "alongside" ? "Dual boot" : "Manual"],
+                            ["Third-party", thirdParty ? "Yes" : "No"],
+                            ["Username", values["username"] ?? "user"],
+                          ].map(([l, v]) => (
+                            <div key={l} className="flex justify-between text-[10px]">
+                              <span className="text-white/40">{l}</span>
+                              <span className="text-white/70 font-medium">{v}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </motion.div>
           </AnimatePresence>
-          <StepNav
-            onBack={handleBack}
-            onNext={handleNext}
-            nextLabel={step === "review" ? "Install now →" : "Next →"}
-            nextDisabled={!canAdvance()}
-            showBack={currentIdx > 0}
-          />
         </div>
       </div>
+      <StepNav onBack={handleBack} onNext={handleNext}
+        nextLabel={step === "review" ? "Install now →" : "Next →"}
+        nextDisabled={!canAdvance()} showBack={currentIdx > 0} />
     </div>
   );
 }
