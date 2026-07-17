@@ -871,7 +871,7 @@ export default function Done({
               {[
                 { src: "/images/ubuntu/15-login.png", label: "Login screen" },
                 { src: "/images/ubuntu/14-finish.webp", label: "Welcome wizard" },
-                { src: "/images/ubuntu/24-neofetch.webp", label: "System info" },
+                { src: "/images/ubuntu/12-welcome-desktop.png", label: "Ubuntu desktop" },
               ].map((img) => (
                 <motion.div
                   key={img.src}

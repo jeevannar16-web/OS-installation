@@ -187,14 +187,13 @@ export default function FakeBrowser({
         >
           Auto-fill
         </button>
+        <button
+          onClick={() => setShowDemo(true)}
+          className="shrink-0 rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-[11px] text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          Show guide
+        </button>
       </motion.div>
-
-      <button
-        onClick={() => setShowDemo(true)}
-        className="absolute top-4 right-4 z-10 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-      >
-        Show guide
-      </button>
 
       {/* Browser window */}
       <div className="overflow-hidden rounded-xl bg-[#202124] shadow-2xl ring-1 ring-white/10">

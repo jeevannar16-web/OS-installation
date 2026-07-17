@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Monitor, ArrowLeftRight, Usb, ChevronDown, Lock, ExternalLink, Play, Check } from "lucide-react";
@@ -231,6 +231,16 @@ export default function LandingPage() {
   const [selected, setSelected] = useState<Outcome | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const guideRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showGuide) return;
+    function handleClick(e: MouseEvent) {
+      if (guideRef.current && !guideRef.current.contains(e.target as Node)) setShowGuide(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showGuide]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleBootReady = useCallback((_ready?: boolean) => {}, []);
@@ -271,7 +281,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-2">
             {/* How it works — dropdown */}
-            <div className="relative">
+            <div className="relative" ref={guideRef}>
               <button
                 onClick={() => setShowGuide(!showGuide)}
                 className="flex items-center gap-1.5 rounded-md bg-white/5 border border-white/10 px-3 py-1.5 text-[11px] text-white/45 hover:bg-white/10 hover:text-white/65 transition-colors"
