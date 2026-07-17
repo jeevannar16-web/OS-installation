@@ -104,9 +104,10 @@ function HowItWorksDropdown({ open }: { open: boolean }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   OUTCOME CARDS — 3 ways to install Ubuntu
+   OUTCOME CARDS — ways to install an OS
    ═══════════════════════════════════════════════════════════════════ */
 type Outcome = "live-usb" | "dual-boot" | "vm";
+type SelectedOS = "ubuntu" | "arch";
 
 interface OutcomeInfo {
   id: Outcome;
@@ -121,44 +122,84 @@ interface OutcomeInfo {
   sceneCount: number;
 }
 
-const OUTCOMES: OutcomeInfo[] = [
-  {
-    id: "live-usb",
-    title: "Try Ubuntu Live",
-    tagline: "No install needed",
-    description: "Boot from USB into a full Ubuntu desktop. Try it without touching your hard drive.",
-    icon: <Usb size={22} strokeWidth={1.5} />,
-    accent: "#22c55e",
-    steps: ["Download ISO", "Flash USB", "Boot from USB", "Try Ubuntu"],
-    time: "~5 min",
-    risk: "Zero risk",
-    sceneCount: 11,
-  },
-  {
-    id: "dual-boot",
-    title: "Dual Boot",
-    tagline: "Ubuntu + Windows",
-    description: "Install Ubuntu alongside Windows. Choose which OS to boot each time you start your PC.",
-    icon: <ArrowLeftRight size={22} strokeWidth={1.5} />,
-    accent: "#E95420",
-    steps: ["Download ISO", "Flash USB", "BIOS Setup", "Install Ubuntu", "GRUB Menu"],
-    time: "~15 min",
-    risk: "Low risk",
-    sceneCount: 14,
-  },
-  {
-    id: "vm",
-    title: "Virtual Machine",
-    tagline: "Safest option",
-    description: "Run Ubuntu inside a virtual machine on your current OS. Completely isolated, zero risk.",
-    icon: <Monitor size={22} strokeWidth={1.5} />,
-    accent: "#6366f1",
-    steps: ["Download ISO", "Create VM", "Boot VM", "Install Ubuntu"],
-    time: "~10 min",
-    risk: "Zero risk",
-    sceneCount: 10,
-  },
-];
+const OS_OUTCOMES: Record<SelectedOS, OutcomeInfo[]> = {
+  ubuntu: [
+    {
+      id: "live-usb",
+      title: "Try Ubuntu Live",
+      tagline: "No install needed",
+      description: "Boot from USB into a full Ubuntu desktop. Try it without touching your hard drive.",
+      icon: <Usb size={22} strokeWidth={1.5} />,
+      accent: "#22c55e",
+      steps: ["Download ISO", "Flash USB", "Boot from USB", "Try Ubuntu"],
+      time: "~5 min",
+      risk: "Zero risk",
+      sceneCount: 11,
+    },
+    {
+      id: "dual-boot",
+      title: "Dual Boot",
+      tagline: "Ubuntu + Windows",
+      description: "Install Ubuntu alongside Windows. Choose which OS to boot each time you start your PC.",
+      icon: <ArrowLeftRight size={22} strokeWidth={1.5} />,
+      accent: "#E95420",
+      steps: ["Download ISO", "Flash USB", "BIOS Setup", "Install Ubuntu", "GRUB Menu"],
+      time: "~15 min",
+      risk: "Low risk",
+      sceneCount: 14,
+    },
+    {
+      id: "vm",
+      title: "Virtual Machine",
+      tagline: "Safest option",
+      description: "Run Ubuntu inside a virtual machine on your current OS. Completely isolated, zero risk.",
+      icon: <Monitor size={22} strokeWidth={1.5} />,
+      accent: "#6366f1",
+      steps: ["Download ISO", "Create VM", "Boot VM", "Install Ubuntu"],
+      time: "~10 min",
+      risk: "Zero risk",
+      sceneCount: 10,
+    },
+  ],
+  arch: [
+    {
+      id: "vm",
+      title: "Virtual Machine",
+      tagline: "Safest first try",
+      description: "Install Arch Linux in VirtualBox using the archinstall guided wizard. No risk to your real files.",
+      icon: <Monitor size={22} strokeWidth={1.5} />,
+      accent: "#1793D1",
+      steps: ["Download ISO", "Create VM", "Boot Arch", "archinstall", "Done"],
+      time: "~10 min",
+      risk: "Zero risk",
+      sceneCount: 10,
+    },
+    {
+      id: "dual-boot",
+      title: "Dual Boot",
+      tagline: "Arch + Windows",
+      description: "Install Arch alongside Windows using archinstall. GRUB bootloader auto-detects both OSes.",
+      icon: <ArrowLeftRight size={22} strokeWidth={1.5} />,
+      accent: "#1793D1",
+      steps: ["Download ISO", "Flash USB", "BIOS Setup", "archinstall", "GRUB"],
+      time: "~15 min",
+      risk: "Low risk",
+      sceneCount: 12,
+    },
+    {
+      id: "live-usb",
+      title: "Live USB",
+      tagline: "Try it first",
+      description: "Boot from a USB stick into the Arch live environment. Explore without installing.",
+      icon: <Usb size={22} strokeWidth={1.5} />,
+      accent: "#22c55e",
+      steps: ["Download ISO", "Flash USB", "Boot from USB", "Live Env"],
+      time: "~5 min",
+      risk: "Zero risk",
+      sceneCount: 8,
+    },
+  ],
+};
 
 function OutcomeCard({ outcome, selected, onSelect }: {
   outcome: OutcomeInfo;
@@ -229,6 +270,7 @@ function OutcomeCard({ outcome, selected, onSelect }: {
 export default function LandingPage() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<Outcome | null>(null);
+  const [selectedOS, setSelectedOS] = useState<SelectedOS>("ubuntu");
   const [showHelp, setShowHelp] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const guideRef = useRef<HTMLDivElement>(null);
@@ -245,11 +287,17 @@ export default function LandingPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleBootReady = useCallback((_ready?: boolean) => {}, []);
 
-  const ubuntu = OS_LIST.find((o) => o.id === "ubuntu");
+  const activeOS = OS_LIST.find((o) => o.id === selectedOS);
+  const outcomes = OS_OUTCOMES[selectedOS];
 
   function start() {
-    if (!selected || !ubuntu) return;
-    navigate(`/ubuntu/${selected}`);
+    if (!selected || !activeOS) return;
+    navigate(`/${selectedOS}/${selected}`);
+  }
+
+  function switchOS(osId: SelectedOS) {
+    setSelectedOS(osId);
+    setSelected(null);
   }
 
   return (
@@ -306,24 +354,32 @@ export default function LandingPage() {
         {/* ── Hero ───────────────────────────────────────────── */}
         <section className="w-full px-6 pt-8 pb-4">
           <div className="max-w-2xl mx-auto text-center">
-            {/* Ubuntu badge */}
+            {/* OS badge — dynamic */}
             <motion.div
+              key={selectedOS}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="inline-flex items-center gap-2 rounded-full bg-[#E95420]/10 border border-[#E95420]/20 px-4 py-1.5 mb-5"
+              className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 mb-5"
+              style={{ background: `${activeOS?.branding.accent}10`, borderColor: `${activeOS?.branding.accent}20` }}
             >
-              <div className="h-5 w-5 rounded-full bg-[#E95420] flex items-center justify-center text-[9px] font-bold text-white">U</div>
-              <span className="text-[11px] font-semibold text-[#E95420]">Ubuntu 24.04 LTS</span>
+              <div className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                style={{ background: activeOS?.branding.accent }}>
+                {activeOS?.branding.logo}
+              </div>
+              <span className="text-[11px] font-semibold" style={{ color: activeOS?.branding.accent }}>
+                {activeOS?.branding.name}
+              </span>
               <span className="text-[10px] text-white/30">•</span>
               <span className="text-[10px] text-white/30">Free &amp; Open Source</span>
             </motion.div>
 
             <motion.h1
+              key={`h1-${selectedOS}`}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white/90 mb-3"
             >
-              Install Ubuntu
+              Install {activeOS?.branding.name}
               <br />
               <span className="text-white/40">before you actually do it</span>
             </motion.h1>
@@ -332,16 +388,16 @@ export default function LandingPage() {
               <TypingEffect />
             </motion.div>
 
-            {/* CTA row */}
+            {/* CTA row — dynamic */}
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex items-center justify-center gap-3">
               <a
-                href="https://ubuntu.com/download/desktop"
+                href={activeOS?.branding.officialUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-xs text-white/50 hover:bg-white/10 hover:text-white/70 transition-colors"
               >
                 <ExternalLink size={12} />
-                Get Ubuntu
+                Get {activeOS?.branding.shortName}
               </a>
               <div className="text-[10px] text-white/20">or try it safe below ↓</div>
             </motion.div>
@@ -355,24 +411,32 @@ export default function LandingPage() {
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Choose your path</span>
               </div>
-              <p className="text-[11px] text-white/25">Three ways to experience Ubuntu — pick one and start the simulation</p>
+              <p className="text-[11px] text-white/25">
+                {selectedOS === "arch"
+                  ? "Three ways to install Arch Linux — from safest VM to bare metal dual-boot"
+                  : "Three ways to experience Ubuntu — pick one and start the simulation"}
+              </p>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
-              className="grid sm:grid-cols-3 gap-4"
-            >
-              {OUTCOMES.map((o) => (
-                <OutcomeCard
-                  key={o.id}
-                  outcome={o}
-                  selected={selected === o.id}
-                  onSelect={() => setSelected(o.id)}
-                />
-              ))}
-            </motion.div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedOS}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25 }}
+                className="grid sm:grid-cols-3 gap-4"
+              >
+                {outcomes.map((o) => (
+                  <OutcomeCard
+                    key={o.id}
+                    outcome={o}
+                    selected={selected === o.id}
+                    onSelect={() => setSelected(o.id)}
+                  />
+                ))}
+              </motion.div>
+            </AnimatePresence>
 
             {/* Start button */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }} className="mt-6 text-center">
@@ -382,15 +446,15 @@ export default function LandingPage() {
                 onClick={start}
                 className={`inline-flex items-center gap-2 text-sm font-semibold rounded-xl px-10 py-3.5 transition-all ${
                   selected
-                    ? "bg-[#E95420] text-white shadow-[0_0_40px_-10px] #E95420 hover:shadow-[0_0_50px_-8px] #E95420"
+                    ? "text-white"
                     : "bg-white/[0.03] text-white/20 border border-white/[0.06] cursor-not-allowed"
                 }`}
-                style={selected ? { boxShadow: "0 0 40px -10px rgba(233,84,32,0.5)" } : {}}
+                style={selected ? { background: activeOS?.branding.accent, boxShadow: `0 0 40px -10px ${activeOS?.branding.accent}80` } : {}}
               >
                 {selected ? (
                   <>
                     <Play size={16} fill="white" />
-                    Start Ubuntu {OUTCOMES.find((o) => o.id === selected)?.title}
+                    Start {activeOS?.branding.name} {outcomes.find((o) => o.id === selected)?.title}
                   </>
                 ) : (
                   "Choose a path above to begin"
@@ -398,23 +462,29 @@ export default function LandingPage() {
               </motion.button>
             </motion.div>
 
-            {/* OS cards row — secondary, at the bottom */}
+            {/* OS cards row — clickable to switch OS */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }} className="mt-10">
               <div className="text-center text-[10px] text-white/20 uppercase tracking-wider mb-3">More operating systems</div>
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 {OS_LIST.map((o) => {
                   const disabled = !!o.stub;
-                  const active = o.id === "ubuntu";
+                  const isActive = o.id === selectedOS;
+                  const available = o.id === "ubuntu" || o.id === "arch";
                   return (
-                    <div
+                    <button
                       key={o.id}
+                      onClick={() => available && switchOS(o.id as SelectedOS)}
+                      disabled={disabled || !available}
                       className={`flex items-center gap-2 rounded-lg px-3 py-1.5 border text-xs transition-all ${
                         disabled
-                          ? "border-white/[0.04] bg-white/[0.01] opacity-40"
-                          : active
-                            ? "border-[#E95420]/30 bg-[#E95420]/10 text-[#E95420]"
-                            : "border-white/[0.08] bg-white/[0.02] text-white/40"
+                          ? "border-white/[0.04] bg-white/[0.01] opacity-40 cursor-not-allowed"
+                          : isActive
+                            ? "border-white/20 bg-white/[0.06] shadow-lg"
+                            : available
+                              ? "border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/[0.15] hover:bg-white/[0.04] cursor-pointer"
+                              : "border-white/[0.04] bg-white/[0.01] opacity-40 cursor-not-allowed"
                       }`}
+                      style={isActive ? { borderColor: `${o.branding.accent}40`, background: `${o.branding.accent}15`, color: o.branding.accent } : {}}
                     >
                       <div
                         className="h-5 w-5 rounded flex items-center justify-center text-[9px] font-bold"
@@ -424,8 +494,8 @@ export default function LandingPage() {
                       </div>
                       <span className="font-medium">{o.branding.name}</span>
                       {disabled && <span className="text-[8px] text-white/20 uppercase ml-1">Soon</span>}
-                      {active && <span className="text-[8px] text-[#E95420] font-semibold ml-1">Available</span>}
-                    </div>
+                      {isActive && <span className="text-[8px] font-semibold ml-1" style={{ color: o.branding.accent }}>Active</span>}
+                    </button>
                   );
                 })}
               </div>
