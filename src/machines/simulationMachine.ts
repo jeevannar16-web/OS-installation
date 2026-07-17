@@ -15,7 +15,7 @@ import type { InstallPath, HostOS } from "../data/types";
  *        → partitioning → installing → grub_menu → oobe → complete
  *
  * Physical live-usb (Ubuntu):
- *   idle → searching → downloading → flashing_usb → usb_reinsert → bios_setup
+ *   idle → searching → downloading → flashing_usb → bios_setup
  *        → rebooting → boot_prompt → boot_menu → live_welcome → live_desktop
  *        → installing → grub_menu → complete
  *
@@ -143,7 +143,14 @@ export const simulationMachine = setup({
 
     /* ── Physical path: Flash USB ── */
     flashing_usb: {
-      on: { FLASH_DONE: "usb_reinsert" },
+      on: {
+        FLASH_DONE: [
+          // Live-usb: USB stays connected, skip reinsert
+          { guard: "isLiveUsb", target: "bios_setup" },
+          // Dual-boot / other: USB must be moved to target machine
+          { target: "usb_reinsert" },
+        ],
+      },
     },
 
     usb_reinsert: {

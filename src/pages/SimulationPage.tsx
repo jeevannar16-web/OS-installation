@@ -315,6 +315,7 @@ function SimulationPageInner() {
     }
     if (VM_ONLY.has(s)) return false;
     if (s === "vm_close") return false;
+    if (s === "usb_reinsert" && path === "live-usb") return false;
     if (s === "disk_prep" && path !== "dual-boot") return false;
     if (s === "partitioning" && path !== "dual-boot") return false;
     if (s === "windows_setup" && (path === "live-usb" || cfg.id !== "windows")) return false;

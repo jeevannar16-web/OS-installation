@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import { ArrowRight, Download } from "lucide-react";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
 import { useSceneAdvance } from "../shared/SceneAdvance";
@@ -14,58 +15,65 @@ export default function LiveWelcome({
   onInstall: () => void;
 }) {
   const { register: registerAdvance } = useSceneAdvance();
-  const name = config.branding.name;
 
   useEffect(() => {
     registerAdvance(() => onInstall());
   }, [registerAdvance, onInstall]);
 
   return (
-    <div
-      className="flex min-h-[400px] sm:h-[680px] lg:h-[75vh] items-center justify-center rounded-2xl border border-white/10"
-      style={{
-        background: `linear-gradient(135deg, ${config.branding.surface} 0%, #0a0a1a 100%)`,
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center gap-6 px-6 text-center"
-      >
-        <div className="text-6xl lg:text-7xl xl:text-8xl">{config.branding.logo}</div>
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white/90">Welcome to {name}</h1>
-        <p className="max-w-md text-sm lg:text-base text-white/50">
-          You've successfully booted from USB. Choose what you'd like to do:
-        </p>
+    <div className="relative w-full rounded-2xl overflow-hidden border border-white/10 bg-[#12121a]">
+      {/* Real Ubuntu Try or Install screenshot as full background */}
+      <img
+        src="/images/ubuntu/01-try-or-install.png"
+        alt="Ubuntu Try or Install screen"
+        className="w-full h-auto object-contain"
+        draggable={false}
+      />
 
-        <div className="flex flex-col sm:flex-row gap-4 mt-4">
+      {/* Transparent clickable overlay on the two buttons */}
+      <div className="absolute inset-0 flex items-end justify-center pb-[18%] sm:pb-[16%] md:pb-[14%]">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="flex gap-4 sm:gap-6"
+        >
+          {/* Try Ubuntu button — overlay on left side of the real UI */}
           <button
             onClick={() => {
               playClick();
               onTry();
             }}
-            className="rounded-xl border border-white/20 bg-white/10 px-8 py-4 lg:px-10 lg:py-5 text-left transition-all hover:bg-white/15 hover:scale-[1.02]"
+            className="group relative rounded-xl border border-white/20 bg-black/40 backdrop-blur-sm px-5 py-3 sm:px-7 sm:py-4 text-left transition-all hover:bg-black/60 hover:border-white/30 hover:scale-[1.03]"
           >
-            <div className="text-sm lg:text-base font-bold text-white">Try {name}</div>
-            <div className="mt-1 text-xs lg:text-sm text-white/50">
-              Use {name} without installing to your computer
+            <div className="flex items-center gap-2">
+              <Download className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
+              <div className="text-sm sm:text-base font-bold text-white">Try Ubuntu</div>
+            </div>
+            <div className="mt-1 text-xs text-white/50 group-hover:text-white/70 transition-colors">
+              Use without installing
             </div>
           </button>
+
+          {/* Install Ubuntu button — overlay on right side of the real UI */}
           <button
             onClick={() => {
               playClick();
               onInstall();
             }}
-            className="rounded-xl px-8 py-4 lg:px-10 lg:py-5 text-left text-white transition-all hover:scale-[1.02]"
+            className="group relative rounded-xl px-5 py-3 sm:px-7 sm:py-4 text-left text-white transition-all hover:scale-[1.03]"
             style={{ background: config.branding.accent }}
           >
-            <div className="text-sm lg:text-base font-bold">Install {name}</div>
-            <div className="mt-1 text-xs lg:text-sm text-white/70">
-              Install {name} alongside (or instead of) your current OS
+            <div className="flex items-center gap-2">
+              <ArrowRight className="w-4 h-4 text-white/90 group-hover:text-white transition-colors" />
+              <div className="text-sm sm:text-base font-bold">Install Ubuntu</div>
+            </div>
+            <div className="mt-1 text-xs text-white/70 group-hover:text-white/90 transition-colors">
+              Install alongside your current OS
             </div>
           </button>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }
