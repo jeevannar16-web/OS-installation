@@ -168,6 +168,8 @@ function SimulationPageInner() {
   const [showNotes, setShowNotes] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showEscHint, setShowEscHint] = useState(false);
+  const autoFullscreenRef = useRef(false);
   const jumpRef = useRef<string | null>(null);
   const historyRef = useRef<string[]>([]);
 
@@ -206,6 +208,18 @@ function SimulationPageInner() {
       send({ type: "START", osId: config.id, path: path as never });
     }
   }, [config, path]);
+
+  /* ── Auto-enter fullscreen on first non-idle state ── */
+  useEffect(() => {
+    if (current !== "idle" && !autoFullscreenRef.current) {
+      autoFullscreenRef.current = true;
+      setPresentationMode(true);
+      document.documentElement.requestFullscreen?.().catch(() => {});
+      setShowEscHint(true);
+      const t = setTimeout(() => setShowEscHint(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [current]);
 
   /* ── Keyboard shortcuts (single handler) ── */
   useEffect(() => {
@@ -645,6 +659,32 @@ function SimulationPageInner() {
                   Got it
                 </button>
               </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══════════════════════════════════════════════════════════
+           ESC HINT — shown when auto-entering fullscreen
+           ═══════════════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {showEscHint && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4 }}
+              className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 rounded-2xl border border-white/10 bg-[#12121a]/95 backdrop-blur-xl px-6 py-4 shadow-2xl"
+            >
+              <div className="h-10 w-10 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0">
+                <span className="text-accent text-lg font-bold">⛶</span>
+              </div>
+              <div>
+                <p className="text-sm text-white/80 font-semibold">You're in fullscreen</p>
+                <p className="text-[11px] text-white/40 mt-0.5">
+                  Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-white/60 text-[10px]">ESC</kbd> to exit · {" "}
+                  <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-white/60 text-[10px]">Enter</kbd> to continue steps
+                </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
