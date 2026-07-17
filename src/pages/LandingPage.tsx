@@ -107,7 +107,7 @@ function HowItWorksDropdown({ open }: { open: boolean }) {
    OUTCOME CARDS — ways to install an OS
    ═══════════════════════════════════════════════════════════════════ */
 type Outcome = "live-usb" | "dual-boot" | "vm" | "practical";
-type SelectedOS = "ubuntu" | "arch";
+type SelectedOS = "ubuntu" | "arch" | "windows";
 
 interface OutcomeInfo {
   id: Outcome;
@@ -219,6 +219,56 @@ const OS_OUTCOMES: Record<SelectedOS, OutcomeInfo[]> = {
       accent: "#f59e0b",
       steps: ["Download", "Flash USB", "Boot", "Follow guide"],
       time: "~15 min",
+      risk: "Real install",
+      sceneCount: 0,
+    },
+  ],
+  windows: [
+    {
+      id: "vm",
+      title: "Virtual Machine",
+      tagline: "Safest first try",
+      description: "Run Windows 11 inside VirtualBox with TPM 2.0 and Secure Boot. No risk to your real files.",
+      icon: <Monitor size={22} strokeWidth={1.5} />,
+      accent: "#0078d4",
+      steps: ["Download ISO", "Create VM", "Enable TPM", "Install", "OOBE"],
+      time: "~15 min",
+      risk: "Zero risk",
+      sceneCount: 12,
+    },
+    {
+      id: "dual-boot",
+      title: "Clean Install",
+      tagline: "Replace or alongside",
+      description: "Install Windows 11 from a bootable USB. Partition your disk and set up from scratch.",
+      icon: <ArrowLeftRight size={22} strokeWidth={1.5} />,
+      accent: "#0078d4",
+      steps: ["Download ISO", "Flash USB", "BIOS Setup", "Windows Setup", "OOBE"],
+      time: "~20 min",
+      risk: "Low risk",
+      sceneCount: 14,
+    },
+    {
+      id: "live-usb",
+      title: "Dual Boot",
+      tagline: "Windows + Linux",
+      description: "Install Windows alongside Linux. Shrink your Linux partition and install Windows side by side.",
+      icon: <Usb size={22} strokeWidth={1.5} />,
+      accent: "#22c55e",
+      steps: ["Download ISO", "Flash USB", "BIOS Setup", "Partition", "Install"],
+      time: "~20 min",
+      risk: "Low risk",
+      sceneCount: 14,
+    },
+    {
+      id: "practical",
+      title: "Practical Guide",
+      tagline: "Real install on your PC",
+      description: "Step-by-step guide with real Windows 11 installation commands and steps you can follow.",
+      icon: <BookOpen size={22} strokeWidth={1.5} />,
+      accent: "#f59e0b",
+      steps: ["Download", "Flash USB", "Boot", "Follow guide"],
+      time: "~20 min",
       risk: "Real install",
       sceneCount: 0,
     },
@@ -394,7 +444,7 @@ export default function LandingPage() {
                 {activeOS?.branding.name}
               </span>
               <span className="text-[10px] text-white/30">•</span>
-              <span className="text-[10px] text-white/30">Free &amp; Open Source</span>
+              <span className="text-[10px] text-white/30">{selectedOS === "windows" ? "Free to try" : "Free & Open Source"}</span>
             </motion.div>
 
             <motion.h1
@@ -437,8 +487,10 @@ export default function LandingPage() {
               </div>
               <p className="text-[11px] text-white/25">
                 {selectedOS === "arch"
-                  ? "Three ways to install Arch Linux — from safest VM to bare metal dual-boot"
-                  : "Three ways to experience Ubuntu — pick one and start the simulation"}
+                  ? "Four ways to install Arch Linux — from practical guide to bare metal dual-boot"
+                  : selectedOS === "windows"
+                    ? "Four ways to install Windows 11 — from safest VM to bare metal clean install"
+                    : "Four ways to experience Ubuntu — pick one and start the simulation"}
               </p>
             </motion.div>
 
@@ -493,7 +545,7 @@ export default function LandingPage() {
                 {OS_LIST.map((o) => {
                   const disabled = !!o.stub;
                   const isActive = o.id === selectedOS;
-                  const available = o.id === "ubuntu" || o.id === "arch";
+                  const available = o.id === "ubuntu" || o.id === "arch" || o.id === "windows";
                   return (
                     <button
                       key={o.id}

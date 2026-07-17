@@ -48,4 +48,13 @@ export const PATHS: PathInfo[] = [
     icon: "📀",
     supported: true,
   },
+  {
+    id: "practical" as InstallPath,
+    name: "Practical Guide",
+    tagline: "Real install",
+    description:
+      "Step-by-step guide with real terminal commands for an actual installation on your hardware.",
+    icon: "📖",
+    supported: true,
+  },
 ];
