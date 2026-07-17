@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useMachine } from "@xstate/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simulationMachine, SIM_SCENES } from "../machines/simulationMachine";
@@ -150,6 +150,7 @@ export default function SimulationPage() {
 
 function SimulationPageInner() {
   const { os, path } = useParams();
+  const navigate = useNavigate();
   const config = getOS(os);
   const { cycleTheme } = useTheme();
   const { current: sceneAdvance } = useSceneAdvance();
@@ -417,7 +418,7 @@ function SimulationPageInner() {
 
   function goBack() {
     if (historyRef.current.length < 2) {
-      send({ type: "RESET" });
+      navigate("/");
       return;
     }
     historyRef.current.pop();
@@ -1037,6 +1038,15 @@ function SimulationPageInner() {
               }`}
             >
               {current === "complete" ? "Restart" : "Next →"}
+            </button>
+
+            {/* Help button — bottom-left */}
+            <button
+              onClick={() => setShowNotes(!showNotes)}
+              className="fixed bottom-4 left-4 z-50 rounded-lg border border-white/10 bg-white/5 backdrop-blur-md px-3 py-1.5 text-[11px] font-medium text-white/60 hover:bg-white/10 hover:text-white/80 transition-all pointer-events-auto"
+              title="Show help for this step"
+            >
+              {showNotes ? "✕ Close" : "? Help"}
             </button>
           </>
         )}

@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Monitor, ArrowLeftRight, Usb, Check } from "lucide-react";
+import { Monitor, ArrowLeftRight, Usb, Check, Search, Info, ArrowRight } from "lucide-react";
 import { PATHS, OS_LIST } from "../data";
 import type { InstallPath } from "../data/types";
 import Footer from "../components/Footer";
@@ -268,10 +268,17 @@ export default function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const [tiltX, setTiltX] = useState(0);
   const [tiltY, setTiltY] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
 
   const canStart = path && os;
   const selectedOS = os ? OS_LIST.find((x) => x.id === os) : null;
   const selectedPath = path ? PATHS.find((x) => x.id === path) : null;
+
+  const filteredOS = OS_LIST.filter((o) =>
+    o.branding.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    o.branding.shortName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Parallax tilt on hero demo card
   const handleMouseMove = useCallback(
@@ -342,8 +349,12 @@ export default function LandingPage() {
             <span className="text-white/90 tracking-tight text-lg">OS Install Simulator</span>
           </div>
           <div className="flex items-center gap-3">
+            <button onClick={() => setShowHelp(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-white/60 hover:bg-white/10 hover:text-white/80 transition-colors">
+              <Info size={14} /> How it works
+            </button>
             <ThemePicker />
-            <span className="text-[10px] uppercase tracking-[0.15em] text-white/30 font-medium">
+            <span className="text-[10px] uppercase tracking-[0.15em] text-white/30 font-medium hidden sm:block">
               Practice · Don't risk
             </span>
           </div>
@@ -400,6 +411,18 @@ export default function LandingPage() {
               >
                 Interactive · Realistic · 100% safe
               </motion.span>
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="mt-4 flex flex-wrap gap-2 justify-center lg:justify-start"
+              >
+                {["BIOS setup", "USB flashing", "Disk partitioning", "OS installer", "Desktop setup"].map((step) => (
+                  <span key={step} className="flex items-center gap-1 rounded-md bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 text-[10px] text-white/40">
+                    <ArrowRight size={8} className="text-accent" />{step}
+                  </span>
+                ))}
+              </motion.div>
               <motion.h1
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -471,13 +494,19 @@ export default function LandingPage() {
           <div className="section-label mb-5">
             Step 2 — Pick an operating system
           </div>
+          <div className="mb-4 relative max-w-xs">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+            <input type="text" placeholder="Search OS..." value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-lg bg-white/5 border border-white/10 pl-9 pr-3 py-2 text-xs text-white/80 outline-none focus:border-accent placeholder:text-white/25 transition-colors" />
+          </div>
           <motion.div
             variants={container}
             initial="hidden"
             animate="show"
             className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"
           >
-            {OS_LIST.map((o) => (
+            {filteredOS.map((o) => (
               <OSCard
                 key={o.id}
                 o={o}
@@ -485,6 +514,11 @@ export default function LandingPage() {
                 onClick={() => setOs(o.id)}
               />
             ))}
+            {filteredOS.length === 0 && (
+              <div className="col-span-full text-center py-8 text-white/30 text-sm">
+                No OS found matching "{searchQuery}"
+              </div>
+            )}
           </motion.div>
         </section>
 
@@ -527,6 +561,64 @@ export default function LandingPage() {
         <div className="flex-1" />
         <Footer />
       </div>
+
+      {/* Help Modal */}
+      <AnimatePresence>
+        {showHelp && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setShowHelp(false)}>
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#12121a] p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-white/90">How it works</h2>
+                <button onClick={() => setShowHelp(false)} className="text-white/40 hover:text-white/70 text-xl">×</button>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { icon: "1️⃣", title: "Choose your path", desc: "Pick Virtual Machine (safest), Dual Boot (real hardware), or Live USB (try without installing)." },
+                  { icon: "2️⃣", title: "Pick an OS", desc: "Select Ubuntu, Windows, Arch, or others. Some are coming soon." },
+                  { icon: "3️⃣", title: "Follow the steps", desc: "Search for the ISO, flash a USB, enter BIOS, partition disks, and run the installer — just like on real hardware." },
+                  { icon: "4️⃣", title: "Learn as you go", desc: "Each step has speaker notes (press B) and a scene navigator (press N) to jump around. Use S for speed mode." },
+                ].map((s) => (
+                  <div key={s.title} className="flex gap-3">
+                    <span className="text-lg shrink-0">{s.icon}</span>
+                    <div>
+                      <div className="text-sm font-semibold text-white/80">{s.title}</div>
+                      <div className="text-xs text-white/40 mt-0.5">{s.desc}</div>
+                    </div>
+                  </div>
+                ))}
+                <div className="border-t border-white/10 pt-4 mt-4">
+                  <div className="text-xs font-semibold text-white/60 mb-2">Keyboard shortcuts</div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    {[
+                      ["Enter / Next", "Advance to next step"],
+                      ["Backspace", "Go back"],
+                      ["N", "Scene navigator"],
+                      ["B", "Speaker notes"],
+                      ["S", "Speed mode"],
+                      ["T", "Change theme"],
+                      ["F", "Fullscreen"],
+                    ].map(([key, desc]) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-mono text-white/60">{key}</kbd>
+                        <span className="text-white/40">{desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setShowHelp(false)}
+                className="mt-5 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
+                Got it, let's start
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
