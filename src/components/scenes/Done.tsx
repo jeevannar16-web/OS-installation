@@ -721,14 +721,14 @@ function AchievementBadge({
 }
 
 /* ── Interactive Checklist ────────────────────────────────────── */
-function StepChecklist({ path }: { path: string }) {
+function StepChecklist({ path, config }: { path: string; config: OSConfig }) {
   const steps = [
     { label: "Downloaded ISO from official website", done: true },
     ...(path === "vm" ? [{ label: "Created VirtualBox VM with proper resources", done: true }] : []),
     ...(path !== "vm" ? [{ label: "Flashed bootable USB with Rufus/Ventoy", done: true }] : []),
     ...(path !== "vm" ? [{ label: "Entered BIOS and set USB as boot device", done: true }] : []),
     ...(path === "dual-boot" ? [{ label: "Shrank Windows partition to create space", done: true }] : []),
-    ...(path === "live-usb" ? [{ label: "Tried Ubuntu in live mode from USB", done: true }] : []),
+    ...(path === "live-usb" ? [{ label: `Tried ${config.branding.name} in live mode from USB`, done: true }] : []),
     ...(path === "vm" ? [{ label: "Mounted ISO and powered on VM", done: true }] : []),
     { label: "Selected language, keyboard, and network", done: true },
     ...(path === "vm" ? [{ label: "Chose 'Erase disk' (virtual disk only)", done: true }] : []),
@@ -926,7 +926,7 @@ export default function Done({
           transition={{ delay: 0.5 }}
           className="rounded-xl border border-white/10 bg-white/5 p-4 sm:p-5"
         >
-          <StepChecklist path={path} />
+          <StepChecklist path={path} config={config} />
         </motion.div>
 
         <motion.div
@@ -1066,7 +1066,7 @@ export default function Done({
                   <div className="bg-[#252536] px-3 py-1.5 text-[8px] sm:text-[9px] text-white/40">Terminal — {config.branding.shortName}</div>
                   <div className="p-2 font-mono text-[7px] sm:text-[8px] leading-relaxed">
                     <div className="text-emerald-400">user@{config.branding.shortName.toLowerCase()}:~$ <span className="text-white/70">neofetch</span></div>
-                    <pre className="text-white/60 mt-1 whitespace-pre">{`${config.branding.name} Linux\n-------------\nOS: ${config.branding.name} 24.04 LTS\nKernel: 6.8.0-41-generic\nUptime: 2 hours, 14 mins\nShell: bash 5.2.21\nDE: GNOME 46\nCPU: Intel i7-12700K (12) @ 3.6GHz\nGPU: NVIDIA RTX 3060\nMemory: 2.1GiB / 16GiB\nDisk: 14G / 256G (6%)`}</pre>
+                    <pre className="text-white/60 mt-1 whitespace-pre">{`${config.branding.name} Linux\n-------------\nOS: ${config.branding.name} ${config.id === "arch" ? "Linux rolling" : config.id === "zorin" ? "17.3" : config.id === "mint" ? "22.1" : "24.04 LTS"}\nKernel: ${config.id === "arch" ? "6.12.4-arch1-1" : "6.8.0-40-generic"}\nUptime: 2 hours, 14 mins\nShell: bash 5.2.21\nDE: ${config.id === "mint" ? "Cinnamon 6.2" : config.id === "zorin" ? "GNOME 43 (Zorin Desktop)" : config.id === "arch" ? "Hyprland" : "GNOME 46"}\nCPU: Intel i7-12700K (12) @ 3.6GHz\nGPU: NVIDIA RTX 3060\nMemory: 2.1GiB / 16GiB\nDisk: 14G / 256G (6%)`}</pre>
                     <div className="text-emerald-400 mt-1">user@{config.branding.shortName.toLowerCase()}:~$ <span className="animate-pulse">▌</span></div>
                   </div>
                   <button onClick={() => setOpenApp(null)} className="w-full border-t border-white/10 py-1 text-[8px] text-white/30 hover:text-white/50">Close</button>
@@ -1097,9 +1097,9 @@ export default function Done({
           <div className="space-y-2 text-xs text-white/50">
             <p>Your VM is ready. Here's what you can do next:</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <a href="https://ubuntu.com/download/desktop" target="_blank" rel="noopener noreferrer"
+              <a href={config.downloadPage.url} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
-                <span>💿</span> Download Ubuntu ISO
+                <span>💿</span> Download {config.branding.shortName} ISO
               </a>
               <a href="https://www.virtualbox.org/wiki/Downloads" target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
@@ -1110,13 +1110,13 @@ export default function Done({
         )}
         {path === "live-usb" && (
           <div className="space-y-2 text-xs text-white/50">
-            <p>You tried Ubuntu without changing anything. When you're ready:</p>
+            <p>You tried {config.branding.name} without changing anything. When you're ready:</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <a href="https://ubuntu.com/download/desktop" target="_blank" rel="noopener noreferrer"
+              <a href={config.downloadPage.url} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
-                <span>💿</span> Download Ubuntu ISO
+                <span>💿</span> Download {config.branding.shortName} ISO
               </a>
-              <a href="https://ubuntu.com/tutorials/install-ubuntu-desktop" target="_blank" rel="noopener noreferrer"
+              <a href={config.downloadPage.url} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
                 <span>📖</span> Real installation guide
               </a>
@@ -1125,18 +1125,16 @@ export default function Done({
         )}
         {path === "dual-boot" && (
           <div className="space-y-2 text-xs text-white/50">
-            <p>Dual boot is set up. Every time you start your PC, GRUB will let you choose between Ubuntu and Windows.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {[
-                { name: "Ubuntu", url: "https://ubuntu.com/download/desktop", icon: "🐧" },
-                { name: "Windows", url: "https://microsoft.com/software-download/windows11", icon: "🪟" },
-                { name: "Arch", url: "https://archlinux.org/download/", icon: "🏔️" },
-              ].map((link) => (
-                <a key={link.name} href={link.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
-                  <span>{link.icon}</span> {link.name} →
-                </a>
-              ))}
+            <p>Dual boot is set up. Every time you start your PC, GRUB will let you choose between {config.branding.name} and Windows.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <a href={config.downloadPage.url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
+                <span>🐧</span> {config.branding.name} →
+              </a>
+              <a href="https://microsoft.com/software-download/windows11" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
+                <span>🪟</span> Windows →
+              </a>
             </div>
           </div>
         )}

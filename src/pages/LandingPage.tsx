@@ -46,7 +46,7 @@ function TypingEffect() {
   return (
     <span className="text-white/40 font-medium inline-block min-w-[140px]">
       {text}
-      <span className="inline-block w-0.5 h-[0.9em] bg-[#E95420] ml-0.5 align-middle animate-pulse" />
+      <span className="inline-block w-0.5 h-[0.9em] bg-white/50 ml-0.5 align-middle animate-pulse" />
     </span>
   );
 }
@@ -54,15 +54,43 @@ function TypingEffect() {
 /* ═══════════════════════════════════════════════════════════════════
    HOW IT WORKS — dropdown in header
    ═══════════════════════════════════════════════════════════════════ */
-const GUIDE_STEPS = [
-  { step: "01", title: "Download the ISO", desc: "Get the Ubuntu 24.04 LTS desktop image from ubuntu.com", img: "/images/ubuntu/02-language.png" },
-  { step: "02", title: "Flash to USB", desc: "Use Rufus, Ventoy, or BalenaEtcher to write the ISO to a USB drive", img: "/images/ubuntu/04-network.webp" },
-  { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/ubuntu/01-try-or-install.png" },
-  { step: "04", title: "Install Ubuntu", desc: "Follow the installer wizard — language, partition, user, done", img: "/images/ubuntu/07-install-type.webp" },
-];
+const GUIDE_STEPS: Record<string, { step: string; title: string; desc: string; img: string }[]> = {
+  ubuntu: [
+    { step: "01", title: "Download the ISO", desc: "Get the Ubuntu 24.04 LTS desktop image from ubuntu.com", img: "/images/ubuntu/02-language.png" },
+    { step: "02", title: "Flash to USB", desc: "Use Rufus, Ventoy, or BalenaEtcher to write the ISO to a USB drive", img: "/images/ubuntu/04-network.webp" },
+    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/ubuntu/01-try-or-install.png" },
+    { step: "04", title: "Install Ubuntu", desc: "Follow the installer wizard — language, partition, user, done", img: "/images/ubuntu/07-install-type.webp" },
+  ],
+  arch: [
+    { step: "01", title: "Download the ISO", desc: "Get the latest Arch Linux image from archlinux.org/download", img: "/images/arch/02-boot-menu.png" },
+    { step: "02", title: "Flash to USB", desc: "Use Rufus, Ventoy, or dd to write the ISO to a USB drive", img: "/images/arch/02-boot-menu.png" },
+    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/arch/02-boot-menu.png" },
+    { step: "04", title: "Install Arch", desc: "Run archinstall and follow the guided installer", img: "/images/arch/04-archinstall.png" },
+  ],
+  windows: [
+    { step: "01", title: "Download the ISO", desc: "Get Windows 11 from microsoft.com/software-download", img: "/images/win11-setup/01-setup-language.webp" },
+    { step: "02", title: "Flash to USB", desc: "Use Rufus or Microsoft Media Creation Tool", img: "/images/win11-setup/01-setup-language.webp" },
+    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/win11-setup/03-install-now.webp" },
+    { step: "04", title: "Install Windows", desc: "Follow the setup wizard — language, partition, account, done", img: "/images/win11-setup/05-install-progress.webp" },
+  ],
+  zorin: [
+    { step: "01", title: "Download the ISO", desc: "Get Zorin OS Core from zorin.com os/download", img: "/images/zorin/02-live-desktop.png" },
+    { step: "02", title: "Flash to USB", desc: "Use Rufus, Ventoy, or BalenaEtcher to write the ISO to a USB drive", img: "/images/zorin/02-live-desktop.png" },
+    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/zorin/03-install-welcome.png" },
+    { step: "04", title: "Install Zorin OS", desc: "Follow the installer wizard — language, partition, user, done", img: "/images/zorin/04-install-type.png" },
+  ],
+  mint: [
+    { step: "01", title: "Download the ISO", desc: "Get Linux Mint from linuxmint.com/download", img: "/images/mint/02-live-desktop.png" },
+    { step: "02", title: "Flash to USB", desc: "Use Rufus, Ventoy, or BalenaEtcher to write the ISO to a USB drive", img: "/images/mint/02-live-desktop.png" },
+    { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/mint/02-live-desktop.png" },
+    { step: "04", title: "Install Linux Mint", desc: "Follow the installer wizard — language, partition, user, done", img: "/images/mint/03-install-welcome.png" },
+  ],
+};
 
-function HowItWorksDropdown({ open }: { open: boolean }) {
+function HowItWorksDropdown({ open, osId }: { open: boolean; osId: string }) {
   if (!open) return null;
+  const steps = GUIDE_STEPS[osId] || GUIDE_STEPS.ubuntu;
+  const osName = OS_LIST.find((o) => o.id === osId)?.branding.name || "Ubuntu";
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
@@ -72,10 +100,10 @@ function HowItWorksDropdown({ open }: { open: boolean }) {
     >
       <div className="px-4 py-3 border-b border-white/10">
         <div className="text-xs font-semibold text-white/60 uppercase tracking-wider">How it works</div>
-        <div className="text-[10px] text-white/30 mt-0.5">4 simple steps to install Ubuntu</div>
+        <div className="text-[10px] text-white/30 mt-0.5">4 simple steps to install {osName}</div>
       </div>
       <div className="p-3 space-y-2">
-        {GUIDE_STEPS.map((s, i) => (
+        {steps.map((s, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, x: -10 }}
@@ -520,7 +548,7 @@ export default function LandingPage() {
                 <ChevronDown size={12} className={`transition-transform ${showGuide ? "rotate-180" : ""}`} />
               </button>
               <AnimatePresence>
-                <HowItWorksDropdown open={showGuide} />
+                <HowItWorksDropdown open={showGuide} osId={selectedOS} />
               </AnimatePresence>
             </div>
             <button

@@ -105,7 +105,7 @@ const SPEAKER_NOTES: Record<string, string> = {
   mount_iso: "Attach the downloaded ISO as a virtual CD/DVD. This is like inserting a physical disc — the VM will boot from it.",
   vm_boot: "Power on the VM. It boots from the attached ISO, just like a real machine booting from USB. You'll see the same installer screens.",
   installing: "The installer copies files, sets up your user account, configures the bootloader. This takes 10-30 minutes on real hardware.",
-  grub_menu: "This is the GRUB bootloader menu. On a dual-boot machine, you choose between Ubuntu and Windows every time you start the PC.",
+  grub_menu: "This is the GRUB bootloader menu. On a dual-boot machine, you choose between your Linux OS and Windows every time you start the PC.",
   oobe: "The OOBE (Out-of-Box Experience) is Windows' first-boot wizard. Walk through region, keyboard, Wi-Fi, account creation, PIN setup, and privacy settings.",
   vm_close: "After installation, shut down the VM. In VirtualBox, you'd remove the ISO from the virtual drive and reboot.",
 };
@@ -387,7 +387,7 @@ function SimulationPageInner() {
       case "installing": return cfg.id === "arch"
         ? <ArchInstall config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} />
         : <Install config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} path={path} />;
-      case "grub_menu": return <GrubMenu onComplete={() => send({ type: "GRUB_DONE" })} />;
+      case "grub_menu": return <GrubMenu config={cfg} onComplete={() => send({ type: "GRUB_DONE" })} />;
       case "oobe": return cfg.id === "windows"
         ? <WindowsOOBE osName={cfg.branding.name} onComplete={() => send({ type: "OOBE_DONE" })} />
         : <Done config={cfg} path={path ?? ""} onBack={goBack} />;

@@ -169,79 +169,99 @@ const ARCH_STEPS: GuideStep[] = [
   },
 ];
 
-/* ─── Ubuntu — standard installer ─── */
-const UBUNTU_STEPS: GuideStep[] = [
-  {
-    title: "Download Ubuntu 24.04 LTS",
-    description: "Get the desktop ISO from ubuntu.com/download/desktop.",
-    kind: "info",
-    image: "/images/ubuntu/02-language.png",
-    tip: "Choose the LTS (Long Term Support) version for stability.",
-  },
-  {
-    title: "Create Bootable USB",
-    description: "Use Rufus (Windows) or Startup Disk Creator (Ubuntu) to flash the ISO to a USB drive (4GB+).",
-    kind: "info",
-    guiAction: "Open Rufus → Select ISO → GPT partition scheme → Start",
-  },
-  {
-    title: "Boot from USB",
-    description: "Restart, enter BIOS (F2/Del/F12), set USB first, save & exit.",
-    kind: "info",
-    image: "/images/ubuntu/01-try-or-install.png",
-    tip: "Select 'Try or Install Ubuntu' from the GRUB menu.",
-  },
-  {
-    title: "Language & Keyboard",
-    description: "Choose your language and keyboard layout in the installer wizard.",
-    kind: "gui",
-    guiAction: "Select English → Continue → Keyboard: English (US) → Continue",
-    image: "/images/ubuntu/02-language.png",
-  },
-  {
-    title: "Network Connection",
-    description: "Connect to WiFi or Ethernet. The installer will check for updates.",
-    kind: "gui",
-    guiAction: "Select your WiFi network → Enter password → Connect → Continue",
-    image: "/images/ubuntu/04-network.webp",
-  },
-  {
-    title: "Installation Type",
-    description: "Choose how to install Ubuntu on your disk.",
-    kind: "gui",
-    guiAction: "Erase disk and install Ubuntu (clean install) — OR — Install alongside Windows (dual-boot)",
-    image: "/images/ubuntu/07-install-type.webp",
-    tip: "For dual-boot, the installer will automatically shrink your Windows partition.",
-  },
-  {
-    title: "Create User",
-    description: "Set your name, computer name, username, and password.",
-    kind: "gui",
-    guiAction: "Your name → Computer name → Username → Password → Continue",
-    image: "/images/ubuntu/11-create-user.png",
-  },
-  {
-    title: "Installation Progress",
-    description: "Sit back while Ubuntu copies files and configures the system.",
-    kind: "info",
-    image: "/images/ubuntu/13-copying-files.png",
-    tip: "This takes 5-15 minutes depending on your hardware.",
-  },
-  {
-    title: "Restart",
-    description: "Remove the USB when prompted, then press Enter to reboot.",
-    kind: "info",
-    image: "/images/ubuntu/11-restart.png",
-    tip: "Ubuntu will show 'Please remove the installation medium, then press Enter'.",
-  },
-  {
-    title: "First Boot",
-    description: "Log in with the user you created. Welcome to Ubuntu!",
-    kind: "info",
-    image: "/images/ubuntu/12-welcome-desktop.png",
-    tip: "Run 'sudo apt update && sudo apt upgrade' after first boot.",
-  },
-];
+/* ─── Dynamic installer steps — OS-aware ─── */
+function getInstallerSteps(config: OSConfig): GuideStep[] {
+  const os = config.branding.name;
+  const short = config.branding.shortName;
+  const imgPrefix = config.id;
+  const imgExt = config.id === "ubuntu" ? "webp" : config.id === "mint" ? "webp" : "png";
+
+  const images = {
+    tryOrInstall: `/images/${imgPrefix}/01-try-or-install.${imgExt}`,
+    language: `/images/${imgPrefix}/02-language.${imgExt}`,
+    network: `/images/${imgPrefix}/04-network.webp`,
+    installType: `/images/${imgPrefix}/07-install-type.webp`,
+    createUser: `/images/${imgPrefix}/11-create-user.png`,
+    copying: `/images/${imgPrefix}/13-copying-files.png`,
+    restart: `/images/${imgPrefix}/11-restart.png`,
+    desktop: `/images/${imgPrefix}/12-welcome-desktop.png`,
+  };
+
+  const updateCmd = config.id === "arch" ? "sudo pacman -Syu" : "sudo apt update && sudo apt upgrade";
+
+  return [
+    {
+      title: `Download ${short}`,
+      description: `Get the desktop ISO from ${short.toLowerCase()}.com.`,
+      kind: "info",
+      image: images.language,
+      tip: config.id === "ubuntu" ? "Choose the LTS (Long Term Support) version for stability." : undefined,
+    },
+    {
+      title: "Create Bootable USB",
+      description: `Use Rufus (Windows) or Startup Disk Creator to flash the ISO to a USB drive (4GB+).`,
+      kind: "info",
+      guiAction: "Open Rufus → Select ISO → GPT partition scheme → Start",
+    },
+    {
+      title: "Boot from USB",
+      description: "Restart, enter BIOS (F2/Del/F12), set USB first, save & exit.",
+      kind: "info",
+      image: images.tryOrInstall,
+      tip: `Select 'Try or Install ${os}' from the GRUB menu.`,
+    },
+    {
+      title: "Language & Keyboard",
+      description: "Choose your language and keyboard layout in the installer wizard.",
+      kind: "gui",
+      guiAction: "Select English → Continue → Keyboard: English (US) → Continue",
+      image: images.language,
+    },
+    {
+      title: "Network Connection",
+      description: "Connect to WiFi or Ethernet. The installer will check for updates.",
+      kind: "gui",
+      guiAction: "Select your WiFi network → Enter password → Connect → Continue",
+      image: images.network,
+    },
+    {
+      title: "Installation Type",
+      description: `Choose how to install ${os} on your disk.`,
+      kind: "gui",
+      guiAction: `Erase disk and install ${os} (clean install) — OR — Install alongside Windows (dual-boot)`,
+      image: images.installType,
+      tip: "For dual-boot, the installer will automatically shrink your Windows partition.",
+    },
+    {
+      title: "Create User",
+      description: "Set your name, computer name, username, and password.",
+      kind: "gui",
+      guiAction: "Your name → Computer name → Username → Password → Continue",
+      image: images.createUser,
+    },
+    {
+      title: "Installation Progress",
+      description: `Sit back while ${os} copies files and configures the system.`,
+      kind: "info",
+      image: images.copying,
+      tip: "This takes 5-15 minutes depending on your hardware.",
+    },
+    {
+      title: "Restart",
+      description: "Remove the USB when prompted, then press Enter to reboot.",
+      kind: "info",
+      image: images.restart,
+      tip: `${os} will show 'Please remove the installation medium, then press Enter'.`,
+    },
+    {
+      title: "First Boot",
+      description: `Log in with the user you created. Welcome to ${os}!`,
+      kind: "info",
+      image: images.desktop,
+      tip: `Run '${updateCmd}' after first boot.`,
+    },
+  ];
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    COPY BUTTON
@@ -278,7 +298,7 @@ export default function PracticalGuide({
   const [stepIdx, setStepIdx] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const steps = config.id === "arch" ? ARCH_STEPS : UBUNTU_STEPS;
+  const steps = config.id === "arch" ? ARCH_STEPS : getInstallerSteps(config);
   const currentStep = steps[stepIdx];
   const isLast = stepIdx >= steps.length - 1;
 

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playClick } from "../shared/sounds";
+import type { OSConfig } from "../../data/types";
 
 type PartitionEntry = {
   device: string;
@@ -15,13 +16,29 @@ const TOTAL_GB = 500;
 const FILESYSTEMS = ["ext4", "xfs", "btrfs", "f2fs", "swap", "FAT32", "NTFS"];
 const MOUNT_POINTS = ["/", "/boot", "/boot/efi", "/home", "/var", "/tmp", "[swap]", "none"];
 
-const PARTITION_IMG: Record<string, string> = {
-  manual: "/images/ubuntu/16-manual-partition.webp",
-  boot: "/images/ubuntu/17-boot-partition.png",
-  root: "/images/ubuntu/18-root-partition.webp",
-  home: "/images/ubuntu/19-home-partition.webp",
-  swap: "/images/ubuntu/20-swap-partition.webp",
-};
+function getPartitionImg(osId: string): Record<string, string> {
+  if (osId === "mint") return {
+    manual: "/images/mint/22-mint-partition.webp",
+    boot: "/images/mint/22-mint-partition.webp",
+    root: "/images/mint/23-mint-create-partition.webp",
+    home: "/images/mint/23-mint-create-partition.webp",
+    swap: "/images/mint/22-mint-partition.webp",
+  };
+  if (osId === "zorin") return {
+    manual: "/images/zorin/11-installer.png",
+    boot: "/images/zorin/11-installer.png",
+    root: "/images/zorin/11-installer.png",
+    home: "/images/zorin/11-installer.png",
+    swap: "/images/zorin/11-installer.png",
+  };
+  return {
+    manual: "/images/ubuntu/16-manual-partition.webp",
+    boot: "/images/ubuntu/17-boot-partition.png",
+    root: "/images/ubuntu/18-root-partition.webp",
+    home: "/images/ubuntu/19-home-partition.webp",
+    swap: "/images/ubuntu/20-swap-partition.webp",
+  };
+}
 
 const DEFAULT_PARTITIONS: PartitionEntry[] = [
   { device: "/dev/sda1", type: "EFI System", fs: "FAT32", sizeGB: 0.5, mount: "/boot/efi", flags: ["boot", "esp"] },
@@ -31,10 +48,12 @@ const DEFAULT_PARTITIONS: PartitionEntry[] = [
 ];
 
 export default function Partition({
+  config,
   onComplete,
   diskShrunk,
   onRebootWindows,
 }: {
+  config: OSConfig;
   onComplete: () => void;
   diskShrunk: boolean;
   onRebootWindows: () => void;
@@ -43,6 +62,8 @@ export default function Partition({
   const [showDialog, setShowDialog] = useState(false);
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [form, setForm] = useState({ sizeGB: 50, fs: "ext4", mount: "/" });
+  const accent = config.branding.accent;
+  const PARTITION_IMG = getPartitionImg(config.id);
 
   const usedGB = partitions.reduce((sum, p) => sum + p.sizeGB, 0);
   const freeGB = Math.max(0, TOTAL_GB - usedGB);
@@ -152,8 +173,8 @@ export default function Partition({
             <div className="max-w-3xl mx-auto mb-2">
               <button disabled={!canAdd} onClick={() => { playClick(); setEditIdx(null); setForm({ sizeGB: Math.min(50, Math.floor(freeGB)), fs: "ext4", mount: "/" }); setShowDialog(true); }}
                 className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-medium transition-colors ${
-                  canAdd ? "border-[#E95420]/30 bg-[#E95420]/5 text-[#E95420] hover:bg-[#E95420]/10" : "border-white/10 bg-white/[0.03] text-white/30 cursor-not-allowed"
-                }`}>
+                  canAdd ? "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]" : "border-white/10 bg-white/[0.03] text-white/30 cursor-not-allowed"
+                }`} style={canAdd ? { borderColor: `${accent}30`, color: accent } : {}}>
                 + Add partition
               </button>
             </div>
@@ -229,9 +250,9 @@ export default function Partition({
           ← Back
         </button>
         <button disabled={!canConfirm} onClick={() => { playClick(); onComplete(); }}
-          className={`rounded-lg px-5 py-2 text-[11px] font-semibold transition-colors ${
-            canConfirm ? "bg-[#E95420] text-white hover:bg-[#c7441a]" : "bg-white/10 text-white/30 cursor-not-allowed"
-          }`}>Install now →</button>
+          className={`rounded-lg px-5 py-2 text-[11px] font-semibold transition-colors text-white ${
+            canConfirm ? "hover:opacity-90" : "bg-white/10 text-white/30 cursor-not-allowed"
+          }`} style={canConfirm ? { background: accent } : {}}>Install now →</button>
       </div>
 
       {/* Create / Edit Dialog */}
@@ -257,19 +278,20 @@ export default function Partition({
                   <label className="block text-[10px] font-medium text-white/60 mb-1">Size (GB)</label>
                   <input type="number" min={1} max={Math.floor(freeGB + (editIdx !== null ? partitions[editIdx].sizeGB : 0))}
                     value={form.sizeGB} onChange={(e) => setForm((p) => ({ ...p, sizeGB: Number(e.target.value) }))}
-                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none focus:border-[#E95420] bg-[#1a1a24]" />
+                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]"
+                    style={{ borderColor: undefined }} />
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium text-white/60 mb-1">Filesystem</label>
                   <select value={form.fs} onChange={(e) => setForm((p) => ({ ...p, fs: e.target.value }))}
-                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none focus:border-[#E95420] bg-[#1a1a24]">
+                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
                     {FILESYSTEMS.map((fs) => <option key={fs} value={fs}>{fs}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium text-white/60 mb-1">Mount point</label>
                   <select value={form.mount} onChange={(e) => setForm((p) => ({ ...p, mount: e.target.value }))}
-                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none focus:border-[#E95420] bg-[#1a1a24]">
+                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
                     {MOUNT_POINTS.map((mp) => <option key={mp} value={mp}>{mp}</option>)}
                   </select>
                 </div>
@@ -278,7 +300,8 @@ export default function Partition({
                 <button onClick={() => { playClick(); setShowDialog(false); setEditIdx(null); }}
                   className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white/60 hover:bg-white/[0.03] transition-colors">Cancel</button>
                 <button onClick={handleSubmit} disabled={form.sizeGB < 1}
-                  className="rounded-lg bg-[#E95420] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#c7441a] transition-colors disabled:opacity-40">
+                  className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
+                  style={{ background: accent }}>
                   {editIdx !== null ? "Save" : "Create"}
                 </button>
               </div>

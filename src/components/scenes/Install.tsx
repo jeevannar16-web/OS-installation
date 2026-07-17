@@ -119,9 +119,9 @@ const KEYBOARD_LAYOUTS = [
   "Français", "Deutsch", "Italiano", "Português (Brasil)", "Dvorak", "Colemak",
 ];
 
-// Real Ubuntu installer feature slides shown during installation
+// Real installer feature slides shown during installation
 const INSTALL_SLIDES = [
-  { title: "Fast and secure", body: "Ubuntu boots in seconds and keeps your data safe with built-in firewall and disk encryption." },
+  { title: "Fast and secure", body: "Boots in seconds and keeps your data safe with built-in firewall and disk encryption." },
   { title: "Productive out of the box", body: "Office suite, email client, web browser, and media player — all pre-installed." },
   { title: "Software Centre", body: "Thousands of free applications available at your fingertips." },
   { title: "Customise your desktop", body: "Themes, fonts, dock position, widgets — make it yours." },
@@ -588,14 +588,14 @@ export default function Install({ config, speed, onComplete, path }: {
                             </div>
                             <button onClick={() => { playClick(); setInstallType("erase"); }}
                               className="w-full rounded-md px-3 py-2 text-[11px] text-left font-medium bg-[#E95420] text-white shadow-lg shadow-[#E95420]">
-                              Erase disk and install Ubuntu
+                              Erase disk and install {getOSName(config.id)}
                             </button>
                           </>
                         ) : (
                           /* Dual-boot / physical: show all options */
                           [
-                            { id: "erase", label: "Erase disk and install Ubuntu" },
-                            { id: "alongside", label: "Install Ubuntu alongside existing OS" },
+                            { id: "erase", label: `Erase disk and install ${getOSName(config.id)}` },
+                            { id: "alongside", label: `Install ${getOSName(config.id)} alongside existing OS` },
                             { id: "something", label: "Something else (manual partitioning)" },
                           ].map((opt) => (
                             <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}

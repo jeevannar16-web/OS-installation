@@ -20,7 +20,7 @@ export default function VmClose({
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
       <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black">
         {/* Real Ubuntu running in VirtualBox screenshot */}
-        <img src="/images/virtualbox/12-ubuntu-running.jpg" alt="Ubuntu running in VirtualBox"
+        <img src="/images/virtualbox/12-ubuntu-running.jpg" alt={`${config.branding.name} running in VirtualBox`}
           className="absolute inset-0 w-full h-full object-contain bg-[#2a2a2b]" />
 
         {/* Success overlay */}
@@ -41,7 +41,7 @@ export default function VmClose({
 
       {/* Bottom nav */}
       <div className="flex items-center justify-between border-t border-white/10 bg-[#1a1a24] px-4 py-2.5 rounded-b-2xl shrink-0">
-        <div className="text-xs text-white/30">✓ Ubuntu installed successfully in VirtualBox</div>
+        <div className="text-xs text-white/30">✓ {config.branding.name} installed successfully in VirtualBox</div>
         <button onClick={onComplete}
           className="rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent/80 transition-colors">
           Close VM →

@@ -31,6 +31,13 @@ function processCommand(cmd: string, osName: string): string {
   return `bash: ${cmd}: command not found`;
 }
 
+const OS_WALLPAPER: Record<string, string> = {
+  ubuntu: "/images/ubuntu/12-welcome-desktop.png",
+  zorin: "/images/zorin/02-live-desktop.png",
+  mint: "/images/mint/02-live-desktop.png",
+  arch: "/images/arch/08-live-login.png",
+};
+
 export default function LiveDesktop({
   config,
   onInstallClick,
@@ -70,7 +77,7 @@ export default function LiveDesktop({
     >
       {/* Real Ubuntu desktop background */}
       <img
-        src="/images/ubuntu/12-welcome-desktop.png"
+        src={OS_WALLPAPER[config.id] || OS_WALLPAPER.ubuntu}
         alt={`${config.branding.name} desktop`}
         className="absolute inset-0 w-full h-full object-cover"
       />
