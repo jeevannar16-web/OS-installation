@@ -19,7 +19,9 @@ function parseSizeGB(s: string) {
   return m ? parseFloat(m[1]) : 0;
 }
 
-/* ─── Rufus ─── */
+/* ═══════════════════════════════════════════════════════════════
+   RUFUS — Real Win32 desktop app UI
+   ═══════════════════════════════════════════════════════════════ */
 function RufusTool({
   config,
   speed,
@@ -38,8 +40,8 @@ function RufusTool({
   const [progress, setProgress] = useState(0);
   const [logLines, setLogLines] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [partitionScheme, setPartitionScheme] = useState<"GPT" | "MBR">("GPT");
+  const [partitionSchemeOpen, setPartitionSchemeOpen] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
   const dur = speed === "fast" ? 1800 : 6000;
 
@@ -99,101 +101,228 @@ function RufusTool({
   const tooSmall = selected && isoGB > 0 && isoGB > selected.sizeGB;
 
   return (
-    <div className="rounded-xl bg-[#f0f0f0] ring-1 ring-black/10 overflow-hidden">
-      <div className="flex items-center gap-2 bg-[#4a8c5c] px-3 lg:px-4 py-2 lg:py-3 text-xs lg:text-sm text-white">
-        <img src="/images/rufus-real.jpg" alt="Rufus" className="h-5 lg:h-6 w-auto rounded-sm opacity-80" />
-        <span className="font-bold text-sm lg:text-base">Rufus</span>
-        <span className="text-white/70">v4.5.2180</span>
+    <div className="mx-auto w-full max-w-2xl rounded-lg overflow-hidden shadow-2xl shadow-black/50" style={{ border: "1px solid #555" }}>
+      {/* ── Windows title bar ── */}
+      <div className="flex items-center justify-between bg-gradient-to-r from-[#0054a6] to-[#0078d4] px-2 py-1 select-none">
+        <div className="flex items-center gap-2">
+          <img src="/images/flash-tools/rufus.jpg" alt="" className="h-4 w-4 rounded-sm" />
+          <span className="text-[11px] text-white font-medium">Rufus v4.5.2180</span>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button className="w-6 h-5 flex items-center justify-center text-white/80 hover:bg-white/10 text-[10px]">─</button>
+          <button className="w-6 h-5 flex items-center justify-center text-white/80 hover:bg-white/10 text-[10px]">□</button>
+          <button className="w-6 h-5 flex items-center justify-center text-white/80 hover:bg-red-500 text-[10px]">✕</button>
+        </div>
       </div>
-      <div className="bg-[#f5f5f5] p-4 lg:p-6 space-y-3">
-        <div className="flex items-center gap-3">
-          <label className="w-20 sm:w-28 text-xs lg:text-sm font-semibold text-gray-600">Device</label>
-          <select value={device} onChange={(e) => { playClick(); setDevice(e.target.value); }}
-            className="flex-1 rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800">
+
+      {/* ── Rufus green header ── */}
+      <div className="bg-gradient-to-b from-[#5ba06c] to-[#4a8c5c] px-4 py-2.5 flex items-center gap-3">
+        <img src="/images/flash-tools/rufus.jpg" alt="Rufus" className="h-8 w-8 rounded" />
+        <div>
+          <div className="text-white font-bold text-sm">Rufus</div>
+          <div className="text-white/70 text-[10px]">FreeDOS / ISO Image</div>
+        </div>
+      </div>
+
+      {/* ── Main form area ── */}
+      <div className="bg-[#f0f0f0] px-4 py-3 space-y-2" style={{ borderTop: "1px solid #ccc" }}>
+        {/* Device */}
+        <div className="flex items-center gap-2">
+          <label className="w-28 text-[11px] text-gray-700 shrink-0">Device</label>
+          <select
+            value={device}
+            onChange={(e) => { playClick(); setDevice(e.target.value); }}
+            className="flex-1 rounded-sm border border-[#7a9bb5] bg-white px-1.5 py-0.5 text-[11px] text-gray-800 focus:outline-none focus:border-[#0078d4]"
+          >
             {USB_DEVICES.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
           </select>
         </div>
-        <div className="flex items-center gap-3">
-          <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">Boot selection</label>
-          <button onClick={() => setPickerOpen(true)}
-            className="flex-1 rounded border border-gray-300 bg-white px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50">
-            {isoFile ?? "Click SELECT to choose an ISO…"}
-          </button>
-          <button onClick={() => setPickerOpen(true)}
-            className="rounded bg-[#4a8c5c] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#3d7a4e]">SELECT</button>
+
+        {/* Boot selection */}
+        <div className="flex items-center gap-2">
+          <label className="w-28 text-[11px] text-gray-700 shrink-0">Boot selection</label>
+          <div className="flex-1 flex items-center gap-1">
+            <button
+              onClick={() => setPickerOpen(true)}
+              className="flex-1 rounded-sm border border-[#7a9bb5] bg-white px-2 py-0.5 text-left text-[11px] text-gray-800 hover:bg-gray-50 truncate"
+            >
+              {isoFile ?? "Disk or ISO image"}
+            </button>
+            <button
+              onClick={() => setPickerOpen(true)}
+              className="rounded-sm bg-[#e1e1e1] border border-[#adadad] px-3 py-0.5 text-[11px] text-gray-800 hover:bg-[#d5d5d5] active:bg-[#c8c8c8] font-semibold shrink-0"
+            >
+              SELECT
+            </button>
+          </div>
         </div>
+
         {tooSmall && (
-          <div className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <div className="rounded-sm border border-amber-400 bg-amber-50 px-2 py-1 text-[10px] text-amber-800">
             ⚠️ ISO ({config.iso.size}) may not fit on {selected!.sizeGB} GB drive.
           </div>
         )}
-        <button onClick={() => setShowAdvanced(!showAdvanced)} className="text-xs text-[#4a8c5c] hover:underline">
-          {showAdvanced ? "▼ Hide" : "▶ Show"} advanced drive properties
-        </button>
-        {showAdvanced && (
-          <div className="space-y-2 rounded border border-gray-200 bg-white/50 p-3">
-            <div className="flex items-center gap-3">
-              <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">Partition scheme</label>
-              <select
-                value={partitionScheme}
-                onChange={(e) => {
-                  playClick();
-                  const val = e.target.value as "GPT" | "MBR";
-                  setPartitionScheme(val);
-                  setRufusPartitionScheme(val);
-                }}
-                className="flex-1 rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800"
-              >
-                <option value="GPT">GPT — UEFI</option>
-                <option value="MBR">MBR — BIOS (Legacy)</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-3">
-              <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">File system</label>
-              <select className="flex-1 rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800">
-                <option>NTFS</option><option>FAT32</option><option>exFAT</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-3">
-              <label className="w-20 sm:w-28 text-xs font-semibold text-gray-600">Cluster size</label>
-              <select className="flex-1 rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800">
-                <option>Default allocation size</option><option>512 bytes</option><option>4096 bytes</option>
-              </select>
-            </div>
+
+        {/* Partition scheme */}
+        <div className="flex items-center gap-2">
+          <label className="w-28 text-[11px] text-gray-700 shrink-0">Partition scheme</label>
+          <div className="relative flex-1">
+            <button
+              onClick={() => setPartitionSchemeOpen(!partitionSchemeOpen)}
+              className="w-full rounded-sm border border-[#7a9bb5] bg-white px-1.5 py-0.5 text-left text-[11px] text-gray-800 hover:bg-gray-50"
+            >
+              {partitionScheme === "GPT" ? "GPT — UEFI" : "MBR — BIOS (Legacy)"} ▾
+            </button>
+            {partitionSchemeOpen && (
+              <div className="absolute z-10 top-full mt-0.5 left-0 w-full bg-white border border-[#7a9bb5] shadow-md rounded-sm">
+                {(["GPT", "MBR"] as const).map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => {
+                      playClick();
+                      setPartitionScheme(v);
+                      setRufusPartitionScheme(v);
+                      setPartitionSchemeOpen(false);
+                    }}
+                    className={`w-full text-left px-2 py-0.5 text-[11px] hover:bg-[#0078d4] hover:text-white ${partitionScheme === v ? "bg-[#0078d4] text-white" : "text-gray-800"}`}
+                  >
+                    {v === "GPT" ? "GPT — UEFI" : "MBR — BIOS (Legacy)"}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-        {(rufusPhase === "flashing" || rufusPhase === "done") && (
-          <div className="space-y-1">
-            <div className="h-2 w-full overflow-hidden rounded bg-gray-200">
-              <div className="h-full rounded bg-[#4a8c5c] transition-all duration-100" style={{ width: `${progress}%` }} />
-            </div>
-            <div className="flex justify-between text-xs lg:text-sm text-gray-500">
-              <span>{rufusPhase === "done" ? "✓ Complete" : `${Math.floor(progress)}%`}</span>
-              <span>{config.iso.size}</span>
-            </div>
+        </div>
+
+        {/* Target system */}
+        <div className="flex items-center gap-2">
+          <label className="w-28 text-[11px] text-gray-700 shrink-0">Target system</label>
+          <div className="flex-1 rounded-sm border border-[#ccc] bg-[#e8e8e8] px-1.5 py-0.5 text-[11px] text-gray-600">
+            {partitionScheme === "GPT" ? "UEFI: Non CSM" : "BIOS (or UEFI-CSM)"}
           </div>
-        )}
-        {rufusPhase === "flashing" && (
-          <div ref={logRef} className="h-36 lg:h-48 overflow-y-auto rounded border border-gray-200 bg-black p-2 font-mono text-xs lg:text-sm leading-relaxed">
+        </div>
+
+        {/* Volume label */}
+        <div className="flex items-center gap-2">
+          <label className="w-28 text-[11px] text-gray-700 shrink-0">Volume label</label>
+          <input
+            type="text"
+            defaultValue={config.iso.filename.replace(/\.iso$/i, "").replace(/[-_]/g, " ").substring(0, 20)}
+            className="flex-1 rounded-sm border border-[#7a9bb5] bg-white px-1.5 py-0.5 text-[11px] text-gray-800 focus:outline-none focus:border-[#0078d4]"
+          />
+        </div>
+
+        {/* File system */}
+        <div className="flex items-center gap-2">
+          <label className="w-28 text-[11px] text-gray-700 shrink-0">File system</label>
+          <select className="flex-1 rounded-sm border border-[#7a9bb5] bg-white px-1.5 py-0.5 text-[11px] text-gray-800 focus:outline-none">
+            <option>NTFS (Default)</option>
+            <option>FAT32</option>
+            <option>exFAT</option>
+            <option>UDF</option>
+          </select>
+        </div>
+
+        {/* Cluster size */}
+        <div className="flex items-center gap-2">
+          <label className="w-28 text-[11px] text-gray-700 shrink-0">Cluster size</label>
+          <select className="flex-1 rounded-sm border border-[#7a9bb5] bg-white px-1.5 py-0.5 text-[11px] text-gray-800 focus:outline-none">
+            <option>Default allocation size</option>
+            <option>512 bytes</option>
+            <option>1024 bytes</option>
+            <option>2048 bytes</option>
+            <option>4096 bytes</option>
+            <option>8192 bytes</option>
+            <option>16 kilobytes</option>
+            <option>32 kilobytes</option>
+            <option>64 kilobytes</option>
+          </select>
+        </div>
+
+        {/* Quick format checkbox */}
+        <div className="flex items-center gap-2 pl-28">
+          <label className="flex items-center gap-1.5 text-[11px] text-gray-700 cursor-pointer">
+            <input type="checkbox" defaultChecked className="accent-[#4a8c5c] w-3 h-3" />
+            Quick format
+          </label>
+          <label className="flex items-center gap-1.5 text-[11px] text-gray-700 cursor-pointer">
+            <input type="checkbox" defaultChecked className="accent-[#4a8c5c] w-3 h-3" />
+            Create extended label and icon files
+          </label>
+        </div>
+      </div>
+
+      {/* ── Progress bar ── */}
+      {(rufusPhase === "flashing" || rufusPhase === "done") && (
+        <div className="bg-[#f0f0f0] px-4 py-1.5">
+          <div className="h-3.5 w-full overflow-hidden rounded-sm bg-white border border-[#b0b0b0]">
+            <div
+              className="h-full rounded-sm transition-all duration-100"
+              style={{
+                width: `${progress}%`,
+                background: rufusPhase === "done"
+                  ? "linear-gradient(to bottom, #7ec87e, #5ba05b)"
+                  : "linear-gradient(to bottom, #7ec87e, #4a8c5c)",
+              }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-gray-600 mt-0.5">
+            <span>{rufusPhase === "done" ? "Ready" : `${Math.floor(progress)}%`}</span>
+            <span>{rufusPhase === "done" ? "Done." : ""}</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Log window during flashing ── */}
+      {rufusPhase === "flashing" && (
+        <div ref={logRef} className="h-32 overflow-y-auto bg-[#f0f0f0] px-4 pb-1">
+          <div className="rounded-sm border border-[#b0b0b0] bg-white p-1.5 font-mono text-[10px] leading-tight min-h-[4rem]">
             {logLines.filter(Boolean).map((l, i) => (
-              <div key={i} className={l.startsWith("ERROR") ? "text-red-400" : (l.includes("✓") || l.includes("Done")) ? "text-emerald-400" : "text-white/70"}>{l}</div>
+              <div key={i} className={l.startsWith("ERROR") ? "text-red-600" : l.includes("✓") || l.includes("Done") ? "text-green-700" : "text-gray-800"}>
+                {l}
+              </div>
             ))}
             <span className="animate-pulse text-[#4a8c5c]">▌</span>
           </div>
-        )}
-        {rufusPhase === "idle" && (
-          <button disabled={!isoFile || !device || !!tooSmall} onClick={() => { if (isoFile && device && !tooSmall) { playClick(); setRufusPhase("flashing"); } }}
-            className="w-full rounded py-2 text-sm font-bold text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-[#4a8c5c] hover:bg-[#3d7a4e]">
-            START
+        </div>
+      )}
+
+      {/* ── Bottom buttons + status bar ── */}
+      <div className="bg-[#f0f0f0] px-4 py-2 flex items-center justify-between" style={{ borderTop: "1px solid #ccc" }}>
+        <div className="flex items-center gap-2">
+          {rufusPhase === "idle" && (
+            <button
+              disabled={!isoFile || !device || !!tooSmall}
+              onClick={() => { if (isoFile && device && !tooSmall) { playClick(); setRufusPhase("flashing"); } }}
+              className="rounded-sm bg-[#e1e1e1] border border-[#adadad] px-5 py-1 text-[11px] font-semibold text-gray-800 hover:bg-[#d5d5d5] active:bg-[#c8c8c8] disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              START
+            </button>
+          )}
+          {rufusPhase === "done" && (
+            <button
+              onClick={() => { playClick(); onComplete(); }}
+              className="rounded-sm bg-[#4a8c5c] border border-[#3d7a4e] px-5 py-1 text-[11px] font-bold text-white hover:bg-[#3d7a4e]"
+            >
+              ✓ Flash Complete — Continue →
+            </button>
+          )}
+          <button className="rounded-sm bg-[#e1e1e1] border border-[#adadad] px-5 py-1 text-[11px] text-gray-800 hover:bg-[#d5d5d5]">
+            CLOSE
           </button>
-        )}
-        {rufusPhase === "done" && (
-          <button onClick={() => { console.log("[FlashUSB] Rufus onComplete clicked"); playClick(); onComplete(); }}
-            className="w-full rounded-lg bg-[#4a8c5c] py-3 text-sm font-bold text-white hover:bg-[#3d7a4e] transition-colors shadow-lg shadow-[#4a8c5c]/20">
-            ✓ Flash Complete — Continue →
-          </button>
-        )}
+        </div>
       </div>
+
+      {/* ── Windows status bar ── */}
+      <div className="bg-[#f0f0f0] border-t border-[#ccc] px-3 py-0.5 text-[10px] text-gray-500">
+        {rufusPhase === "done"
+          ? `1 device found — ${config.iso.filename} ready`
+          : rufusPhase === "flashing"
+            ? `Writing… ${Math.floor(progress)}%`
+            : "1 device found"
+        }
+      </div>
+
       <FilePickerModal open={pickerOpen} title="Select ISO image"
         files={[{ name: config.iso.filename, icon: "💿", size: config.iso.size }]}
         onSelect={(n) => { playClick(); setIsoFile(n); setRufusPhase("idle"); }}
@@ -202,12 +331,16 @@ function RufusTool({
   );
 }
 
-/* ─── Ventoy ─── */
+/* ═══════════════════════════════════════════════════════════════
+   VENTOY — Real Ventoy2Disk Win32 app UI
+   ═══════════════════════════════════════════════════════════════ */
 function VentoyTool({ config, speed, onComplete }: { config: OSConfig; speed: "normal" | "fast"; onComplete: () => void }) {
   const { register: registerAdvance } = useSceneAdvance();
-  const [phase, setPhase] = useState<"idle" | "installing" | "copying" | "done">("idle");
+  const [phase, setPhase] = useState<"idle" | "confirming" | "installing" | "copying" | "done">("idle");
   const [progress, setProgress] = useState(0);
-  const [over, setOver] = useState(false);
+  const [activeTab, setActiveTab] = useState<"ventoy" | "option" | "configure" | "donate">("ventoy");
+  const [copiedFile, setCopiedFile] = useState(false);
+  const [overDrop, setOverDrop] = useState(false);
   const installDur = speed === "fast" ? 800 : 2500;
   const copyDur = speed === "fast" ? 600 : 1800;
 
@@ -238,53 +371,248 @@ function VentoyTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
     }
   }, [phase, registerAdvance, onComplete]);
 
+  const tabs = [
+    { id: "ventoy" as const, label: "Ventoy" },
+    { id: "option" as const, label: "Option" },
+    { id: "configure" as const, label: "Configure" },
+    { id: "donate" as const, label: "Donate" },
+  ];
+
   return (
-    <div className="rounded-xl bg-[#1a1a2e] ring-1 ring-white/10 overflow-hidden p-5 space-y-4">
-      <div className="flex items-center gap-2 text-white/90 text-sm font-semibold"><span className="text-lg">📦</span> Ventoy</div>
-      {phase === "idle" && (
-        <button onClick={() => { playClick(); setPhase("installing"); }}
-          className="w-full rounded-lg bg-accent px-4 py-3 text-sm font-bold text-white hover:bg-accent-soft transition-colors">Install Ventoy to USB</button>
-      )}
-      {phase === "installing" && (
-        <div className="space-y-2">
-          <div className="text-xs text-white/60">Installing Ventoy to USB drive…</div>
-          <div className="h-2 w-full overflow-hidden rounded bg-white/10">
-            <div className="h-full rounded bg-accent transition-all duration-100" style={{ width: `${progress}%` }} />
-          </div>
+    <div className="mx-auto w-full max-w-xl rounded-lg overflow-hidden shadow-2xl shadow-black/50" style={{ border: "1px solid #888" }}>
+      {/* ── Windows title bar ── */}
+      <div className="flex items-center justify-between bg-gradient-to-r from-[#0054a6] to-[#0078d4] px-2 py-1 select-none">
+        <div className="flex items-center gap-2">
+          <img src="/images/flash-tools/ventoy.png" alt="" className="h-4 w-4 rounded-sm" />
+          <span className="text-[11px] text-white font-medium">Ventoy2Disk (USB) — {USB_DEVICES[0].short}</span>
         </div>
-      )}
-      {phase === "copying" && (
-        <div className="space-y-3">
-          <div className="text-xs text-white/50">Ventoy is installed — just copy the ISO.</div>
-          <div className="flex flex-col sm:flex-row gap-6 items-start">
-            <div className="flex w-24 flex-col items-center gap-1">
-              <div className="flex h-16 w-16 items-center justify-center rounded-lg text-3xl shadow-lg" style={{ background: `${config.branding.accent}22`, border: `1px solid ${config.branding.accent}55` }}>💿</div>
-              <div className="w-24 break-words text-center text-xs lg:text-sm text-white/70">{config.iso.filename}</div>
-            </div>
-            <div onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
-              onDrop={(e) => { e.preventDefault(); setOver(false); setProgress(0); playUsbConnect(); setPhase("copying"); }}
-              className={`flex h-24 w-40 items-center justify-center rounded-xl border-2 border-dashed transition-colors ${over ? "border-accent bg-accent/20" : "border-white/20 bg-white/5"}`}>
-              <div className="text-center"><div className="text-2xl">🔌</div><div className="text-xs lg:text-sm text-white/50 mt-1">{over ? "Release to copy" : "Drop ISO here"}</div></div>
-            </div>
-          </div>
-          {phase === "copying" && (
-            <div className="h-2 w-full overflow-hidden rounded bg-white/10">
-              <div className="h-full rounded bg-emerald-500 transition-all duration-100" style={{ width: `${progress}%` }} />
-            </div>
-          )}
+        <div className="flex items-center gap-0.5">
+          <button className="w-6 h-5 flex items-center justify-center text-white/80 hover:bg-white/10 text-[10px]">─</button>
+          <button className="w-6 h-5 flex items-center justify-center text-white/80 hover:bg-white/10 text-[10px]">□</button>
+          <button className="w-6 h-5 flex items-center justify-center text-white/80 hover:bg-red-500 text-[10px]">✕</button>
         </div>
-      )}
-      {phase === "done" && (
-        <button onClick={() => { console.log("[FlashUSB] Ventoy onComplete clicked"); playClick(); onComplete(); }}
-          className="w-full rounded-lg bg-emerald-500 py-3 text-sm font-bold text-white hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">
-          ✓ ISO copied — Continue →
-        </button>
-      )}
+      </div>
+
+      {/* ── Tabs ── */}
+      <div className="bg-[#e8e8e8] px-2 pt-1.5 flex gap-0 border-b border-[#999]">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => { playClick(); setActiveTab(t.id); }}
+            className={`px-4 py-1 text-[11px] font-medium border border-b-0 rounded-t-sm ${
+              activeTab === t.id
+                ? "bg-white border-[#999] text-gray-800 relative z-10 -mb-px"
+                : "bg-[#d4d4d4] border-transparent text-gray-600 hover:bg-[#dcdcdc]"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Content area ── */}
+      <div className="bg-white px-4 py-3 space-y-3">
+        {activeTab === "ventoy" && (
+          <>
+            {/* Device info */}
+            <div className="flex items-center gap-2">
+              <img src="/images/flash-tools/ventoy.png" alt="" className="h-5 w-5" />
+              <span className="text-[11px] font-semibold text-gray-800">
+                Ventoy2Disk
+              </span>
+            </div>
+
+            {/* Device selector */}
+            <div className="flex items-center gap-2">
+              <label className="text-[11px] text-gray-600 shrink-0">Device:</label>
+              <select className="flex-1 rounded-sm border border-[#7a9bb5] bg-white px-1.5 py-0.5 text-[11px] text-gray-800">
+                {USB_DEVICES.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
+              </select>
+            </div>
+
+            {/* Check device checkbox */}
+            <label className="flex items-center gap-1.5 text-[11px] text-gray-700 cursor-pointer">
+              <input type="checkbox" defaultChecked className="accent-[#28a745] w-3 h-3" />
+              Check device in list
+            </label>
+
+            {/* Install / Update buttons */}
+            <div className="flex items-center gap-3 pt-1">
+              {(phase === "idle" || phase === "confirming") && (
+                <>
+                  <button
+                    onClick={() => {
+                      if (phase === "idle") {
+                        playClick();
+                        setPhase("confirming");
+                      } else {
+                        playClick();
+                        setPhase("installing");
+                      }
+                    }}
+                    className="rounded-sm bg-[#e1e1e1] border border-[#adadad] px-6 py-1.5 text-[11px] font-semibold text-gray-800 hover:bg-[#d5d5d5] active:bg-[#c8c8c8]"
+                  >
+                    Install
+                  </button>
+                  <button
+                    onClick={() => { playClick(); setPhase("confirming"); }}
+                    className="rounded-sm bg-[#e1e1e1] border border-[#adadad] px-6 py-1.5 text-[11px] text-gray-800 hover:bg-[#d5d5d5] active:bg-[#c8c8c8]"
+                  >
+                    Update
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Confirmation dialog */}
+            {phase === "confirming" && (
+              <div className="rounded border border-amber-300 bg-amber-50 p-3 space-y-2">
+                <div className="text-[11px] text-gray-800 font-semibold">⚠️ Warning</div>
+                <div className="text-[10px] text-gray-600">
+                  The device will be formatted and all data will be destroyed. Continue?
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { playClick(); setPhase("idle"); }}
+                    className="rounded-sm bg-[#e1e1e1] border border-[#adadad] px-4 py-0.5 text-[10px] text-gray-800 hover:bg-[#d5d5d5]"
+                  >
+                    No
+                  </button>
+                  <button
+                    onClick={() => { playClick(); setPhase("installing"); }}
+                    className="rounded-sm bg-[#e1e1e1] border border-[#adadad] px-4 py-0.5 text-[10px] text-gray-800 hover:bg-[#d5d5d5]"
+                  >
+                    Yes
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Progress bar */}
+            {(phase === "installing" || phase === "copying") && (
+              <div className="space-y-1">
+                <div className="text-[10px] text-gray-600">
+                  {phase === "installing" ? "Installing Ventoy to USB drive…" : "Ventoy installed. Copy ISO files to USB."}
+                </div>
+                <div className="h-3 w-full overflow-hidden rounded-sm bg-white border border-[#b0b0b0]">
+                  <div
+                    className="h-full rounded-sm transition-all duration-100"
+                    style={{
+                      width: `${progress}%`,
+                      background: "linear-gradient(to bottom, #5bc0de, #28a745)",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Done */}
+            {phase === "done" && (
+              <div className="space-y-2">
+                <div className="text-[11px] text-green-700 font-semibold">✓ Ventoy installed successfully!</div>
+                <button
+                  onClick={() => { playClick(); onComplete(); }}
+                  className="w-full rounded-sm bg-[#4a8c5c] border border-[#3d7a4e] py-1.5 text-[11px] font-bold text-white hover:bg-[#3d7a4e]"
+                >
+                  ✓ Continue →
+                </button>
+              </div>
+            )}
+
+            {/* ISO copy area (shown after install) */}
+            {phase === "copying" && (
+              <div className="space-y-2">
+                <div className="text-[10px] text-gray-500">Drag your ISO file to the USB drive:</div>
+                <div className="flex gap-4 items-center">
+                  <div className="w-16 h-16 rounded-lg border border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-0.5">
+                    <span className="text-xl">💿</span>
+                    <span className="text-[8px] text-gray-500 text-center leading-tight px-1 break-all max-w-[60px]">{config.iso.filename.substring(0, 15)}</span>
+                  </div>
+                  <div className="text-xl text-gray-400">→</div>
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setOverDrop(true); }}
+                    onDragLeave={() => setOverDrop(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setOverDrop(false);
+                      playUsbConnect();
+                      setCopiedFile(true);
+                      setProgress(0);
+                    }}
+                    className={`w-32 h-16 rounded-lg border-2 border-dashed flex items-center justify-center transition-colors cursor-pointer ${
+                      overDrop ? "border-[#28a745] bg-green-50" : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                    }`}
+                  >
+                    <span className="text-[10px] text-gray-500">{overDrop ? "Release" : "Drop ISO here"}</span>
+                  </div>
+                </div>
+                {copiedFile && (
+                  <div className="h-3 w-full overflow-hidden rounded-sm bg-white border border-[#b0b0b0]">
+                    <div
+                      className="h-full rounded-sm bg-[#28a745] transition-all duration-100"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Ventoy info (default tab content) */}
+            {phase === "idle" && (
+              <div className="mt-3 rounded border border-gray-200 p-2 font-mono text-[9px] text-gray-600 leading-relaxed bg-gray-50 whitespace-pre-wrap max-h-28 overflow-y-auto">
+{`Ventoy2Disk 2.1 (r2140)
+=====================================
+Ventoy:  2.1.0000.00
+License: GNU GPL v3
+=====================================
+Ventoy is an open source tool to create bootable USB drive for ISO/WIM/IMG/VHD(x)/EFI files.
+With Ventoy, you don't need to format the disk again and again, you just need to copy the ISO/WIM/IMG files to the USB drive and boot directly.
+
+Copyright (c) 2020-2024 Aventoy Technology`}
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === "option" && (
+          <div className="space-y-2 py-2">
+            <label className="flex items-center gap-2 text-[11px] text-gray-700 cursor-pointer">
+              <input type="checkbox" defaultChecked className="accent-[#28a745] w-3 h-3" />
+              Secure Boot Support
+            </label>
+            <label className="flex items-center gap-2 text-[11px] text-gray-700 cursor-pointer">
+              <input type="checkbox" className="accent-[#28a745] w-3 h-3" />
+              Partition Style — MBR
+            </label>
+            <label className="flex items-center gap-2 text-[11px] text-gray-700 cursor-pointer">
+              <input type="checkbox" defaultChecked className="accent-[#28a745] w-3 h-3" />
+              Longest Path (increase max ISO path length)
+            </label>
+            <div className="text-[10px] text-gray-500 pt-2">Note: Options only apply during Install (not Update).</div>
+          </div>
+        )}
+
+        {activeTab === "configure" && (
+          <div className="py-4 text-center text-[11px] text-gray-500">
+            <div className="text-lg mb-2">⚙️</div>
+            No additional configuration required for basic use.
+          </div>
+        )}
+
+        {activeTab === "donate" && (
+          <div className="py-4 text-center text-[11px] text-gray-500">
+            <div className="text-lg mb-2">❤️</div>
+            Ventoy is free and open source. If you find it useful, consider supporting the developer.
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-/* ─── BalenaEtcher ─── */
+/* ═══════════════════════════════════════════════════════════════
+   BALENA ETCHER — Real Electron dark UI
+   ═══════════════════════════════════════════════════════════════ */
 function EtcherTool({ config, speed, onComplete }: { config: OSConfig; speed: "normal" | "fast"; onComplete: () => void }) {
   const { register: registerAdvance } = useSceneAdvance();
   const [etcherPhase, setEtcherPhase] = useState<"pick_file" | "pick_target" | "flashing" | "done">("pick_file");
@@ -316,55 +644,189 @@ function EtcherTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
     }
   }, [etcherPhase, registerAdvance, onComplete]);
 
-  const steps = [
-    { label: "Flash from file", done: !!selectedFile, onClick: () => setPickerOpen(true), icon: "📁" },
-    { label: "Select target", done: !!selectedTarget, onClick: () => { if (selectedFile) setEtcherPhase("pick_target"); }, icon: "🎯", disabled: !selectedFile },
-    { label: "Flash!", done: false, onClick: () => { if (selectedFile && selectedTarget) { playClick(); setEtcherPhase("flashing"); } }, icon: "⚡", disabled: !selectedFile || !selectedTarget },
-  ];
+  const canFlash = selectedFile && selectedTarget;
 
   return (
-    <div className="rounded-xl bg-[#1a1a2e] ring-1 ring-white/10 overflow-hidden p-5 space-y-4">
-      <div className="flex items-center gap-2 text-white/90 text-sm font-semibold"><span className="text-lg">⚗️</span> BalenaEtcher</div>
-      <div className="flex gap-3">
-        {steps.map((s, i) => (
-          <button key={i} onClick={() => { if (!s.disabled) playClick(); s.onClick(); }} disabled={s.disabled}
-            className={`flex-1 rounded-xl border p-3 text-center text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${s.done ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"}`}>
-            <div className="text-xl mb-1">{s.icon}</div>{s.done ? "✓ " : ""}{s.label}
-          </button>
-        ))}
+    <div className="mx-auto w-full max-w-2xl rounded-xl overflow-hidden shadow-2xl shadow-black/50" style={{ background: "linear-gradient(180deg, #1a1a2e 0%, #12121a 100%)" }}>
+      {/* ── Title bar ── */}
+      <div className="flex items-center justify-between bg-[#0d0d14] px-4 py-2 border-b border-white/[0.06]">
+        <div className="flex items-center gap-2">
+          <img src="/images/flash-tools/etcher.jpg" alt="" className="h-4 w-4 rounded" />
+          <span className="text-[11px] text-white/70 font-medium">balenaEtcher</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+          <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+          <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+        </div>
       </div>
-      {etcherPhase === "pick_target" && (
-        <div className="space-y-2">
-          <div className="text-xs text-white/50">Select target drive:</div>
-          {USB_DEVICES.map((d) => (
-            <button key={d.id} onClick={() => { playClick(); setSelectedTarget(d.id); setEtcherPhase("pick_file"); }}
-              className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${selectedTarget === d.id ? "border-accent bg-accent/20 text-white" : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"}`}>
-              <div className="flex items-center gap-2"><span>🔌</span><span className="font-medium">{d.label}</span></div>
-            </button>
-          ))}
-        </div>
-      )}
-      {etcherPhase === "flashing" && (
-        <div className="flex items-center gap-3">
-          <div className="relative h-12 w-12">
-            <svg className="h-12 w-12 -rotate-90" viewBox="0 0 48 48">
-              <circle cx="24" cy="24" r="20" fill="none" stroke="white" strokeOpacity="0.1" strokeWidth="4" />
-              <circle cx="24" cy="24" r="20" fill="none" stroke="#6c5ce7" strokeWidth="4"
-                strokeDasharray={`${2 * Math.PI * 20}`}
-                strokeDashoffset={`${2 * Math.PI * 20 * (1 - progress / 100)}`}
-                strokeLinecap="round" />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center text-xs lg:text-sm font-bold text-white">{Math.floor(progress)}%</div>
+
+      {/* ── Main content ── */}
+      <div className="px-6 py-8">
+        {/* ── Three-step flow (idle state) ── */}
+        {etcherPhase !== "flashing" && etcherPhase !== "done" && (
+          <>
+            <div className="flex items-center gap-4">
+              {/* Step 1: Flash from file */}
+              <button
+                onClick={() => setPickerOpen(true)}
+                className={`flex-1 rounded-xl p-5 text-center transition-all border ${
+                  selectedFile
+                    ? "border-emerald-500/40 bg-emerald-500/[0.08]"
+                    : "border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20"
+                }`}
+              >
+                <div className={`text-3xl mb-2 ${selectedFile ? "text-emerald-400" : "text-white/40"}`}>
+                  {selectedFile ? "✓" : "📁"}
+                </div>
+                <div className="text-[11px] font-semibold text-white/80">
+                  {selectedFile ? "Flash from file" : "Flash from file"}
+                </div>
+                {selectedFile && (
+                  <div className="mt-1.5 text-[10px] text-emerald-400/80 truncate">{selectedFile}</div>
+                )}
+                {!selectedFile && (
+                  <div className="mt-1 text-[10px] text-white/30">Select an image to flash</div>
+                )}
+              </button>
+
+              {/* Arrow */}
+              <div className="text-white/15 text-xl">›</div>
+
+              {/* Step 2: Select target */}
+              <button
+                onClick={() => { if (selectedFile) setEtcherPhase("pick_target"); }}
+                disabled={!selectedFile}
+                className={`flex-1 rounded-xl p-5 text-center transition-all border ${
+                  !selectedFile
+                    ? "border-white/5 bg-white/[0.02] opacity-40 cursor-not-allowed"
+                    : selectedTarget
+                      ? "border-emerald-500/40 bg-emerald-500/[0.08]"
+                      : "border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20"
+                }`}
+              >
+                <div className={`text-3xl mb-2 ${selectedTarget ? "text-emerald-400" : "text-white/40"}`}>
+                  {selectedTarget ? "✓" : "🎯"}
+                </div>
+                <div className="text-[11px] font-semibold text-white/80">Select target</div>
+                {selectedTarget && (
+                  <div className="mt-1.5 text-[10px] text-emerald-400/80">
+                    {USB_DEVICES.find((d) => d.id === selectedTarget)?.short}
+                  </div>
+                )}
+                {!selectedTarget && (
+                  <div className="mt-1 text-[10px] text-white/30">Select a drive to flash to</div>
+                )}
+              </button>
+
+              {/* Arrow */}
+              <div className="text-white/15 text-xl">›</div>
+
+              {/* Step 3: Flash! */}
+              <button
+                onClick={() => { if (canFlash) { playClick(); setEtcherPhase("flashing"); } }}
+                disabled={!canFlash}
+                className={`flex-1 rounded-xl p-5 text-center transition-all border ${
+                  !canFlash
+                    ? "border-white/5 bg-white/[0.02] opacity-40 cursor-not-allowed"
+                    : "border-[#6c5ce7]/40 bg-[#6c5ce7]/[0.1] hover:bg-[#6c5ce7]/[0.2] hover:border-[#6c5ce7]/60 cursor-pointer"
+                }`}
+              >
+                <div className={`text-3xl mb-2 ${canFlash ? "text-[#6c5ce7]" : "text-white/40"}`}>⚡</div>
+                <div className="text-[11px] font-semibold text-white/80">Flash!</div>
+                <div className="mt-1 text-[10px] text-white/30">
+                  {canFlash ? "Ready to flash" : "Complete steps 1 & 2 first"}
+                </div>
+              </button>
+            </div>
+
+            {/* Speed selector hint */}
+            <div className="mt-6 text-center text-[10px] text-white/20">
+              balenaEtcher — {config.iso.filename}
+            </div>
+          </>
+        )}
+
+        {/* ── Pick target overlay ── */}
+        {etcherPhase === "pick_target" && (
+          <div className="mt-4 space-y-2">
+            <div className="text-xs text-white/50 mb-2">Select target drive:</div>
+            {USB_DEVICES.map((d) => (
+              <button
+                key={d.id}
+                onClick={() => { playClick(); setSelectedTarget(d.id); setEtcherPhase("pick_file"); }}
+                className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${
+                  selectedTarget === d.id
+                    ? "border-[#6c5ce7] bg-[#6c5ce7]/20 text-white"
+                    : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>🔌</span>
+                  <span className="font-medium">{d.label}</span>
+                </div>
+              </button>
+            ))}
           </div>
-          <div><div className="text-sm text-white/80">Flashing…</div><div className="text-xs text-white/40">{config.iso.filename}</div></div>
-        </div>
-      )}
-      {etcherPhase === "done" && (
-        <button onClick={() => { console.log("[FlashUSB] Etcher onComplete clicked"); playClick(); onComplete(); }}
-          className="w-full rounded-lg bg-emerald-500 py-3 text-sm font-bold text-white hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">
-          ✓ Flash Complete — Continue →
-        </button>
-      )}
+        )}
+
+        {/* ── Flashing progress ── */}
+        {etcherPhase === "flashing" && (
+          <div className="flex flex-col items-center py-8 space-y-6">
+            {/* Circular progress */}
+            <div className="relative h-40 w-40">
+              <svg className="h-40 w-40 -rotate-90" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="70" fill="none" stroke="white" strokeOpacity="0.06" strokeWidth="8" />
+                <circle
+                  cx="80" cy="80" r="70" fill="none" stroke="#6c5ce7" strokeWidth="8"
+                  strokeDasharray={`${2 * Math.PI * 70}`}
+                  strokeDashoffset={`${2 * Math.PI * 70 * (1 - progress / 100)}`}
+                  strokeLinecap="round"
+                  className="transition-all duration-100"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="text-3xl font-bold text-white">{Math.floor(progress)}%</div>
+                <div className="text-[10px] text-white/40 mt-1">Flashing…</div>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <div className="text-sm text-white/80">{config.iso.filename}</div>
+              <div className="text-[10px] text-white/40 mt-0.5">
+                → {USB_DEVICES.find((d) => d.id === selectedTarget)?.label}
+              </div>
+            </div>
+
+            {/* Etcher reference image */}
+            <img
+              src="/images/flash-tools/etcher.jpg"
+              alt="BalenaEtcher"
+              className="h-16 w-auto rounded-lg opacity-30"
+            />
+          </div>
+        )}
+
+        {/* ── Done ── */}
+        {etcherPhase === "done" && (
+          <div className="flex flex-col items-center py-8 space-y-6">
+            <div className="h-24 w-24 rounded-full bg-emerald-500/20 border-2 border-emerald-500/50 flex items-center justify-center">
+              <span className="text-4xl text-emerald-400">✓</span>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-semibold text-white">Flash complete!</div>
+              <div className="text-sm text-white/50 mt-1">{config.iso.filename}</div>
+            </div>
+            <button
+              onClick={() => { playClick(); onComplete(); }}
+              className="rounded-xl bg-emerald-500 px-8 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 transition-colors"
+            >
+              ✓ Continue →
+            </button>
+          </div>
+        )}
+      </div>
+
       <FilePickerModal open={pickerOpen} title="Select image to flash"
         files={[{ name: config.iso.filename, icon: "💿", size: config.iso.size }]}
         onSelect={(n) => { playClick(); setSelectedFile(n); setEtcherPhase("pick_file"); }}
@@ -373,7 +835,9 @@ function EtcherTool({ config, speed, onComplete }: { config: OSConfig; speed: "n
   );
 }
 
-/* ─── Main FlashUSB Component ─── */
+/* ═══════════════════════════════════════════════════════════════
+   MAIN FlashUSB COMPONENT
+   ═══════════════════════════════════════════════════════════════ */
 export default function FlashUSB({
   config,
   speed,
@@ -404,8 +868,8 @@ export default function FlashUSB({
           <div className="relative z-10 p-8 lg:p-10">
             <div className="text-center mb-6">
               <div className="text-xs lg:text-sm uppercase tracking-widest text-amber-300/40 font-medium">Step 1</div>
-              <h2 className="mt-2 text-xl lg:text-2xl xl:text-3xl font-bold text-white">Plug in your USB drive</h2>
-              <p className="mt-2 text-sm lg:text-base text-white/40">Drag the USB stick onto the computer port.</p>
+              <h2 className="mt-2 text-xl lg:text-2xl xl:text-3xl font-bold text-white text-center">Plug in your USB drive</h2>
+              <p className="mt-2 text-sm lg:text-base text-white/40 text-center">Drag the USB stick onto the computer port.</p>
             </div>
             <div className="relative flex flex-col sm:flex-row items-center justify-center gap-12 sm:gap-24 py-8">
               <motion.div draggable onDragStart={() => {}} onDragEnd={() => {}}
@@ -458,15 +922,23 @@ export default function FlashUSB({
         <div className="space-y-4">
           <div className="text-center mb-4">
             <div className="text-sm lg:text-base uppercase tracking-widest text-white/40">Step 2</div>
-            <h2 className="mt-1 text-xl lg:text-2xl xl:text-3xl font-bold text-white">Choose your flashing tool</h2>
+            <h2 className="mt-1 text-xl lg:text-2xl xl:text-3xl font-bold text-white text-center">Choose your flashing tool</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
             {config.flashers.map((t) => {
               const ok = SUPPORTED_TOOLS.has(t.id);
+              const isRufus = t.id === "rufus";
+              const isVentoy = t.id === "ventoy";
+              const isEtcher = t.id === "balena";
               return (
                 <button key={t.id} onClick={() => { playClick(); setTool(ok ? (t.id as typeof tool) : "unsupported"); }}
-                  className="rounded-xl border border-white/10 bg-white/5 p-4 lg:p-6 text-center transition-all hover:bg-white/10">
-                  <div className="text-2xl lg:text-4xl mb-2">{t.id === "rufus" ? "🟢" : t.id === "ventoy" ? "📦" : t.id === "balena" ? "⚗️" : "🔧"}</div>
+                  className="rounded-xl border border-white/10 bg-white/5 p-4 lg:p-6 text-center transition-all hover:bg-white/10 group">
+                  <div className="w-16 h-16 mx-auto mb-3 rounded-lg overflow-hidden border border-white/10 group-hover:border-white/20 transition-colors">
+                    {isRufus && <img src="/images/flash-tools/rufus.jpg" alt="Rufus" className="w-full h-full object-cover" />}
+                    {isVentoy && <img src="/images/flash-tools/ventoy.png" alt="Ventoy" className="w-full h-full object-cover" />}
+                    {isEtcher && <img src="/images/flash-tools/etcher.jpg" alt="BalenaEtcher" className="w-full h-full object-cover" />}
+                    {!isRufus && !isVentoy && !isEtcher && <div className="w-full h-full flex items-center justify-center text-2xl bg-white/5">🔧</div>}
+                  </div>
                   <div className="text-sm lg:text-base font-bold text-white/90">{t.name}</div>
                   <div className="mt-1 text-xs lg:text-sm text-white/50">{t.note}</div>
                   {!ok && <div className="mt-2 text-xs lg:text-sm text-amber-400/80 font-medium">Coming soon</div>}

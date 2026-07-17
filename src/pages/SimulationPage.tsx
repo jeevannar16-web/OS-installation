@@ -954,13 +954,21 @@ function SimulationPageInner() {
               document.documentElement.requestFullscreen?.().catch(() => {});
               setFullscreenPrompt(false);
             }}
-            className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer group"
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md cursor-pointer group px-4"
           >
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#12121a]/90 px-10 py-8 shadow-2xl group-hover:border-accent/30 transition-colors">
-              <span className="text-4xl">▶</span>
-              <div className="text-center">
-                <p className="text-white/90 text-lg font-semibold">Click to start in fullscreen</p>
-                <p className="text-white/40 text-sm mt-1">Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/60 font-mono text-xs">ESC</kbd> to exit anytime</p>
+            <div className="flex flex-col items-center gap-5 rounded-2xl border border-white/10 bg-[#12121a]/95 px-8 sm:px-12 py-8 sm:py-10 shadow-2xl group-hover:border-accent/30 transition-colors max-w-md w-full">
+              <div className="w-14 h-14 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center">
+                <span className="text-2xl text-accent">▶</span>
+              </div>
+              <div className="text-center space-y-2">
+                <p className="text-white/90 text-base sm:text-lg font-semibold leading-snug">Click to start in fullscreen</p>
+                <p className="text-white/40 text-xs sm:text-sm leading-relaxed">
+                  Best for presentations and classroom use
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-white/30 font-mono">
+                <kbd className="px-1.5 py-0.5 rounded bg-white/[0.08] text-white/50 border border-white/[0.06]">ESC</kbd>
+                <span>to exit anytime</span>
               </div>
             </div>
           </button>
