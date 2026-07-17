@@ -7,16 +7,18 @@ export default function BiosSetup({
   onComplete,
   secureBoot,
   setSecureBoot,
+  osId,
 }: {
   onComplete: () => void;
   secureBoot: boolean;
   setSecureBoot: (v: boolean) => void;
+  osId?: string;
 }) {
   const [tab, setTab] = useState<BiosTab>("Main");
   const [bootMode, setBootMode] = useState<"UEFI" | "Legacy">("UEFI");
   const [usbBoot, setUsbBoot] = useState(true);
   const [bootOrder, setBootOrder] = useState([
-    { id: "hdd", label: "Windows Boot Manager", enabled: true },
+    { id: "hdd", label: osId === "windows" ? "Windows Boot Manager" : `UEFI: ${osId === "arch" ? "Arch Linux" : osId === "zorin" ? "Zorin OS" : osId === "mint" ? "Linux Mint" : "Ubuntu"} (nvme0n1p1)`, enabled: true },
     { id: "usb", label: "UEFI: SanDisk Ultra Flair 16GB", enabled: true },
     { id: "net", label: "Network Boot: Realtek PXE", enabled: false },
   ]);

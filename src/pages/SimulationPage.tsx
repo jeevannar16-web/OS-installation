@@ -374,10 +374,10 @@ function SimulationPageInner() {
       case "flashing_usb": return <FlashUSB config={cfg} speed={speed} onComplete={() => send({ type: "FLASH_DONE" })} setRufusPartitionScheme={setRufusPartitionScheme} />;
       case "usb_reinsert": return <UsbReinsert onComplete={() => send({ type: "USB_INSERTED" })} />;
       case "disk_prep": return <DiskManagement onComplete={() => send({ type: "DISK_PREPPED" })} setDiskShrunk={setDiskShrunk} />;
-      case "bios_setup": return <BiosSetup onComplete={() => send({ type: "BIOS_DONE" })} secureBoot={secureBoot} setSecureBoot={setSecureBoot} />;
+      case "bios_setup": return <BiosSetup onComplete={() => send({ type: "BIOS_DONE" })} secureBoot={secureBoot} setSecureBoot={setSecureBoot} osId={cfg.id} />;
       case "rebooting": return <Reboot speed={speed} onComplete={() => send({ type: "REBOOT_DONE" })} secureBoot={secureBoot} setSecureBoot={setSecureBoot} vtEnabled={vtEnabled} setVtEnabled={setVtEnabled} bootOrderUSB={bootOrderUSB} setBootOrderUSB={setBootOrderUSB} />;
       case "boot_prompt": return <BootPrompt onComplete={() => send({ type: "BOOT_KEY_PRESSED" })} onError={() => send({ type: "BOOT_KEY_TIMEOUT" })} />;
-      case "boot_menu": return <BootMenu onComplete={() => send({ type: path === "live-usb" ? "LIVE_TRY" : "BOOT_SELECTED" })} />;
+      case "boot_menu": return <BootMenu config={cfg} onComplete={() => send({ type: path === "live-usb" ? "LIVE_TRY" : "BOOT_SELECTED" })} />;
       case "windows_setup": return <WindowsSetup config={cfg} onComplete={() => send({ type: "SETUP_DONE" })} />;
       case "live_welcome": return <LiveWelcome config={cfg} onTry={() => send({ type: "LIVE_TRY" })} onInstall={() => send({ type: "LIVE_INSTALL" })} />;
       case "live_desktop": return <LiveDesktop config={cfg} onInstallClick={() => send({ type: "LIVE_INSTALL" })} />;

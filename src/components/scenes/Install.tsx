@@ -40,6 +40,36 @@ const SIDEBAR_LABELS: Record<InstallerStep, string> = {
   review: "Summary",
 };
 
+// OS-specific boot and install progress images
+function getBootImg(osId: string): string {
+  if (osId === "zorin") return "/images/zorin/03-installer-welcome.png";
+  if (osId === "mint") return "/images/mint/03-language-select.png";
+  return "/images/ubuntu/01-try-or-install.png";
+}
+
+function getInstallProgressImg(osId: string): string {
+  if (osId === "zorin") return "/images/zorin/11-installer.png";
+  if (osId === "mint") return "/images/mint/10-installing.png";
+  return "/images/ubuntu/10-progress.png";
+}
+
+function getRestartImg(osId: string): string {
+  if (osId === "mint") return "/images/mint/11-install-complete.png";
+  return "/images/ubuntu/11-restart.png";
+}
+
+function getPartImg(osId: string, mount: string): string {
+  if (osId === "mint") {
+    if (mount === "/") return "/images/mint/23-mint-create-partition.webp";
+    return "/images/mint/22-mint-partition.webp";
+  }
+  if (osId === "zorin") return "/images/zorin/11-installer.png";
+  if (mount === "/boot") return "/images/ubuntu/17-boot-partition.png";
+  if (mount === "/home") return "/images/ubuntu/19-home-partition.webp";
+  if (mount === "[swap]") return "/images/ubuntu/20-swap-partition.webp";
+  return "/images/ubuntu/18-root-partition.webp";
+}
+
 // Fixed: 05 = install type (erase/alongside), 07 = install method (interactive/auto)
 const STEP_IMG: Record<InstallerStep, string> = {
   language: "/images/ubuntu/02-language.png",
@@ -343,7 +373,7 @@ export default function Install({ config, speed, onComplete, path }: {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black">
-          <img src="/images/ubuntu/01-try-or-install.png" alt={`Try or Install ${osName}`}
+          <img src={getBootImg(config.id)} alt={`Try or Install ${osName}`}
             className="absolute inset-0 w-full h-full object-contain" style={{ background: surface }} />
 
           <div className="absolute inset-x-0 bottom-0">
@@ -378,7 +408,7 @@ export default function Install({ config, speed, onComplete, path }: {
      Shows the actual progress screenshot with real-time file copy
      ═══════════════════════════════════════════════════════════════ */
   if (phase === "installing") {
-    const installImg = isWindows ? "/images/win11-setup/08-clean-install.webp" : "/images/ubuntu/10-progress.png";
+    const installImg = isWindows ? "/images/win11-setup/08-clean-install.webp" : getInstallProgressImg(config.id);
     return (
       <div className="mx-auto w-full max-w-5xl">
         <SparkleBurst trigger={showSparkle} />
@@ -441,7 +471,7 @@ export default function Install({ config, speed, onComplete, path }: {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0" style={{ background: surface }}>
-          <img src="/images/ubuntu/11-restart.png" alt="Restart needed"
+          <img src={getRestartImg(config.id)} alt="Restart needed"
             className="absolute inset-0 w-full h-full object-contain" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/40 to-transparent pt-24 pb-6 px-6 flex items-end">
             <div className="max-w-md mx-auto space-y-3 text-center w-full">
@@ -473,7 +503,7 @@ export default function Install({ config, speed, onComplete, path }: {
     return (
       <div className="mx-auto w-full max-w-5xl">
         <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
-          <img src="/images/ubuntu/11-restart.png" alt="Restart" className="w-full h-auto" />
+          <img src={getRestartImg(config.id)} alt="Restart" className="w-full h-auto" />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
             <div className="text-center space-y-4 bg-black/60 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
               <SparkleBurst trigger={showSparkle} />
@@ -542,9 +572,9 @@ export default function Install({ config, speed, onComplete, path }: {
                             <button key={layout} onClick={() => { playClick(); setVal("keyboard", layout); }}
                               className={`rounded-md px-3 py-1.5 text-[11px] text-left transition-all ${
                                 values["keyboard"] === layout
-                                  ? "bg-[#E95420] text-white font-semibold"
+                                  ? "text-white font-semibold"
                                   : "bg-white/10 text-white/70 hover:bg-white/15"
-                              }`}>{layout}</button>
+                              }`} style={values["keyboard"] === layout ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>{layout}</button>
                           ))}
                         </div>
                       </div>
@@ -553,7 +583,7 @@ export default function Install({ config, speed, onComplete, path }: {
                     {/* ── Network selector ── */}
                     {step === "network" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Connect to network</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Connect to network</div>
                         <div className="space-y-1">
                           {[{ id: "wifi-home", label: "HomeWiFi", icon: "📶" },
                             { id: "wifi-5g", label: "Neighbor_5G", icon: "📶" },
@@ -562,16 +592,16 @@ export default function Install({ config, speed, onComplete, path }: {
                             <button key={n.id} onClick={() => { playClick(); setVal("network", n.id); }}
                               className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-[11px] transition-all ${
                                 values["network"] === n.id
-                                  ? "bg-[#E95420] text-white"
+                                  ? "text-white"
                                   : "bg-white/10 text-white/70 hover:bg-white/15"
-                              }`}>
+                              }`} style={values["network"] === n.id ? { background: accent } : {}}>
                               <span>{n.icon}</span><span className="font-medium">{n.label}</span>
                             </button>
                           ))}
                           <button onClick={() => { playClick(); setVal("network", "skip"); }}
                             className={`w-full rounded-md px-3 py-2 text-[11px] transition-all ${
-                              values["network"] === "skip" ? "bg-[#E95420] text-white" : "bg-white/5 text-white/40 hover:bg-white/10"
-                            }`}>I don't want to connect now</button>
+                              values["network"] === "skip" ? "text-white" : "bg-white/5 text-white/40 hover:bg-white/10"
+                            }`} style={values["network"] === "skip" ? { background: accent } : {}}>I don't want to connect now</button>
                         </div>
                       </div>
                     )}
@@ -579,7 +609,7 @@ export default function Install({ config, speed, onComplete, path }: {
                     {/* ── Install type (Erase / Alongside / Manual) — image 05 ── */}
                     {step === "install_type" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Type of installation</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Type of installation</div>
                         {path === "vm" ? (
                           /* VM path: only Erase disk makes sense (virtual disk) */
                           <>
@@ -587,7 +617,8 @@ export default function Install({ config, speed, onComplete, path }: {
                               ✓ In a VM, "Erase disk" only affects the virtual disk — your host OS is safe.
                             </div>
                             <button onClick={() => { playClick(); setInstallType("erase"); }}
-                              className="w-full rounded-md px-3 py-2 text-[11px] text-left font-medium bg-[#E95420] text-white shadow-lg shadow-[#E95420]">
+                              className="w-full rounded-md px-3 py-2 text-[11px] text-left font-medium text-white shadow-lg"
+                              style={{ background: accent, boxShadow: `0 4px 12px ${accent}40` }}>
                               Erase disk and install {getOSName(config.id)}
                             </button>
                           </>
@@ -601,9 +632,9 @@ export default function Install({ config, speed, onComplete, path }: {
                             <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
                               className={`w-full rounded-md px-3 py-2 text-[11px] text-left font-medium transition-all ${
                                 installType === opt.id
-                                  ? "bg-[#E95420] text-white shadow-lg shadow-[#E95420]"
+                                  ? "text-white shadow-lg"
                                   : "bg-white/10 text-white/70 hover:bg-white/15"
-                              }`}>{opt.label}</button>
+                              }`} style={installType === opt.id ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>{opt.label}</button>
                           ))
                         )}
                       </div>
@@ -612,7 +643,7 @@ export default function Install({ config, speed, onComplete, path }: {
                     {/* ── Manual partition editor (shown when "Something else" is selected) ── */}
                     {step === "partition" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Manual partitioning</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Manual partitioning</div>
 
                         {/* Disk visual bar */}
                         <div className="space-y-1">
@@ -677,8 +708,8 @@ export default function Install({ config, speed, onComplete, path }: {
                         <div className="flex items-center justify-between">
                           <button disabled={freeGB < 1} onClick={() => { playClick(); setEditPartIdx(null); setPartForm({ sizeGB: Math.min(50, Math.floor(freeGB)), fs: "ext4", mount: "/" }); setShowPartDialog(true); }}
                             className={`rounded border px-2 py-1 text-[10px] font-medium transition-colors ${
-                              freeGB >= 1 ? "border-[#E95420]/30 bg-[#E95420]/5 text-[#E95420] hover:bg-[#E95420]/10" : "border-white/10 text-white/30 cursor-not-allowed"
-                            }`}>+ Add partition</button>
+                              freeGB >= 1 ? "text-white/60 hover:bg-white/10" : "border-white/10 text-white/30 cursor-not-allowed"
+                            }`} style={freeGB >= 1 ? { borderColor: `${accent}50`, background: `${accent}08` } : {}}>+ Add partition</button>
                           {!canConfirmPart && (
                             <div className="text-[9px] text-amber-400">Need ext4 mounted at /</div>
                           )}
@@ -689,7 +720,7 @@ export default function Install({ config, speed, onComplete, path }: {
                     {/* ── Install method (Interactive / Automated) — image 07 ── */}
                     {step === "install_option" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Installation method</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Installation method</div>
                         <div className="grid grid-cols-2 gap-2">
                           {[
                             { id: "interactive", label: "Interactive installation", desc: "Walk through each step" },
@@ -698,9 +729,9 @@ export default function Install({ config, speed, onComplete, path }: {
                             <button key={opt.id} onClick={() => { playClick(); setInstallMethod(opt.id); }}
                               className={`rounded-lg border p-3 text-left transition-all ${
                                 installMethod === opt.id
-                                  ? "border-[#E95420] bg-[#E95420]/10 text-white"
+                                  ? "border-white/20 text-white"
                                   : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
-                              }`}>
+                              }`} style={installMethod === opt.id ? { borderColor: accent, background: `${accent}15` } : {}}>
                               <div className="text-[11px] font-semibold">{opt.label}</div>
                               <div className="text-[9px] text-white/30 mt-0.5">{opt.desc}</div>
                             </button>
@@ -712,13 +743,13 @@ export default function Install({ config, speed, onComplete, path }: {
                     {/* ── Third party ── */}
                     {step === "third_party" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Additional software</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Additional software</div>
                         <label className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 cursor-pointer hover:bg-white/15 transition-all">
-                          <input type="checkbox" checked={thirdParty} onChange={() => setThirdParty(!thirdParty)} className="accent-[#E95420]" />
+                          <input type="checkbox" checked={thirdParty} onChange={() => setThirdParty(!thirdParty)} style={{ accentColor: accent }} />
                           <span className="text-[11px] text-white/80">Install third-party software for graphics and Wi-Fi</span>
                         </label>
                         <label className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 cursor-pointer hover:bg-white/15 transition-all">
-                          <input type="checkbox" defaultChecked className="accent-[#E95420]" />
+                          <input type="checkbox" defaultChecked style={{ accentColor: accent }} />
                           <span className="text-[11px] text-white/80">Download and install support for additional media formats</span>
                         </label>
                       </div>
@@ -727,7 +758,7 @@ export default function Install({ config, speed, onComplete, path }: {
                     {/* ── App selection (Normal / Minimal) — image 21 ── */}
                     {step === "app_selection" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Applications to install</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Applications to install</div>
                         <div className="grid grid-cols-2 gap-2">
                           {[
                             { id: "normal", label: "Normal installation", desc: "Web browser, utilities, office software, games, media player" },
@@ -736,16 +767,16 @@ export default function Install({ config, speed, onComplete, path }: {
                             <button key={opt.id} onClick={() => { playClick(); setVal("apps", opt.id); }}
                               className={`rounded-lg border p-3 text-left transition-all ${
                                 values["apps"] === opt.id
-                                  ? "border-[#E95420] bg-[#E95420]/10 text-white"
+                                  ? "border-white/20 text-white"
                                   : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
-                              }`}>
+                              }`} style={values["apps"] === opt.id ? { borderColor: accent, background: `${accent}15` } : {}}>
                               <div className="text-[11px] font-semibold">{opt.label}</div>
                               <div className="text-[9px] text-white/30 mt-0.5">{opt.desc}</div>
                             </button>
                           ))}
                         </div>
                         <label className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 cursor-pointer hover:bg-white/15 transition-all">
-                          <input type="checkbox" defaultChecked className="accent-[#E95420]" />
+                          <input type="checkbox" defaultChecked style={{ accentColor: accent }} />
                           <span className="text-[11px] text-white/80">Download and install third-party codecs</span>
                         </label>
                       </div>
@@ -754,7 +785,7 @@ export default function Install({ config, speed, onComplete, path }: {
                     {/* ── Timezone selector — image 23 ── */}
                     {step === "timezone" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Select your timezone</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Select your timezone</div>
                         <div className="grid grid-cols-2 gap-1.5 max-h-[140px] overflow-y-auto">
                           {["UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
                             "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Tokyo", "Australia/Sydney",
@@ -762,9 +793,9 @@ export default function Install({ config, speed, onComplete, path }: {
                             <button key={tz} onClick={() => { playClick(); setVal("timezone", tz); }}
                               className={`rounded-md px-3 py-1.5 text-[11px] text-left transition-all ${
                                 values["timezone"] === tz
-                                  ? "bg-[#E95420] text-white font-semibold"
+                                  ? "text-white font-semibold"
                                   : "bg-white/10 text-white/70 hover:bg-white/15"
-                              }`}>{tz}</button>
+                              }`} style={values["timezone"] === tz ? { background: accent } : {}}>{tz}</button>
                           ))}
                         </div>
                       </div>
@@ -773,7 +804,7 @@ export default function Install({ config, speed, onComplete, path }: {
                     {/* ── Create user — image 08 ── */}
                     {step === "create_user" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Who are you?</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Who are you?</div>
                         <div className="grid grid-cols-2 gap-2">
                           {[
                             { key: "name", placeholder: "Your name" },
@@ -784,11 +815,11 @@ export default function Install({ config, speed, onComplete, path }: {
                             <input key={f.key} type={f.secret ? "password" : "text"}
                               value={values[f.key] ?? ""} placeholder={f.placeholder}
                               onChange={(e) => { setVal(f.key, e.target.value); playKeyClick(); }}
-                              className="rounded-md bg-white/10 border border-white/10 px-3 py-2 text-[11px] text-white/90 outline-none focus:border-[#E95420] placeholder:text-white/25 transition-colors" />
+                              className="rounded-md bg-white/10 border border-white/10 px-3 py-2 text-[11px] text-white/90 outline-none placeholder:text-white/25 transition-colors" style={{ borderColor: undefined }} />
                           ))}
                         </div>
                         <label className="flex items-center gap-1.5 text-[10px] text-white/40 cursor-pointer">
-                          <input type="checkbox" defaultChecked className="accent-[#E95420] w-3 h-3" />Log in automatically
+                          <input type="checkbox" defaultChecked className="w-3 h-3" style={{ accentColor: accent }} />Log in automatically
                         </label>
                       </div>
                     )}
@@ -796,7 +827,7 @@ export default function Install({ config, speed, onComplete, path }: {
                     {/* ── Review / Summary — image 09 ── */}
                     {step === "review" && (
                       <div className="space-y-2">
-                        <div className="text-[10px] text-[#E95420] font-semibold uppercase tracking-wider">Ready to install</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Ready to install</div>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 bg-white/5 rounded-lg p-3 border border-white/10">
                           {[
                             ["Language", values["language"] ?? "English"],
@@ -838,8 +869,7 @@ export default function Install({ config, speed, onComplete, path }: {
               exit={{ opacity: 0, scale: 0.95 }} onClick={(e) => e.stopPropagation()}
               className="w-full max-w-sm rounded-xl border border-white/10 bg-[#12121a] p-5 shadow-2xl">
               <div className="rounded-lg overflow-hidden mb-4 border border-white/10">
-                <img src={partForm.mount === "/boot" ? "/images/ubuntu/17-boot-partition.png" : partForm.mount === "/home" ? "/images/ubuntu/19-home-partition.webp" : partForm.mount === "[swap]" ? "/images/ubuntu/20-swap-partition.webp" : "/images/ubuntu/18-root-partition.webp"}
-                  alt="Partition type" className="w-full h-24 object-cover" />
+                <img src={getPartImg(config.id, partForm.mount)} alt="Partition type" className="w-full h-24 object-cover" />
               </div>
               <h3 className="text-sm font-bold text-white/90 mb-3">{editPartIdx !== null ? "Edit partition" : "Create partition"}</h3>
               <div className="space-y-3">
@@ -847,19 +877,19 @@ export default function Install({ config, speed, onComplete, path }: {
                   <label className="block text-[10px] font-medium text-white/60 mb-1">Size (GB)</label>
                   <input type="number" min={1} max={Math.floor(freeGB + (editPartIdx !== null ? partitions[editPartIdx].sizeGB : 0))}
                     value={partForm.sizeGB} onChange={(e) => setPartForm((p) => ({ ...p, sizeGB: Number(e.target.value) }))}
-                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none focus:border-[#E95420] bg-[#1a1a24]" />
+                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium text-white/60 mb-1">Filesystem</label>
                   <select value={partForm.fs} onChange={(e) => setPartForm((p) => ({ ...p, fs: e.target.value }))}
-                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none focus:border-[#E95420] bg-[#1a1a24]">
+                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
                     {FILESYSTEMS.map((fs) => <option key={fs} value={fs}>{fs}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium text-white/60 mb-1">Mount point</label>
                   <select value={partForm.mount} onChange={(e) => setPartForm((p) => ({ ...p, mount: e.target.value }))}
-                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none focus:border-[#E95420] bg-[#1a1a24]">
+                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
                     {MOUNT_POINTS.map((mp) => <option key={mp} value={mp}>{mp}</option>)}
                   </select>
                 </div>
@@ -879,7 +909,8 @@ export default function Install({ config, speed, onComplete, path }: {
                   else setPartitions((prev) => [...prev, np]);
                   setShowPartDialog(false); setEditPartIdx(null);
                 }} disabled={partForm.sizeGB < 1}
-                  className="rounded-lg bg-[#E95420] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#c7441a] transition-colors disabled:opacity-40">
+                  className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
+                  style={{ background: accent }}>
                   {editPartIdx !== null ? "Save" : "Create"}
                 </button>
               </div>

@@ -1,23 +1,30 @@
 import { useCallback, useEffect, useState } from "react";
 import { playKeyClick } from "../shared/sounds";
 import { useSceneAdvance } from "../shared/SceneAdvance";
+import type { OSConfig } from "../../data/types";
 
-const ENTRIES = [
-  { id: "usb", label: "UEFI: Generic Flash Disk 8.0, Partition 1", correct: true },
-  { id: "hdd", label: "Windows Boot Manager (Samsung SSD 980 PRO)", correct: false },
-  { id: "net", label: "Network Boot: Realtek PXE B01 D00", correct: false },
-  { id: "cd", label: "UEFI: CD/DVD Drive", correct: false },
-];
+function getBootEntries(osId: string) {
+  const osName = osId === "zorin" ? "Zorin OS" : osId === "mint" ? "Linux Mint" : osId === "arch" ? "Arch Linux" : "Ubuntu";
+  return [
+    { id: "usb", label: "UEFI: Generic Flash Disk 8.0, Partition 1", correct: true },
+    { id: "hdd", label: osId === "windows" ? "Windows Boot Manager (Samsung SSD 980 PRO)" : `UEFI: ${osName} (nvme0n1p1)`, correct: false },
+    { id: "net", label: "Network Boot: Realtek PXE B01 D00", correct: false },
+    { id: "cd", label: "UEFI: CD/DVD Drive", correct: false },
+  ];
+}
 
 export default function BootMenu({
+  config,
   onComplete,
 }: {
+  config: OSConfig;
   onComplete: () => void;
 }) {
   const { register: registerAdvance } = useSceneAdvance();
   const [selected, setSelected] = useState(0);
   const [wrongFakeout, setWrongFakeout] = useState(false);
 
+  const ENTRIES = getBootEntries(config.id);
   const correctIndex = ENTRIES.findIndex((e) => e.correct);
 
   useEffect(() => {
@@ -69,8 +76,8 @@ export default function BootMenu({
       {wrongFakeout && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0a0a1a]">
           <div className="text-center">
-            <div className="text-3xl mb-3">🪟</div>
-            <div className="text-sm text-white/60">Loading normal Windows…</div>
+            <div className="text-3xl mb-3">{config.branding.logo}</div>
+            <div className="text-sm text-white/60">Booting {config.branding.name}…</div>
             <div className="mt-2 text-xs text-white/30">
               (Wrong selection — returning to menu)
             </div>
