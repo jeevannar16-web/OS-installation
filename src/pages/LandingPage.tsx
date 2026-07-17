@@ -1,13 +1,15 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Monitor, ArrowLeftRight, Usb, Check, Info, ChevronDown, Cpu, Lock } from "lucide-react";
-import { PATHS, OS_LIST } from "../data";
-import type { InstallPath } from "../data/types";
+import { Monitor, ArrowLeftRight, Usb, ChevronDown, Lock, ExternalLink, Play, Check } from "lucide-react";
+import { OS_LIST } from "../data";
 import Footer from "../components/Footer";
 import BootSequence from "../components/BootSequence";
 import ThemePicker from "../components/shared/ThemePicker";
 
+/* ═══════════════════════════════════════════════════════════════════
+   TYPING EFFECT
+   ═══════════════════════════════════════════════════════════════════ */
 const TYPING_TEXTS = [
   "before you actually do it",
   "without risking your PC",
@@ -22,191 +24,222 @@ function TypingEffect() {
 
   useEffect(() => {
     const currentText = TYPING_TEXTS[textIndex];
-    const typeSpeed = isDeleting ? 30 : 50;
-    const pauseSpeed = 2000;
     const timer = setTimeout(() => {
       if (!isDeleting) {
         if (charIndex < currentText.length) {
           setText(currentText.slice(0, charIndex + 1));
-          setCharIndex((prev) => prev + 1);
-        } else {
-          setTimeout(() => setIsDeleting(true), pauseSpeed);
-        }
+          setCharIndex((p) => p + 1);
+        } else setTimeout(() => setIsDeleting(true), 2000);
       } else {
         if (charIndex > 0) {
           setText(currentText.slice(0, charIndex - 1));
-          setCharIndex((prev) => prev - 1);
+          setCharIndex((p) => p - 1);
         } else {
           setIsDeleting(false);
-          setTextIndex((prev) => (prev + 1) % TYPING_TEXTS.length);
+          setTextIndex((p) => (p + 1) % TYPING_TEXTS.length);
         }
       }
-    }, typeSpeed);
+    }, isDeleting ? 30 : 50);
     return () => clearTimeout(timer);
   }, [textIndex, charIndex, isDeleting]);
 
   return (
     <span className="text-white/40 font-medium inline-block min-w-[140px]">
       {text}
-      <span className="inline-block w-0.5 h-[0.9em] bg-accent ml-0.5 align-middle animate-pulse" />
+      <span className="inline-block w-0.5 h-[0.9em] bg-[#E95420] ml-0.5 align-middle animate-pulse" />
     </span>
   );
 }
 
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.04 } },
-};
-const item = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
-};
-
-const PATH_ICONS: Record<string, React.ReactNode> = {
-  vm: <Monitor size={16} strokeWidth={1.5} />,
-  "dual-boot": <ArrowLeftRight size={16} strokeWidth={1.5} />,
-  "live-usb": <Usb size={16} strokeWidth={1.5} />,
-};
-
-function PathCard({ p, active, onClick }: {
-  p: (typeof PATHS)[number];
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <motion.button
-      variants={item}
-      onClick={onClick}
-      whileTap={{ scale: 0.98 }}
-      className={`flex items-center gap-3 rounded-xl p-3 text-left transition-all border ${
-        active
-          ? "border-accent/40 bg-accent/[0.08] shadow-[0_0_20px_-8px] shadow-accent"
-          : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.04]"
-      }`}
-    >
-      <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
-        active ? "bg-accent/20 text-accent" : "bg-white/5 text-white/40"
-      }`}>
-        {PATH_ICONS[p.id]}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="font-semibold text-xs text-white/80">{p.name}</div>
-        <div className="text-[10px] text-white/35">{p.tagline}</div>
-      </div>
-      <div className={`shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${
-        active ? "bg-accent text-white" : "bg-white/10 text-white/25"
-      }`}>
-        {active ? <Check size={10} strokeWidth={3} /> : <div className="h-1.5 w-1.5 rounded-full bg-white/15" />}
-      </div>
-    </motion.button>
-  );
-}
-
-function OSCard({ o, active, onClick }: {
-  o: (typeof OS_LIST)[number];
-  active: boolean;
-  onClick: () => void;
-}) {
-  const disabled = !!o.stub;
-  return (
-    <motion.button
-      variants={item}
-      onClick={() => !disabled && onClick()}
-      whileTap={!disabled ? { scale: 0.98 } : {}}
-      className={`flex items-center gap-3 rounded-xl p-3 text-left transition-all border ${
-        disabled
-          ? "border-white/[0.04] bg-white/[0.01] opacity-50 cursor-not-allowed"
-          : active
-            ? "border-accent/40 bg-accent/[0.08]"
-            : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.04]"
-      }`}
-    >
-      <div
-        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-        style={{
-          background: disabled ? "rgba(255,255,255,0.03)" : `${o.branding.accent}15`,
-          color: disabled ? "rgba(255,255,255,0.15)" : o.branding.accent,
-          border: `1px solid ${disabled ? "rgba(255,255,255,0.04)" : `${o.branding.accent}25`}`,
-        }}
-      >
-        {disabled ? <Lock size={12} /> : o.branding.logo}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="font-semibold text-xs text-white/80 truncate">{o.branding.name}</div>
-        {disabled && <div className="text-[9px] text-white/25 uppercase tracking-wider">Coming soon</div>}
-      </div>
-      <div className={`shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${
-        active ? "bg-accent text-white" : "bg-white/10 text-white/25"
-      }`}>
-        {active ? <Check size={10} strokeWidth={3} /> : <div className="h-1.5 w-1.5 rounded-full bg-white/15" />}
-      </div>
-    </motion.button>
-  );
-}
-
-/* ── Step Guide Dropdown ──────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════
+   HOW IT WORKS — dropdown in header
+   ═══════════════════════════════════════════════════════════════════ */
 const GUIDE_STEPS = [
+  { step: "01", title: "Download the ISO", desc: "Get the Ubuntu 24.04 LTS desktop image from ubuntu.com", img: "/images/ubuntu/02-language.png" },
+  { step: "02", title: "Flash to USB", desc: "Use Rufus, Ventoy, or BalenaEtcher to write the ISO to a USB drive", img: "/images/ubuntu/04-network.webp" },
+  { step: "03", title: "Boot from USB", desc: "Enter BIOS, set USB as first boot device, save & restart", img: "/images/ubuntu/01-try-or-install.png" },
+  { step: "04", title: "Install Ubuntu", desc: "Follow the installer wizard — language, partition, user, done", img: "/images/ubuntu/07-install-type.webp" },
+];
+
+function HowItWorksDropdown({ open }: { open: boolean }) {
+  if (!open) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      className="absolute top-full right-0 mt-2 w-[520px] max-w-[calc(100vw-3rem)] rounded-2xl border border-white/10 bg-[#12121a]/95 backdrop-blur-xl shadow-2xl z-50 overflow-hidden"
+    >
+      <div className="px-4 py-3 border-b border-white/10">
+        <div className="text-xs font-semibold text-white/60 uppercase tracking-wider">How it works</div>
+        <div className="text-[10px] text-white/30 mt-0.5">4 simple steps to install Ubuntu</div>
+      </div>
+      <div className="p-3 space-y-2">
+        {GUIDE_STEPS.map((s, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.06 }}
+            className="flex items-start gap-3 rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 hover:bg-white/[0.05] transition-colors"
+          >
+            <div className="h-10 w-14 rounded-lg overflow-hidden bg-black/30 shrink-0 border border-white/5">
+              <img src={s.img} alt={s.title} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono text-[#E95420] font-bold">{s.step}</span>
+                <span className="text-xs font-semibold text-white/80">{s.title}</span>
+              </div>
+              <p className="text-[11px] text-white/35 mt-0.5 leading-relaxed">{s.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+      <div className="px-4 py-2.5 border-t border-white/10 text-[10px] text-white/25 text-center">
+        Each step is a fully interactive mini-simulation
+      </div>
+    </motion.div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   OUTCOME CARDS — 3 ways to install Ubuntu
+   ═══════════════════════════════════════════════════════════════════ */
+type Outcome = "live-usb" | "dual-boot" | "vm";
+
+interface OutcomeInfo {
+  id: Outcome;
+  title: string;
+  tagline: string;
+  description: string;
+  icon: React.ReactNode;
+  accent: string;
+  steps: string[];
+  time: string;
+  risk: string;
+  sceneCount: number;
+}
+
+const OUTCOMES: OutcomeInfo[] = [
   {
-    title: "Download the Ubuntu ISO",
-    desc: "Search the official site and download the desktop ISO",
+    id: "live-usb",
+    title: "Try Ubuntu Live",
+    tagline: "No install needed",
+    description: "Boot from USB into a full Ubuntu desktop. Try it without touching your hard drive.",
+    icon: <Usb size={22} strokeWidth={1.5} />,
+    accent: "#22c55e",
+    steps: ["Download ISO", "Flash USB", "Boot from USB", "Try Ubuntu"],
+    time: "~5 min",
+    risk: "Zero risk",
+    sceneCount: 11,
   },
   {
-    title: "Flash a bootable USB",
-    desc: "Use Rufus, Ventoy, or BalenaEtcher to write the ISO to USB",
+    id: "dual-boot",
+    title: "Dual Boot",
+    tagline: "Ubuntu + Windows",
+    description: "Install Ubuntu alongside Windows. Choose which OS to boot each time you start your PC.",
+    icon: <ArrowLeftRight size={22} strokeWidth={1.5} />,
+    accent: "#E95420",
+    steps: ["Download ISO", "Flash USB", "BIOS Setup", "Partition Disk", "Install Ubuntu", "GRUB Menu"],
+    time: "~15 min",
+    risk: "Low risk",
+    sceneCount: 14,
   },
   {
-    title: "Enter BIOS & boot from USB",
-    desc: "Restart, press F2/F12, enable USB boot, set USB as first priority",
-  },
-  {
-    title: "Install Ubuntu",
-    desc: "Choose language, keyboard, partition disk, create user, done",
+    id: "vm",
+    title: "Virtual Machine",
+    tagline: "Safest option",
+    description: "Run Ubuntu inside a virtual machine on your current OS. Completely isolated, zero risk.",
+    icon: <Monitor size={22} strokeWidth={1.5} />,
+    accent: "#6366f1",
+    steps: ["Download ISO", "Create VM", "Boot VM", "Install Ubuntu"],
+    time: "~10 min",
+    risk: "Zero risk",
+    sceneCount: 10,
   },
 ];
 
-function StepGuide() {
-  const [openIdx, setOpenIdx] = useState<number | null>(0);
+function OutcomeCard({ outcome, selected, onSelect }: {
+  outcome: OutcomeInfo;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   return (
-    <div className="space-y-1.5">
-      {GUIDE_STEPS.map((step, i) => (
-        <div key={i} className="rounded-lg border border-white/[0.06] bg-white/[0.02] overflow-hidden">
-          <button
-            onClick={() => setOpenIdx(openIdx === i ? null : i)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-white/[0.03] transition-colors"
-          >
-            <span className="h-6 w-6 rounded-md bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center shrink-0">
-              {i + 1}
-            </span>
-            <div className="min-w-0 flex-1">
-              <span className="font-semibold text-xs text-white/75">{step.title}</span>
-              {openIdx === i && <p className="text-[10px] text-white/35 mt-0.5">{step.desc}</p>}
+    <motion.button
+      onClick={onSelect}
+      whileTap={{ scale: 0.98 }}
+      className={`relative text-left rounded-2xl border transition-all overflow-hidden ${
+        selected
+          ? "border-white/20 bg-white/[0.06] shadow-[0_0_40px_-12px]"
+          : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.04]"
+      }`}
+      style={selected ? { boxShadow: `0 0 40px -12px ${outcome.accent}40` } : {}}
+    >
+      {/* Accent top stripe */}
+      <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${outcome.accent}, transparent)` }} />
+
+      <div className="p-5">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl flex items-center justify-center" style={{ background: `${outcome.accent}15`, border: `1px solid ${outcome.accent}25` }}>
+              <span style={{ color: outcome.accent }}>{outcome.icon}</span>
             </div>
-            <motion.span animate={{ rotate: openIdx === i ? 180 : 0 }} transition={{ duration: 0.15 }}>
-              <ChevronDown size={14} className="text-white/25" />
-            </motion.span>
-          </button>
+            <div>
+              <div className="text-sm font-bold text-white/90">{outcome.title}</div>
+              <div className="text-[11px] text-white/35">{outcome.tagline}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {selected && (
+              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="h-5 w-5 rounded-full flex items-center justify-center" style={{ background: outcome.accent }}>
+                <Check size={12} className="text-white" strokeWidth={3} />
+              </motion.div>
+            )}
+          </div>
         </div>
-      ))}
-    </div>
+
+        <p className="text-xs text-white/40 leading-relaxed mb-4">{outcome.description}</p>
+
+        {/* Steps preview */}
+        <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
+          {outcome.steps.map((step, i) => (
+            <div key={i} className="flex items-center gap-1 shrink-0">
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-white/35 border border-white/5">{step}</span>
+              {i < outcome.steps.length - 1 && <span className="text-white/15 text-[8px]">→</span>}
+            </div>
+          ))}
+        </div>
+
+        {/* Meta */}
+        <div className="flex items-center gap-3 text-[10px] text-white/30">
+          <span className="flex items-center gap-1"><span className="text-white/15">⏱</span> {outcome.time}</span>
+          <span className="flex items-center gap-1"><span className="text-white/15">🛡</span> {outcome.risk}</span>
+          <span className="flex items-center gap-1"><span className="text-white/15">🎬</span> {outcome.sceneCount} scenes</span>
+        </div>
+      </div>
+    </motion.button>
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   MAIN LANDING PAGE
+   ═══════════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [path, setPath] = useState<InstallPath | null>(null);
-  const [os, setOs] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Outcome | null>(null);
   const [showHelp, setShowHelp] = useState(false);
-
-  const canStart = path && os;
-  const selectedOS = os ? OS_LIST.find((x) => x.id === os) : null;
-  const selectedPath = path ? PATHS.find((x) => x.id === path) : null;
+  const [showGuide, setShowGuide] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleBootReady = useCallback((_ready?: boolean) => {}, []);
 
+  const ubuntu = OS_LIST.find((o) => o.id === "ubuntu");
+
   function start() {
-    if (!path || !os) return;
-    navigate(`/${os}/${path}`);
+    if (!selected || !ubuntu) return;
+    navigate(`/ubuntu/${selected}`);
   }
 
   return (
@@ -230,103 +263,170 @@ export default function LandingPage() {
       <div className="vignette-overlay" aria-hidden />
 
       <div className="relative z-0 flex-1 flex flex-col">
-        {/* Header */}
+        {/* ── Header ─────────────────────────────────────────── */}
         <header className="w-full px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-md bg-accent/20 flex items-center justify-center">
-              <Cpu size={14} className="text-accent" />
-            </div>
+            <img src="/logo.svg" alt="Logo" className="h-7 w-7" />
             <span className="font-semibold text-sm text-white/80 tracking-tight">OS Install Simulator</span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowHelp(true)}
-              className="flex items-center gap-1 rounded-md bg-white/5 border border-white/10 px-2.5 py-1 text-[11px] text-white/45 hover:bg-white/10 hover:text-white/65 transition-colors">
-              <Info size={12} /> Help
+            {/* How it works — dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowGuide(!showGuide)}
+                className="flex items-center gap-1.5 rounded-md bg-white/5 border border-white/10 px-3 py-1.5 text-[11px] text-white/45 hover:bg-white/10 hover:text-white/65 transition-colors"
+              >
+                How it works
+                <ChevronDown size={12} className={`transition-transform ${showGuide ? "rotate-180" : ""}`} />
+              </button>
+              <AnimatePresence>
+                <HowItWorksDropdown open={showGuide} />
+              </AnimatePresence>
+            </div>
+            <button
+              onClick={() => setShowHelp(true)}
+              className="rounded-md bg-white/5 border border-white/10 px-3 py-1.5 text-[11px] text-white/45 hover:bg-white/10 hover:text-white/65 transition-colors"
+            >
+              Shortcuts
             </button>
             <ThemePicker />
           </div>
         </header>
 
-        {/* Hero — minimal centered */}
-        <section className="w-full px-6 pt-6 pb-6">
-          <div className="text-center max-w-xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-3 mb-3">
-              <img src="/logo.svg" alt="Logo" className="w-12 h-12" />
-              <div className="text-left">
-                <div className="text-xl font-bold tracking-tight text-white/90">OS Install Simulator</div>
-                <div className="text-xs text-white/35">Practice installing an OS — safely</div>
-              </div>
+        {/* ── Hero ───────────────────────────────────────────── */}
+        <section className="w-full px-6 pt-8 pb-4">
+          <div className="max-w-2xl mx-auto text-center">
+            {/* Ubuntu badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 rounded-full bg-[#E95420]/10 border border-[#E95420]/20 px-4 py-1.5 mb-5"
+            >
+              <div className="h-5 w-5 rounded-full bg-[#E95420] flex items-center justify-center text-[9px] font-bold text-white">U</div>
+              <span className="text-[11px] font-semibold text-[#E95420]">Ubuntu 24.04 LTS</span>
+              <span className="text-[10px] text-white/30">•</span>
+              <span className="text-[10px] text-white/30">Free &amp; Open Source</span>
             </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-              className="text-xs text-white/40">
+
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white/90 mb-3"
+            >
+              Install Ubuntu
+              <br />
+              <span className="text-white/40">before you actually do it</span>
+            </motion.h1>
+
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="text-sm text-white/30 mb-6">
               <TypingEffect />
+            </motion.div>
+
+            {/* CTA row */}
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex items-center justify-center gap-3">
+              <a
+                href="https://ubuntu.com/download/desktop"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-xs text-white/50 hover:bg-white/10 hover:text-white/70 transition-colors"
+              >
+                <ExternalLink size={12} />
+                Get Ubuntu
+              </a>
+              <div className="text-[10px] text-white/20">or try it safe below ↓</div>
             </motion.div>
           </div>
         </section>
 
-        {/* Main content — everything in one section */}
+        {/* ── Outcome Selection — the core of the landing page ── */}
         <section className="w-full px-6 pb-8 flex-1">
-          <div className="max-w-5xl mx-auto">
-            {/* How it works */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">How it works</span>
+          <div className="max-w-4xl mx-auto">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mb-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Choose your path</span>
               </div>
-              <StepGuide />
-            </div>
+              <p className="text-[11px] text-white/25">Three ways to experience Ubuntu — pick one and start the simulation</p>
+            </motion.div>
 
-            {/* Selection grid: Path (vertical 3) | OS (vertical 5) */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Path selection */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="h-5 w-5 rounded-full bg-accent/20 text-accent text-[10px] font-bold flex items-center justify-center">1</span>
-                  <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Install method</span>
-                </div>
-                <motion.div variants={container} initial="hidden" animate="show" className="space-y-1.5">
-                  {PATHS.map((p) => (
-                    <PathCard key={p.id} p={p} active={path === p.id} onClick={() => setPath(p.id)} />
-                  ))}
-                </motion.div>
-              </div>
-
-              {/* OS selection */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="h-5 w-5 rounded-full bg-accent/20 text-accent text-[10px] font-bold flex items-center justify-center">2</span>
-                  <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Operating system</span>
-                </div>
-                <motion.div variants={container} initial="hidden" animate="show" className="space-y-1.5">
-                  {OS_LIST.map((o) => (
-                    <OSCard key={o.id} o={o} active={os === o.id} onClick={() => setOs(o.id)} />
-                  ))}
-                </motion.div>
-              </div>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="grid sm:grid-cols-3 gap-4"
+            >
+              {OUTCOMES.map((o) => (
+                <OutcomeCard
+                  key={o.id}
+                  outcome={o}
+                  selected={selected === o.id}
+                  onSelect={() => setSelected(o.id)}
+                />
+              ))}
+            </motion.div>
 
             {/* Start button */}
-            <div className="mt-6 text-center">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }} className="mt-6 text-center">
               <motion.button
-                whileTap={canStart ? { scale: 0.97 } : {}}
-                disabled={!canStart}
+                whileTap={selected ? { scale: 0.97 } : {}}
+                disabled={!selected}
                 onClick={start}
-                className={`text-sm font-semibold rounded-xl px-10 py-3 transition-all ${
-                  canStart
-                    ? "bg-accent text-white shadow-[0_0_30px_-8px] shadow-accent hover:shadow-[0_0_40px_-6px] hover:shadow-accent"
+                className={`inline-flex items-center gap-2 text-sm font-semibold rounded-xl px-10 py-3.5 transition-all ${
+                  selected
+                    ? "bg-[#E95420] text-white shadow-[0_0_40px_-10px] #E95420 hover:shadow-[0_0_50px_-8px] #E95420"
                     : "bg-white/[0.03] text-white/20 border border-white/[0.06] cursor-not-allowed"
                 }`}
+                style={selected ? { boxShadow: "0 0 40px -10px rgba(233,84,32,0.5)" } : {}}
               >
-                {canStart ? `Start ${selectedOS?.branding.shortName} — ${selectedPath?.name}` : "Select a method and OS above"}
+                {selected ? (
+                  <>
+                    <Play size={16} fill="white" />
+                    Start Ubuntu {OUTCOMES.find((o) => o.id === selected)?.title}
+                  </>
+                ) : (
+                  "Choose a path above to begin"
+                )}
               </motion.button>
-            </div>
+            </motion.div>
+
+            {/* OS cards row — secondary, at the bottom */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }} className="mt-10">
+              <div className="text-center text-[10px] text-white/20 uppercase tracking-wider mb-3">More operating systems</div>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                {OS_LIST.map((o) => {
+                  const disabled = !!o.stub;
+                  const active = o.id === "ubuntu";
+                  return (
+                    <div
+                      key={o.id}
+                      className={`flex items-center gap-2 rounded-lg px-3 py-1.5 border text-xs transition-all ${
+                        disabled
+                          ? "border-white/[0.04] bg-white/[0.01] opacity-40"
+                          : active
+                            ? "border-[#E95420]/30 bg-[#E95420]/10 text-[#E95420]"
+                            : "border-white/[0.08] bg-white/[0.02] text-white/40"
+                      }`}
+                    >
+                      <div
+                        className="h-5 w-5 rounded flex items-center justify-center text-[9px] font-bold"
+                        style={{ background: disabled ? "rgba(255,255,255,0.03)" : `${o.branding.accent}15`, color: disabled ? "rgba(255,255,255,0.15)" : o.branding.accent }}
+                      >
+                        {disabled ? <Lock size={9} /> : o.branding.logo}
+                      </div>
+                      <span className="font-medium">{o.branding.name}</span>
+                      {disabled && <span className="text-[8px] text-white/20 uppercase ml-1">Soon</span>}
+                      {active && <span className="text-[8px] text-[#E95420] font-semibold ml-1">Available</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
           </div>
         </section>
 
         <Footer />
       </div>
 
-      {/* Help Modal */}
+      {/* ── Help Modal ───────────────────────────────────────── */}
       <AnimatePresence>
         {showHelp && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -356,7 +456,7 @@ export default function LandingPage() {
                 ))}
               </div>
               <button onClick={() => setShowHelp(false)}
-                className="mt-5 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
+                className="mt-5 w-full rounded-lg bg-[#E95420] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
                 Got it
               </button>
             </motion.div>
