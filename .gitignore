@@ -16,3 +16,8 @@ yarn-error.log*
 !.vscode/extensions.json
 .DS_Store
 *.swp
+
+# Stray images at root (not part of the project)
+/*.jpg
+/*.jpeg
+/*.png
