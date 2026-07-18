@@ -936,8 +936,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   // ─── TUI — classic menu ───
   if (phase === "tui") {
-    const configuring = tuiOptions[tuiSelected];
-
     function handleTuiClick(i: number) {
       const opt = tuiOptions[i];
       if (!opt) return;
@@ -966,210 +964,152 @@ export default function ArchInstall({ config, speed, onComplete }: {
       if (opt.kind === "text") { setTuiConfiguring(true); setTuiMsg(""); }
     }
 
-    function tuiRow(opt: TuiConfig, i: number) {
-      const isInstall = opt.id === "install";
-      const isAbort = opt.id === "abort";
-      const isSave = opt.id === "save_config";
-      const sel = i === tuiSelected;
-      const hasSub = (opt.subItems && opt.subItems.length > 0) || (opt.kind === "menu" && opt.items);
-      return (
-        <div key={opt.id} onClick={() => handleTuiClick(i)}
-          className={`flex items-center px-3 py-[3px] cursor-pointer select-none ${
-            sel ? "bg-white/[0.04]" : "hover:bg-white/[0.01]"
-          }`}>
-          <span className="w-5 shrink-0 text-center" style={{ color: sel ? "#0000aa" : "transparent" }}>
-            {sel ? ">" : ""}
-          </span>
-          <span className="flex-1" style={{ color: sel ? "#ffffff" : "#aaaaaa" }}>
-            {opt.label}
-            {opt.required && <span style={{ color: "#aa0000" }} className="ml-1">*</span>}
-          </span>
-          <span style={{ color: sel ? "#0000aa" : "#666666" }}>
-            {opt.summary}
-            {hasSub && !isInstall && !isAbort && !isSave && <span style={{color: "#555"}} className="ml-1">&#8250;</span>}
-          </span>
-        </div>
-      );
-    }
 
-    function tuiFooter() {
-      const allOpts = tuiOptions.filter(o => o.kind !== "action");
-      const total = allOpts.length;
-      const done = allOpts.filter(o => o.summary !== "").length;
-      const reqOpts = allOpts.filter(o => o.required);
-      const reqDone = reqOpts.filter(o => o.summary !== "").length;
-      const reqTotal = reqOpts.length;
-      return (
-        <div className="bg-black px-3 py-1.5 text-[10px] font-mono flex justify-between shrink-0">
-          <span style={{ color: "#aa0000" }}>
-            {tuiSubCfg ? "Enter confirm  Esc cancel"
-              : tuiSubMenu ? "Enter select  Esc back"
-              : tuiConfiguring ? "Enter select  Esc cancel"
-              : "Up/Down navigate  Enter select  H Help  Esc back"}
-          </span>
-          <span style={{ color: "#aaaaaa" }}>
-            {tuiSubCfg ? `${tuiSubMenu?.[tuiSubSel]?.label || ""}`
-              : tuiSubMenu ? `${tuiOptions[tuiSelected]?.label || ""}`
-              : tuiConfiguring ? `${configuring?.label || ""}`
-              : `WiFi ${wifiConnected ? "ok" : "no"}  >> ${reqDone}/${reqTotal}  ${done}/${total}`}
-          </span>
-        </div>
-      );
-    }
 
     return (
-      <div data-no-auto-advance ref={tuiRef} className="w-full max-w-6xl mx-auto h-full"
-        onKeyDown={handleTuiKey} tabIndex={0}>
-        <div className="h-full bg-black flex flex-col">
-          {/* Header */}
-          <div className="px-4 py-1 shrink-0">
-            <span className="text-white font-bold text-[10px] font-mono tracking-wide">Arch Linux Installer</span>
-          </div>
-
-          {/* Help overlay */}
-          {showHelp && (
-            <div className="absolute inset-0 z-10 bg-black/95 flex items-center justify-center p-4 sm:p-8"
-              onClick={() => setShowHelp(false)}>
-              <div className="bg-black border border-white/10 p-5 max-w-md w-full font-mono text-xs space-y-3"
-                onClick={e => e.stopPropagation()}>
-                <div className="text-white font-bold text-sm mb-3">archinstall 4.0 — How to Use</div>
-                <div className="space-y-2 text-[#aaaaaa]">
-                  <div className="flex justify-between"><span className="text-white/40">↑ ↓</span><span>Navigate menu items</span></div>
-                  <div className="flex justify-between"><span className="text-white/40">Enter</span><span>Select/configure/confirm</span></div>
-                  <div className="flex justify-between"><span className="text-white/40">Esc</span><span>Go back one level</span></div>
-                  <div className="flex justify-between"><span className="text-white/40">H / ?</span><span>Toggle this help screen</span></div>
-                  <div className="border-t border-white/10 pt-2 mt-3" />
-                  <div className="text-white/50">Work through each option from top to bottom.</div>
-                  <div className="text-white/50">Navigate to "Install" and press Enter when ready.</div>
-                  <div className="text-white/50">"Abort" returns to the shell.</div>
-                </div>
-                <button onClick={() => setShowHelp(false)}
-                  className="mt-3 w-full py-1.5 rounded border border-white/10 text-[#aaaaaa] hover:text-white text-[11px] transition-colors">
-                  Close
-                </button>
+      <div data-no-auto-advance ref={tuiRef} className="fixed inset-0 z-50 bg-black font-mono text-xs leading-none overflow-hidden"
+        onKeyDown={handleTuiKey} tabIndex={0}
+        style={{
+          fontFamily: "'Courier New', monospace",
+          color: "#aaaaaa",
+          WebkitFontSmoothing: "none",
+          MozOsxFontSmoothing: "unset",
+          fontSmooth: "never",
+          textRendering: "optimizeSpeed",
+          lineHeight: 1,
+        }}>
+        {/* Help overlay */}
+        {showHelp && (
+          <div className="absolute inset-0 z-10 bg-black flex items-center justify-center"
+            onClick={() => setShowHelp(false)}>
+            <div className="bg-black" onClick={e => e.stopPropagation()}>
+              <div style={{color: "#ffffff"}}>archinstall 4.0 — How to Use</div>
+              <div style={{color: "#aaaaaa"}}>
+                <div><span style={{color: "#888"}}>Up/Down</span> Navigate items</div>
+                <div><span style={{color: "#888"}}>Enter</span> Select/confirm</div>
+                <div><span style={{color: "#888"}}>Esc</span> Go back</div>
+                <div><span style={{color: "#888"}}>H / ?</span> Help</div>
               </div>
+              <button onClick={() => setShowHelp(false)}
+                style={{color: "#aaaaaa", background: "none", border: "none", cursor: "pointer"}}>
+                Close
+              </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Body — single-column full-width menu */}
-          <div className="flex-1 font-mono text-xs bg-black overflow-y-auto">
-            {/* Level 3: configuring a sub-menu item's value */}
-            {tuiSubMenu && tuiSubCfg ? (
-              <div className="px-4 py-3">
-                <div className="text-white font-bold mb-2 text-[11px]">
-                  {tuiSubMenu[tuiSubSel]?.label || ""}
-                </div>
-                {tuiSubMenu[tuiSubSel]?.kind === "menu" && tuiSubMenu[tuiSubSel]?.items ? (
-                  <div>
-                    {tuiSubMenu[tuiSubSel]!.items!.map((item, i) => (
-                      <div key={item.label} onClick={() => {
-                        setTuiSubCfgIdx(i); playClick();
-                        const subOpt = tuiSubMenu![tuiSubSel];
-                        const val = subOpt.items![i].label;
-                        setTuiSubMenu(prev => prev!.map((o, j) => j === tuiSubSel ? { ...o, summary: val, selectedIdx: i } : o));
-                        setTuiSubCfg(false);
-                        setTuiMsg(`  ✓ ${subOpt.label}: ${val}`);
-                      }}
-                        className={`flex items-center px-2 py-1.5 cursor-pointer select-none ${
-                          i === tuiSubCfgIdx ? "bg-white/5" : "hover:bg-white/[0.02]"
-                        }`}>
-                        <span className="w-5 shrink-0 text-center" style={{ color: i === tuiSubCfgIdx ? "#0000aa" : "transparent" }}>
-                          {i === tuiSubCfgIdx ? ">" : ""}
-                        </span>
-                        <span style={{ color: i === tuiSubCfgIdx ? "#ffffff" : "#aaaaaa" }}>
-                          {item.label}
-                        </span>
-                        <span className="text-[#666666] ml-2 text-[10px]">— {item.desc}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div>
-                    <div className="text-[#aaaaaa] text-[11px] mb-2">Enter value:</div>
-                    <input type="text" defaultValue={tuiSubMenu[tuiSubSel]?.textValue || ""} autoFocus
-                      onKeyDown={handleTuiKey} onChange={() => playKeyClick()}
-                      className="w-full bg-black border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
-                  </div>
-                )}
-              </div>
-            ) : tuiSubMenu ? (
-              /* Level 2: sub-menu */
+        {/* Level 3: configuring a sub-menu item */}
+        {tuiSubMenu && tuiSubCfg ? (
+          <div>
+            <div style={{color: "#ffffff"}}>{tuiSubMenu[tuiSubSel]?.label || ""}</div>
+            {tuiSubMenu[tuiSubSel]?.kind === "menu" && tuiSubMenu[tuiSubSel]?.items ? (
               <div>
-                <div className="px-4 pt-2 pb-1 text-[11px] text-white">
-                  {tuiOptions[tuiSelected]?.label || ""}
-                </div>
-                {tuiSubMenu.map((opt, i) => (
-                  <div key={opt.id} onClick={() => setTuiSubSel(i)}
-                    className={`flex items-center px-3 py-1.5 cursor-pointer select-none ${
-                      i === tuiSubSel ? "bg-white/5" : "hover:bg-white/[0.02]"
-                    }`}>
-                    <span className="w-5 shrink-0 text-center" style={{ color: i === tuiSubSel ? "#0000aa" : "transparent" }}>
-                      {i === tuiSubSel ? ">" : ""}
-                    </span>
-                    <span className="flex-1" style={{ color: i === tuiSubSel ? "#ffffff" : "#aaaaaa" }}>
-                      {opt.label}
-                    </span>
-                    <span className="text-[#666666] text-[10px]">{opt.summary}</span>
-                    {(opt.kind === "menu" && opt.items) || opt.kind === "text"
-                      ? <span className="ml-1.5 text-[#555555] text-[11px]">›</span>
-                      : null}
+                {tuiSubMenu[tuiSubSel]!.items!.map((item, i) => (
+                  <div key={item.label} onClick={() => {
+                    setTuiSubCfgIdx(i); playClick();
+                    const subOpt = tuiSubMenu![tuiSubSel];
+                    const val = subOpt.items![i].label;
+                    setTuiSubMenu(prev => prev!.map((o, j) => j === tuiSubSel ? { ...o, summary: val, selectedIdx: i } : o));
+                    setTuiSubCfg(false);
+                    setTuiMsg(`  ok ${subOpt.label}: ${val}`);
+                  }} style={{color: i === tuiSubCfgIdx ? "#ffffff" : "#aaaaaa", cursor: "pointer"}}>
+                    {i === tuiSubCfgIdx ? " > " : "   "}{item.label}
                   </div>
                 ))}
               </div>
-            ) : tuiConfiguring && configuring ? (
-              /* Level 1b: selecting a value for a menu item */
-              <div className="px-4 py-3">
-                <div className="text-white font-bold mb-2 text-[11px]">
-                  {configuring.label}
-                </div>
-                {configuring.kind === "menu" && configuring.items ? (
-                  <div>
-                    {configuring.items.map((item, i) => (
-                      <div key={item.label} onClick={() => {
-                        setTuiSubIdx(i); playClick();
-                        setTuiOptions(prev => prev.map((o, j) => j === tuiSelected ? { ...o, summary: item.label, selectedIdx: i } : o));
-                        setTuiConfiguring(false);
-                        setTuiMsg(`  ✓ ${configuring.label}: ${item.label}`);
-                      }}
-                        className={`flex items-center px-2 py-1.5 cursor-pointer select-none ${
-                          i === tuiSubIdx ? "bg-white/5" : "hover:bg-white/[0.02]"
-                        }`}>
-                        <span className="w-5 shrink-0 text-center" style={{ color: i === tuiSubIdx ? "#0000aa" : "transparent" }}>
-                          {i === tuiSubIdx ? ">" : ""}
-                        </span>
-                        <span style={{ color: i === tuiSubIdx ? "#ffffff" : "#aaaaaa" }}>
-                          {item.label}
-                        </span>
-                        <span className="text-[#666666] ml-2 text-[10px]">— {item.desc}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div>
-                    <div className="text-[#aaaaaa] text-[11px] mb-2">Enter value:</div>
-                    <input type="text" defaultValue={configuring.textValue} autoFocus
-                      onKeyDown={handleTuiKey} onChange={() => playKeyClick()}
-                      className="w-full bg-black border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
-                  </div>
-                )}
-              </div>
             ) : (
-              /* Level 1: main menu */
               <div>
-                <div className="px-3 py-1 font-mono" style={{ color: "#aa0000" }}>
-                  Up/Down navigate, Enter select
-                </div>
-                {tuiOptions.map((opt, i) => tuiRow(opt, i))}
-                {tuiMsg && (
-                  <div className="px-4 pt-2 pb-1 text-[10px] font-mono" style={{ color: tuiMsg.includes("✗") ? "#aa0000" : "#aaaaaa" }}>
-                    {tuiMsg}
-                  </div>
-                )}
+                <div style={{color: "#aaaaaa"}}>Enter value:</div>
+                <input type="text" defaultValue={tuiSubMenu[tuiSubSel]?.textValue || ""} autoFocus
+                  onKeyDown={handleTuiKey} onChange={() => playKeyClick()}
+                  style={{background: "#000", border: "1px solid #333", color: "#fff", fontFamily: "'Courier New', monospace"}} />
               </div>
             )}
           </div>
+        ) : tuiSubMenu ? (
+          /* Level 2: sub-menu */
+          <div>
+            <div style={{color: "#ffffff"}}>
+              {tuiOptions[tuiSelected]?.label || ""}
+            </div>
+            {tuiSubMenu.map((opt, i) => (
+              <div key={opt.id} onClick={() => setTuiSubSel(i)}
+                style={{color: i === tuiSubSel ? "#ffffff" : "#aaaaaa", cursor: "pointer"}}>
+                {i === tuiSubSel ? " > " : "   "}{opt.label}
+                <span style={{color: "#666"}}> {opt.summary}</span>
+                {(opt.kind === "menu" && opt.items) || opt.kind === "text"
+                  ? <span style={{color: "#555"}}> &gt;</span>
+                  : null}
+              </div>
+            ))}
+          </div>
+        ) : tuiConfiguring ? (
+          /* Level 1b: configuring a value */
+          <div>
+            <div style={{color: "#ffffff"}}>
+              {tuiOptions[tuiSelected]?.label || ""}
+            </div>
+            {tuiOptions[tuiSelected]?.kind === "menu" && tuiOptions[tuiSelected]?.items ? (
+              <div>
+                {tuiOptions[tuiSelected]!.items!.map((item, i) => (
+                  <div key={item.label} onClick={() => {
+                    setTuiSubIdx(i); playClick();
+                    setTuiOptions(prev => prev.map((o, j) => j === tuiSelected ? { ...o, summary: item.label, selectedIdx: i } : o));
+                    setTuiConfiguring(false);
+                    setTuiMsg(`  ok ${tuiOptions[tuiSelected]?.label}: ${item.label}`);
+                  }} style={{color: i === tuiSubIdx ? "#ffffff" : "#aaaaaa", cursor: "pointer"}}>
+                    {i === tuiSubIdx ? " > " : "   "}{item.label}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div>
+                <div style={{color: "#aaaaaa"}}>Enter value:</div>
+                <input type="text" defaultValue={tuiOptions[tuiSelected]?.textValue || ""} autoFocus
+                  onKeyDown={handleTuiKey} onChange={() => playKeyClick()}
+                  style={{background: "#000", border: "1px solid #333", color: "#fff", fontFamily: "'Courier New', monospace"}} />
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Level 1: main menu */
+          <div>
+            <div style={{color: "#aa0000"}}>
+              Up/Down navigate, Enter select
+            </div>
+            {tuiOptions.map((opt, i) => {
+              const sel = i === tuiSelected;
+              const hasSub = (opt.subItems && opt.subItems.length > 0) || (opt.kind === "menu" && opt.items);
+              const isInstall = opt.id === "install";
+              const isAbort = opt.id === "abort";
+              const isSave = opt.id === "save_config";
+              return (
+                <div key={opt.id} onClick={() => handleTuiClick(i)}
+                  style={{color: sel ? "#ffffff" : "#aaaaaa", cursor: "pointer"}}>
+                  <span style={{color: sel ? "#0000aa" : "transparent"}}>&gt;</span>
+                  {opt.label}
+                  {opt.required && <span style={{color: "#aa0000"}}> *</span>}
+                  <span style={{color: sel ? "#0000aa" : "#666"}}>
+                    {opt.summary}
+                    {hasSub && !isInstall && !isAbort && !isSave && <span style={{color: "#555"}}> &gt;</span>}
+                  </span>
+                </div>
+              );
+            })}
+            {tuiMsg && (
+              <div style={{color: tuiMsg.includes("✗") || tuiMsg.includes("Required") ? "#aa0000" : "#aaaaaa"}}>
+                {tuiMsg}
+              </div>
+            )}
+          </div>
+        )}
 
-          {tuiFooter()}
+        {/* Footer */}
+        <div style={{color: "#aa0000"}}>
+          {tuiSubCfg ? "Enter confirm  Esc cancel"
+            : tuiSubMenu ? "Enter select  Esc back"
+            : tuiConfiguring ? "Enter select  Esc cancel"
+            : "Up/Down navigate  Enter select  H Help  Esc back"}
         </div>
       </div>
     );
