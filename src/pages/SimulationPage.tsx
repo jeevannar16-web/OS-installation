@@ -561,9 +561,9 @@ function SimulationPageInner() {
         {/* ═══════════════════════════════════════════════════════════
            SCENE CONTENT — full width, maximum space
            ═══════════════════════════════════════════════════════════ */}
-        <main className="flex-1 flex flex-col items-center justify-center px-4 py-4 overflow-auto" key={current}>
+        <main className="flex-1 flex flex-col px-4 py-2 overflow-auto" key={current}>
           <ErrorBoundary label={current}>
-            <div className="w-full max-w-6xl">
+            <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0">
               {renderScene()}
             </div>
           </ErrorBoundary>

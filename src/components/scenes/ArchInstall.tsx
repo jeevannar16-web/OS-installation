@@ -707,7 +707,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
   // ─── Boot ───
   if (phase === "boot") {
     return (
-      <div className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}
+      <div className="w-full max-w-6xl mx-auto h-full"
         onClick={() => setBootIdx(BOOT_LINES.length)}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden">
           <div className="h-full overflow-y-auto p-4 font-mono text-xs leading-relaxed" ref={termRef}>
@@ -735,7 +735,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
     })();
 
     return (
-      <div data-no-auto-advance className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}>
+      <div data-no-auto-advance className="w-full max-w-6xl mx-auto h-full">
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
 
           {/* ── nmtui WiFi panel ── */}
@@ -858,7 +858,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
                       : "#c0c0c0"
                   }}>{line}</div>
                 ))}
-                <div className="flex items-center gap-1.5 py-1">
+              </div>
+              <div className="shrink-0 px-4 py-2 border-t border-white/5">
+                <div className="flex items-center gap-1.5">
                   <span className="shrink-0 text-sm leading-none" style={{ color: promptColor }}>{prompt}</span>
                   <input ref={inputRef} type="text" value={input} autoFocus autoComplete="off" spellCheck={false}
                     onChange={(e) => { setInput(e.target.value); setCompletionIdx(-1); playKeyClick(); }}
@@ -975,30 +977,29 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
     if (guideView) {
       return (
-        <div data-no-auto-advance ref={tuiRef} className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}
+        <div data-no-auto-advance ref={tuiRef} className="w-full max-w-6xl mx-auto h-full"
           onKeyDown={handleGuideKey} tabIndex={0}>
-          <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
+          <div className="h-full rounded-lg border border-white/10 bg-black overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="bg-[#0a0a0e] px-4 py-2 border-b border-white/10 flex items-center gap-2 shrink-0">
-              <span className="text-white/50 text-[10px] font-mono font-bold tracking-wider flex-1">
-                archinstall 4.0
+            <div className="px-4 py-1.5 flex items-center gap-2 shrink-0 border-b border-white/5">
+              <span className="text-white font-bold text-[10px] font-mono tracking-wide flex-1">
+                Arch Linux Installer
               </span>
               <button onClick={() => { setGuideView(false); playClick(); }}
-                className="text-white/20 hover:text-white/60 text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors">
+                className="text-[#aaaaaa] hover:text-white text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors">
                 Full Menu
               </button>
             </div>
-            <div className="h-px bg-white/5 shrink-0" />
 
-            {/* Body */}
+            {/* Body — single column */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-5 font-mono text-xs" ref={tuiRef}>
               {/* Step indicator */}
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[#60a5fa] font-bold text-[11px]">
+                <span className="text-white font-bold text-[11px]">
                   {panel.item.kind === "action" ? "" : `Step ${guideStep + 1} / ${panels.length}`}
                 </span>
                 {panel.item.kind !== "action" && (
-                  <span className="text-white/20 text-[9px]">
+                  <span className="text-[#aaaaaa] text-[9px]">
                     ({configuredCount}/{totalCount}  *{configurable.filter(o => o.required && o.summary !== "").length}/{configurable.filter(o => o.required).length})
                   </span>
                 )}
@@ -1007,40 +1008,36 @@ export default function ArchInstall({ config, speed, onComplete }: {
               {/* Title & description */}
               <div className="text-white font-bold text-sm mb-1">{panel.title}</div>
               {panel.description && (
-                <div className="text-white/40 text-[10px] mb-3 leading-relaxed">{panel.description}</div>
+                <div className="text-[#aaaaaa] text-[10px] mb-3 leading-relaxed">{panel.description}</div>
               )}
 
               {/* Configuration UI */}
               {cfgItem.kind === "menu" && cfgItems.length > 0 && (
-                <div className="space-y-1 mb-2">
-                  {cfgItems.map((item, i) => {
-                    const isSel = (curSel ?? 0) === i;
-                    const isFocused = guideFocus === i;
-                    return (
-                    <div key={item.label}
-                      className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer transition-colors border ${
-                        isSel
-                          ? "bg-[#60a5fa]/20 text-white border-[#60a5fa]/30"
-                          : isFocused
-                            ? "bg-[#60a5fa]/8 text-white/80 border-[#60a5fa]/20"
-                            : "text-white/60 hover:bg-white/5 border-transparent"
-                      }`}
-                      onClick={() => { setGuideFocus(i); setVal(item.label, i); }}
-                      onMouseEnter={() => setGuideFocus(i)}>
-                      <div className="flex items-center gap-2">
-                        <span className={`w-3 h-3 rounded-full border-2 flex items-center justify-center ${
-                          isSel ? "border-[#60a5fa] bg-[#60a5fa]" : isFocused ? "border-[#60a5fa]/60" : "border-white/20"
-                        }`}>
-                          {isSel && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                <div className="mb-2">
+                  <div className="mb-1" style={{ color: "#aa0000" }}>
+                    Up/Down navigate, Enter select
+                  </div>
+                  <div>
+                    {cfgItems.map((item, i) => {
+                      const isSel = (curSel ?? 0) === i;
+                      return (
+                      <div key={item.label}
+                        className={`flex items-center px-2 py-1.5 cursor-pointer select-none ${
+                          isSel ? "bg-white/[0.04]" : "hover:bg-white/[0.01]"
+                        }`}
+                        onClick={() => { setGuideFocus(i); setVal(item.label, i); }}
+                        onMouseEnter={() => setGuideFocus(i)}>
+                        <span className="w-5 shrink-0 text-center" style={{ color: isSel ? "#0000aa" : "transparent" }}>
+                          {isSel ? ">" : ""}
                         </span>
-                        <span className={isSel ? "font-bold" : ""}>{item.label}</span>
-                        <span className="text-white/30 ml-1">— {item.desc}</span>
+                        <span style={{ color: isSel ? "#ffffff" : "#aaaaaa" }}>
+                          {item.label}
+                        </span>
+                        <span className="text-[#666666] ml-2 text-[10px]">— {item.desc}</span>
                       </div>
-                      {isSel && <span className="text-[#4ade80] text-[10px] font-bold">✓</span>}
-                      {isFocused && !isSel && <span className="text-[#60a5fa] text-[10px]">▶</span>}
-                    </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -1052,8 +1049,8 @@ export default function ArchInstall({ config, speed, onComplete }: {
                       if (e.key === "Escape") { e.preventDefault(); }
                     }}
                     onChange={() => playKeyClick()}
-                    className="w-full bg-[#1a1a2e] border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
-                  <div className="text-[9px] text-white/20 mt-1">Enter to confirm</div>
+                    className="w-full bg-black border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
+                  <div className="text-[9px] text-[#aaaaaa]/40 mt-1">Enter to confirm</div>
                 </div>
               )}
 
@@ -1069,47 +1066,48 @@ export default function ArchInstall({ config, speed, onComplete }: {
                       }}
                         className={`w-full py-3 rounded text-xs font-bold border transition-colors ${
                           canInstall
-                            ? "bg-[#4ade80]/20 text-[#4ade80] border-[#4ade80]/30 hover:bg-[#4ade80]/30"
-                            : "bg-white/5 text-white/30 border-white/10"
+                            ? "bg-white/5 text-white border-white/20 hover:bg-white/10"
+                            : "bg-transparent text-[#666666] border-white/5"
                         }`}>
-                        {canInstall ? "▶ Install Arch Linux" : "✗ Missing required configuration"}
+                        {canInstall ? "Install" : "✗ Missing required configuration"}
                       </button>
                     ) : null;
                   })()}
                   {cfgItem.id === "save_config" && (
                     <button onClick={() => { setTuiMsg("  ✓ Configuration saved to /root/archinstall.json"); playClick(); }}
-                      className="w-full py-2 rounded text-xs font-bold border border-[#fbbf24]/20 bg-[#fbbf24]/10 text-[#fbbf24] hover:bg-[#fbbf24]/20 transition-colors">
+                      className="w-full py-2 rounded text-xs font-bold border border-white/10 text-[#aaaaaa] hover:text-white hover:border-white/30 transition-colors">
                       Save configuration
                     </button>
                   )}
                   {cfgItem.id === "abort" && (
                     <button onClick={() => { playClick(); setTuiMsg(""); setPhase("shell"); }}
-                      className="w-full py-2 rounded text-xs font-bold border border-[#f87171]/20 bg-[#f87171]/10 text-[#f87171] hover:bg-[#f87171]/30 transition-colors">
-                      Abort installation
+                      className="w-full py-2 rounded text-xs font-bold border border-white/10 text-[#aaaaaa] hover:text-white hover:border-white/30 transition-colors">
+                      Abort
                     </button>
                   )}
                 </div>
               )}
 
               {tuiMsg && (
-                <div className="mt-3 text-[10px]" style={{ color: tuiMsg.includes("✗") ? "#f87171" : "#4ade80" }}>{tuiMsg}</div>
+                <div className="mt-3 text-[10px]" style={{ color: tuiMsg.includes("✗") ? "#aa0000" : "#aaaaaa" }}>{tuiMsg}</div>
               )}
             </div>
 
             {/* Bottom navigation */}
-            <div className="border-t border-white/10 bg-[#0a0a0a] px-4 py-2 shrink-0">
+            <div className="border-t border-white/10 bg-black px-4 py-2 shrink-0">
               <div className="flex items-center justify-between">
                 <button onClick={() => { if (guideStep > 0) { setGuideStep(p => p - 1); setTuiMsg(""); playClick(); } }}
                   className={`px-3 py-1.5 rounded text-[10px] font-mono border transition-colors ${
                     guideStep === 0
-                      ? "text-white/10 border-white/5 cursor-default"
-                      : "text-white/50 border-white/10 hover:text-white/80 hover:border-white/30"
-                  }`}>
+                      ? "text-[#555555] border-white/5 cursor-default"
+                      : "text-[#aaaaaa] border-white/10 hover:text-white hover:border-white/30"
+                  }`}
+                  style={guideStep > 0 ? { color: "#aa0000" } : {}}>
                   ← Back
                 </button>
 
                 {cfgItem.kind !== "action" && (
-                  <span className="text-white/20 text-[9px]">
+                  <span style={{ color: "#aaaaaa" }}>
                     {panels.filter(p => (p.subItem || p.item).summary !== "" && p.item.kind !== "action").length} / {panels.filter(p => p.item.kind !== "action").length} done
                   </span>
                 )}
@@ -1122,11 +1120,12 @@ export default function ArchInstall({ config, speed, onComplete }: {
                 }}
                   className={`px-3 py-1.5 rounded text-[10px] font-mono border transition-colors ${
                     guideStep < panels.length - 1
-                      ? "text-white/50 border-white/10 hover:text-white/80 hover:border-white/30"
+                      ? "text-[#aaaaaa] border-white/10 hover:text-white hover:border-white/30"
                       : getMissingRequired(tuiOptions).length === 0
-                        ? "bg-[#4ade80]/20 text-[#4ade80] border-[#4ade80]/30 font-bold"
-                        : "text-white/10 border-white/5 cursor-default"
-                  }`}>
+                        ? "bg-white/5 text-white border-white/20 font-bold"
+                        : "text-[#555555] border-white/5 cursor-default"
+                  }`}
+                  style={guideStep < panels.length - 1 ? { color: "#aa0000" } : {}}>
                   {guideStep < panels.length - 1 ? "Next →" : "Install"}
                 </button>
               </div>
@@ -1145,23 +1144,21 @@ export default function ArchInstall({ config, speed, onComplete }: {
       const isSave = opt.id === "save_config";
       const sel = i === tuiSelected;
       const hasSub = (opt.subItems && opt.subItems.length > 0) || (opt.kind === "menu" && opt.items);
-      const canInstall = getMissingRequired(tuiOptions).length === 0;
-      const color = sel ? (isAbort ? "#f87171" : isInstall && canInstall ? "#4ade80" : isSave ? "#fbbf24" : "#ffffff") : "#9ca3af";
       return (
         <div key={opt.id} onClick={() => setTuiSelected(i)}
-          className={`flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none ${
-            sel ? "bg-[#1e293b]" : "hover:bg-white/[0.03]"
+          className={`flex items-center px-3 py-[3px] cursor-pointer select-none ${
+            sel ? "bg-white/[0.04]" : "hover:bg-white/[0.01]"
           }`}>
-          <span className="w-5 shrink-0 text-center text-[10px]" style={{ color: sel ? color : "transparent" }}>
+          <span className="w-5 shrink-0 text-center" style={{ color: sel ? "#0000aa" : "transparent" }}>
             {sel ? ">" : ""}
           </span>
-          <span className="flex-1 text-xs" style={{ color, fontWeight: sel ? 700 : 400 }}>
+          <span className="flex-1" style={{ color: sel ? "#ffffff" : "#aaaaaa" }}>
             {opt.label}
-            {opt.required && <span className="text-[#f87171] ml-0.5 text-[9px]" title="Required">*</span>}
+            {opt.required && <span style={{ color: "#aa0000" }} className="ml-1">*</span>}
           </span>
-          <span className="text-[10px] text-white/30 shrink-0 ml-2">
+          <span style={{ color: sel ? "#0000aa" : "#666666" }}>
             {opt.summary}
-            {hasSub && !isInstall && !isAbort && !isSave && <span className="ml-1 text-white/20">›</span>}
+            {hasSub && !isInstall && !isAbort && !isSave && <span style={{color: "#555"}} className="ml-1">&#8250;</span>}
           </span>
         </div>
       );
@@ -1175,45 +1172,44 @@ export default function ArchInstall({ config, speed, onComplete }: {
       const reqDone = reqOpts.filter(o => o.summary !== "").length;
       const reqTotal = reqOpts.length;
       return (
-        <div className="border-t border-white/10 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/30 font-mono flex justify-between shrink-0">
-          <span className="text-white/20">
-            {tuiSubCfg ? "↵ Confirm  Esc cancel"
-              : tuiSubMenu ? "↵ Select  Esc back"
-              : tuiConfiguring ? "↵ Select  Esc cancel"
-              : "↑↓ Navigate  ↵ Select  H Help  Esc back"}
+        <div className="bg-black border-t border-white/10 px-3 py-1.5 text-[10px] font-mono flex justify-between shrink-0">
+          <span style={{ color: "#aa0000" }}>
+            {tuiSubCfg ? "Enter confirm  Esc cancel"
+              : tuiSubMenu ? "Enter select  Esc back"
+              : tuiConfiguring ? "Enter select  Esc cancel"
+              : "Up/Down navigate  Enter select  H Help  Esc back"}
           </span>
-          <span>
+          <span style={{ color: "#aaaaaa" }}>
             {tuiSubCfg ? `${tuiSubMenu?.[tuiSubSel]?.label || ""}`
-              : tuiSubMenu ? `${tuiOptions[tuiSelected]?.label || ""} ›`
+              : tuiSubMenu ? `${tuiOptions[tuiSelected]?.label || ""}`
               : tuiConfiguring ? `${configuring?.label || ""}`
-              : `WiFi ${wifiConnected ? "✓" : "✗"}  *${reqDone}/${reqTotal}  ${done}/${total}`}
+              : `WiFi ${wifiConnected ? "ok" : "no"}  >> ${reqDone}/${reqTotal}  ${done}/${total}`}
           </span>
         </div>
       );
     }
 
     return (
-      <div data-no-auto-advance ref={tuiRef} className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}
+      <div data-no-auto-advance ref={tuiRef} className="w-full max-w-6xl mx-auto h-full"
         onKeyDown={handleTuiKey} tabIndex={0}>
-        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
-          {/* Header bar */}
-          <div className="bg-[#0a0a0e] px-4 py-2 border-b border-white/10 flex items-center gap-2 shrink-0">
-            <span className="text-white/50 text-[10px] font-mono font-bold tracking-wider flex-1">archinstall 4.0</span>
+        <div className="h-full rounded-lg border border-white/10 bg-black overflow-hidden flex flex-col">
+          {/* Header — terminal style */}
+          <div className="px-4 py-1.5 flex items-center gap-2 shrink-0 border-b border-white/5">
+            <span className="text-white font-bold text-[10px] font-mono tracking-wide flex-1">Arch Linux Installer</span>
             <button onClick={() => { setGuideView(true); setShowHelp(false); playClick(); }}
-              className="text-white/20 hover:text-white/60 text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors">
+              className="text-[#aaaaaa] hover:text-white text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors">
               Guided
             </button>
           </div>
-          <div className="h-px bg-white/5 shrink-0" />
 
           {/* Help overlay */}
           {showHelp && (
-            <div className="absolute inset-0 z-10 bg-[#0d1117]/95 flex items-center justify-center p-4 sm:p-8"
+            <div className="absolute inset-0 z-10 bg-black/95 flex items-center justify-center p-4 sm:p-8"
               onClick={() => setShowHelp(false)}>
-              <div className="bg-[#1a1a2e] border border-white/10 rounded-lg p-5 max-w-md w-full font-mono text-xs space-y-3"
+              <div className="bg-black border border-white/10 rounded-lg p-5 max-w-md w-full font-mono text-xs space-y-3"
                 onClick={e => e.stopPropagation()}>
-                <div className="text-[#60a5fa] font-bold text-sm mb-3">archinstall 4.0 — How to Use</div>
-                <div className="space-y-2 text-white/70">
+                <div className="text-white font-bold text-sm mb-3">archinstall 4.0 — How to Use</div>
+                <div className="space-y-2 text-[#aaaaaa]">
                   <div className="flex justify-between"><span className="text-white/40">↑ ↓</span><span>Navigate menu items</span></div>
                   <div className="flex justify-between"><span className="text-white/40">Enter</span><span>Select/configure/confirm</span></div>
                   <div className="flex justify-between"><span className="text-white/40">Esc</span><span>Go back one level</span></div>
@@ -1224,112 +1220,112 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   <div className="text-white/50">"Abort" returns to the shell.</div>
                 </div>
                 <button onClick={() => setShowHelp(false)}
-                  className="mt-3 w-full py-1.5 rounded border border-white/10 text-white/60 hover:text-white/80 text-[11px] transition-colors">
+                  className="mt-3 w-full py-1.5 rounded border border-white/10 text-[#aaaaaa] hover:text-white text-[11px] transition-colors">
                   Close
                 </button>
               </div>
             </div>
           )}
 
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto p-0 font-mono text-xs bg-[#0d1117]">
+          {/* Body — single-column full-width menu */}
+          <div className="flex-1 font-mono text-xs bg-black overflow-y-auto">
             {/* Level 3: configuring a sub-menu item's value */}
             {tuiSubMenu && tuiSubCfg ? (
-              <div className="p-4">
-                <div className="text-[#60a5fa] font-bold mb-4 text-[10px] uppercase tracking-wider border-b border-white/10 pb-2">
+              <div className="px-4 py-3">
+                <div className="text-white font-bold mb-3 text-[11px] border-b border-white/10 pb-2">
                   {tuiSubMenu[tuiSubSel]?.label || ""}
                 </div>
                 {tuiSubMenu[tuiSubSel]?.kind === "menu" && tuiSubMenu[tuiSubSel]?.items ? (
-                  <div className="space-y-0.5">
+                  <div>
                     {tuiSubMenu[tuiSubSel]!.items!.map((item, i) => (
                       <div key={item.label} onClick={() => { setTuiSubCfgIdx(i); }}
-                        className={`flex items-center px-3 py-2 rounded cursor-pointer transition-colors select-none ${
-                          i === tuiSubCfgIdx ? "bg-[#1e293b]" : "hover:bg-white/[0.03]"
+                        className={`flex items-center px-2 py-1.5 cursor-pointer select-none ${
+                          i === tuiSubCfgIdx ? "bg-white/5" : "hover:bg-white/[0.02]"
                         }`}>
-                        <span className="w-5 shrink-0 text-center text-[10px] text-[#60a5fa]">
+                        <span className="w-5 shrink-0 text-center" style={{ color: i === tuiSubCfgIdx ? "#0000aa" : "transparent" }}>
                           {i === tuiSubCfgIdx ? ">" : ""}
                         </span>
-                        <span className={`flex-1 text-xs ${i === tuiSubCfgIdx ? "text-white font-bold" : "text-white/60"}`}>
+                        <span style={{ color: i === tuiSubCfgIdx ? "#ffffff" : "#aaaaaa" }}>
                           {item.label}
                         </span>
-                        <span className="text-[10px] text-white/30 ml-2">— {item.desc}</span>
+                        <span className="text-[#666666] ml-2 text-[10px]">— {item.desc}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div>
-                    <div className="text-white/40 text-[10px] mb-2">Enter value:</div>
+                    <div className="text-[#aaaaaa] text-[11px] mb-2">Enter value:</div>
                     <input type="text" defaultValue={tuiSubMenu[tuiSubSel]?.textValue || ""} autoFocus
                       onKeyDown={handleTuiKey} onChange={() => playKeyClick()}
-                      className="w-full bg-[#0a0a0a] border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
+                      className="w-full bg-black border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
                   </div>
                 )}
               </div>
             ) : tuiSubMenu ? (
               /* Level 2: sub-menu */
               <div>
-                <div className="px-4 pt-3 pb-2 text-[10px] text-white/40 uppercase tracking-wider border-b border-white/5">
+                <div className="px-4 pt-3 pb-2 text-[11px] text-white border-b border-white/10">
                   {tuiOptions[tuiSelected]?.label || ""}
                 </div>
                 {tuiSubMenu.map((opt, i) => (
                   <div key={opt.id} onClick={() => setTuiSubSel(i)}
-                    className={`flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none ${
-                      i === tuiSubSel ? "bg-[#1e293b]" : "hover:bg-white/[0.03]"
+                    className={`flex items-center px-3 py-1.5 cursor-pointer select-none ${
+                      i === tuiSubSel ? "bg-white/5" : "hover:bg-white/[0.02]"
                     }`}>
-                    <span className="w-5 shrink-0 text-center text-[10px] text-[#60a5fa]">
+                    <span className="w-5 shrink-0 text-center" style={{ color: i === tuiSubSel ? "#0000aa" : "transparent" }}>
                       {i === tuiSubSel ? ">" : ""}
                     </span>
-                    <span className={`flex-1 text-xs ${i === tuiSubSel ? "text-white font-bold" : "text-white/60"}`}>
+                    <span className="flex-1" style={{ color: i === tuiSubSel ? "#ffffff" : "#aaaaaa" }}>
                       {opt.label}
                     </span>
-                    <span className="text-[10px] text-white/30">{opt.summary}</span>
+                    <span className="text-[#666666] text-[10px]">{opt.summary}</span>
                     {(opt.kind === "menu" && opt.items) || opt.kind === "text"
-                      ? <span className="ml-1.5 text-white/20 text-[10px]">›</span>
+                      ? <span className="ml-1.5 text-[#555555] text-[11px]">›</span>
                       : null}
                   </div>
                 ))}
               </div>
             ) : tuiConfiguring && configuring ? (
               /* Level 1b: selecting a value for a menu item */
-              <div className="p-4">
-                <div className="text-[#60a5fa] font-bold mb-4 text-[10px] uppercase tracking-wider border-b border-white/10 pb-2">
+              <div className="px-4 py-3">
+                <div className="text-white font-bold mb-3 text-[11px] border-b border-white/10 pb-2">
                   {configuring.label}
                 </div>
                 {configuring.kind === "menu" && configuring.items ? (
-                  <div className="space-y-0.5">
+                  <div>
                     {configuring.items.map((item, i) => (
                       <div key={item.label} onClick={() => { setTuiSubIdx(i); }}
-                        className={`flex items-center px-3 py-2 rounded cursor-pointer transition-colors select-none ${
-                          i === tuiSubIdx ? "bg-[#1e293b]" : "hover:bg-white/[0.03]"
+                        className={`flex items-center px-2 py-1.5 cursor-pointer select-none ${
+                          i === tuiSubIdx ? "bg-white/5" : "hover:bg-white/[0.02]"
                         }`}>
-                        <span className="w-5 shrink-0 text-center text-[10px] text-[#60a5fa]">
+                        <span className="w-5 shrink-0 text-center" style={{ color: i === tuiSubIdx ? "#0000aa" : "transparent" }}>
                           {i === tuiSubIdx ? ">" : ""}
                         </span>
-                        <span className={`flex-1 text-xs ${i === tuiSubIdx ? "text-white font-bold" : "text-white/60"}`}>
+                        <span style={{ color: i === tuiSubIdx ? "#ffffff" : "#aaaaaa" }}>
                           {item.label}
                         </span>
-                        <span className="text-[10px] text-white/30 ml-2">— {item.desc}</span>
+                        <span className="text-[#666666] ml-2 text-[10px]">— {item.desc}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div>
-                    <div className="text-white/40 text-[10px] mb-2">Enter value:</div>
+                    <div className="text-[#aaaaaa] text-[11px] mb-2">Enter value:</div>
                     <input type="text" defaultValue={configuring.textValue} autoFocus
                       onKeyDown={handleTuiKey} onChange={() => playKeyClick()}
-                      className="w-full bg-[#0a0a0a] border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
+                      className="w-full bg-black border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
                   </div>
                 )}
               </div>
             ) : (
               /* Level 1: main menu */
-              <div className="pt-2">
-                <div className="px-3 pb-2 text-[9px] text-white/20 font-mono border-b border-white/5 mb-1">
-                  ↑↓ select • Enter configure • Esc to shell • ? help
+              <div className="pt-1">
+                <div className="px-3 py-1.5 font-mono border-b border-white/10" style={{ color: "#aaaaaa" }}>
+                  Use Up/Down to navigate, Enter to select
                 </div>
                 {tuiOptions.map((opt, i) => tuiRow(opt, i))}
                 {tuiMsg && (
-                  <div className="px-4 pt-2 pb-1 text-[10px] font-mono" style={{ color: tuiMsg.includes("✗") ? "#f87171" : "#4ade80" }}>
+                  <div className="px-4 pt-2 pb-1 text-[10px] font-mono" style={{ color: tuiMsg.includes("✗") ? "#aa0000" : "#aaaaaa" }}>
                     {tuiMsg}
                   </div>
                 )}
@@ -1358,7 +1354,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       "(10/42)  bluez                             ######## 100%",
     ];
     return (
-      <div data-no-auto-advance className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}>
+      <div data-no-auto-advance className="w-full max-w-6xl mx-auto h-full">
         <div className="h-full rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden p-4 font-mono text-xs leading-relaxed"
           style={{ fontFamily: "'Courier New', 'JetBrains Mono', 'Fira Code', monospace" }}>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -1422,7 +1418,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       { label: "Desktop", icon: "🖥️" },
     ];
     return (
-      <div data-no-auto-advance className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}
+      <div data-no-auto-advance className="w-full max-w-6xl mx-auto h-full"
         onClick={() => { if (postStep < 4) setPostStep(4); }}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
           {/* Header */}
@@ -1552,7 +1548,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
   // ─── Done ───
   if (phase === "done") {
     return (
-      <div data-no-auto-advance className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}>
+      <div data-no-auto-advance className="w-full max-w-6xl mx-auto h-full">
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden p-6 font-mono text-xs leading-relaxed flex items-center justify-center">
           <div className="text-center space-y-4 bg-black/40 rounded-xl p-8" style={{ borderColor: `${accent}33`, borderWidth: 1 }}>
             <SparkleBurst trigger={true} />
