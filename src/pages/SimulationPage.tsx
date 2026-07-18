@@ -237,6 +237,7 @@ function SimulationPageInner() {
       // Navigation
       if (e.key === "Backspace" || e.key === "ArrowLeft") { e.preventDefault(); goBack(); }
       if (e.key === "Enter") {
+        if ((e.target as HTMLElement).closest("[data-no-auto-advance]")) return;
         e.preventDefault();
         const s = String(state.value);
         const evt = TRANSITIONS[s];

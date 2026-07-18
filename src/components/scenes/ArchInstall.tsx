@@ -391,7 +391,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
     if (phase === "done") { const t = setTimeout(() => onComplete(), speed === "fast" ? 800 : 2000); return () => clearTimeout(t); }
   }, [phase, onComplete, speed]);
   useEffect(() => {
-    if (phase === "shell" || phase === "tui") registerAdvance(() => onComplete());
+    if (phase === "shell") registerAdvance(() => onComplete());
   }, [phase, registerAdvance, onComplete]);
 
   useEffect(() => {
@@ -776,7 +776,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
     if (subshell === "iwctl") {
       // ── Visual WiFi panel ──
       return (
-        <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
+        <div data-no-auto-advance className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
           <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
             <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2 border-b border-white/10 flex items-center shrink-0">
               <span className="text-[#60a5fa] text-[10px] font-mono font-bold tracking-wider flex-1">iwctl — WiFi Setup</span>
@@ -844,7 +844,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
     if (subshell === "fdisk") {
       // ── Visual partition panel ──
       return (
-        <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
+        <div data-no-auto-advance className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
           <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
             <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2 border-b border-white/10 flex items-center shrink-0">
               <span className="text-[#fbbf24] text-[10px] font-mono font-bold tracking-wider flex-1">fdisk — /dev/{fdiskDisk}</span>
@@ -914,7 +914,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
     // ── Bash: text terminal ──
     return (
-      <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
+      <div data-no-auto-advance className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col relative"
           onClick={() => inputRef.current?.focus()}>
           {/* Floating image overlay */}
@@ -1084,7 +1084,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
     const allDone = configurable.every(o => o.summary !== "");
 
     return (
-      <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}
+      <div data-no-auto-advance className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}
         onKeyDown={handleTuiKey} tabIndex={0}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
           {/* Header bar — same full width as terminal */}
@@ -1302,7 +1302,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
   // ─── Installing ───
   if (phase === "installing") {
     return (
-      <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
+      <div data-no-auto-advance className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden p-4 font-mono text-xs leading-relaxed">
           <div className="text-[#4ade80] mb-2">:: Synchronizing package databases...</div>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
@@ -1357,7 +1357,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       { label: "Desktop", icon: "🖥️" },
     ];
     return (
-      <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}
+      <div data-no-auto-advance className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}
         onClick={() => { if (postStep < 4) setPostStep(4); }}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
           {/* Header */}
@@ -1487,7 +1487,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
   // ─── Done ───
   if (phase === "done") {
     return (
-      <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
+      <div data-no-auto-advance className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden p-6 font-mono text-xs leading-relaxed flex items-center justify-center">
           <div className="text-center space-y-4 bg-black/40 rounded-xl p-8" style={{ borderColor: `${accent}33`, borderWidth: 1 }}>
             <SparkleBurst trigger={true} />
