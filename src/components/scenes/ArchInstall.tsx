@@ -312,7 +312,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState(-1);
   const [wifiConnected, setWifiConnected] = useState(false);
-  type SubShell = "bash" | "iwctl" | "fdisk";
+  type SubShell = "bash" | "nmtui" | "fdisk";
   const [subshell, setSubshell] = useState<SubShell>("bash");
   const [fdiskDisk, setFdiskDisk] = useState("");
 
@@ -440,94 +440,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
     return missing;
   }
 
-  function handleIwctlSubmit(raw: string) {
-    const parts = raw.trim().split(/\s+/);
-    const cmd = parts[0]?.toLowerCase();
-    const args = parts.slice(1);
-
-    if (cmd === "exit" || cmd === "quit") {
-      playClick();
-      setSubshell("bash");
-      addTerminal(["[iwctl]# exit", "  Back to shell"]);
-      setInput("");
-      return;
-    }
-    if (cmd === "help") {
-      addTerminal(["[iwctl]# help",
-        "── iwctl commands ───────────────────────",
-        "  station list               Show WiFi stations",
-        "  station wlan0 scan         Scan for networks",
-        "  station wlan0 get-networks Show available networks",
-        "  station wlan0 connect <S>  Connect to a network",
-        "  exit                       Return to shell",
-      ]);
-      setInput("");
-      return;
-    }
-    if (cmd === "device") {
-      addTerminal(["[iwctl]# device list", "                Devices",
-        "┌──────┬──────────┬──────────┬──────────┐",
-        "│ Name │ Address  │ Powered  │ Adapter  │",
-        "├──────┼──────────┼──────────┼──────────┤",
-        "│ wlan0│ 00:1a:2b:3c:4d:5e │ on       │ phy0    │",
-        "└──────┴──────────┴──────────┴──────────┘",
-      ]);
-      setInput("");
-      return;
-    }
-    if (cmd === "station") {
-      const sub = args[0];
-      if (sub === "list") {
-        addTerminal(["[iwctl]# station list", "                Stations",
-          "┌──────┬──────────┬──────────┬──────────┐",
-          "│ Name │ State    │ Network  │  Address │",
-          "├──────┼──────────┼──────────┼──────────┤",
-          `│ wlan0│ ${wifiConnected ? "connected" : "disconnected"} │ ${wifiConnected ? "HomeWiFi" : "—"}      │ 00:1a:2b:3c:4d:5e│`,
-          "└──────┴──────────┴──────────┴──────────┘",
-        ]);
-      } else if (sub === "wlan0") {
-        if (args[1] === "scan") {
-          addTerminal(["[iwctl]# station wlan0 scan", "  ✓ Scan completed", "  Type 'station wlan0 get-networks' to see results"]);
-        } else if (args[1] === "get-networks") {
-          addTerminal(["[iwctl]# station wlan0 get-networks",
-            "                              Available Networks",
-            "┌─────┬──────────────────────────┬──────────┬──────────┐",
-            "│ Nr. │ Network name             │ Security │ Strength │",
-            "├─────┼──────────────────────────┼──────────┼──────────┤",
-            "│   1 │ HomeWiFi                 │ WPA2     │ ████ 54% │",
-            "│   2 │ Neighbor                 │ WPA3     │ ██  28%  │",
-            "│   3 │ Starbucks_Guest          │ Open     │ ███ 40%  │",
-            "│   4 │ Library_Public           │ Open     │ █    12%  │",
-            "└─────┴──────────────────────────┴──────────┴──────────┘",
-          ]);
-        } else if (args[1] === "connect") {
-          const ssid = args.slice(2).join(" ");
-          if (ssid) {
-            setWifiConnected(true);
-            setShellStep(2);
-            addTerminal(["[iwctl]# station wlan0 connect " + ssid,
-              "  ✓ Authentication completed",
-              "  ✓ DHCP lease obtained",
-              `  ✓ Connected to ${ssid}`,
-              "  Internet ready! exit iwctl → ping → archinstall",
-            ]);
-          } else {
-            addTerminal(["[iwctl]# station wlan0 connect <SSID>", "  Usage: station wlan0 connect HomeWiFi"]);
-          }
-        } else {
-          addTerminal(["[iwctl]# station wlan0 ...", "  Commands: scan, get-networks, connect <SSID>"]);
-        }
-      } else {
-        addTerminal(["[iwctl]# station ...", "  Usage: station list | station wlan0 <command>"]);
-      }
-      setInput("");
-      return;
-    }
-    // fallback
-    addTerminal([`[iwctl]# ${raw}`, `  Unknown iwctl command. Type 'help'`]);
-    setInput("");
-  }
-
   function handleFdiskSubmit(raw: string) {
     const cmd = raw.trim().toLowerCase();
     if (cmd === "q" || cmd === "quit") {
@@ -590,14 +502,23 @@ export default function ArchInstall({ config, speed, onComplete }: {
     setHistory(prev => [...prev, raw]);
     setHistIdx(-1);
 
-    if (subshell === "iwctl") { handleIwctlSubmit(raw); return; }
+    if (subshell === "nmtui") {
+      const c = raw.toLowerCase();
+      if (c === "exit" || c === "quit" || c === "back") {
+        setSubshell("bash"); addTerminal(["  Back to shell"]); setInput("");
+        return;
+      }
+      addTerminal([`  Unknown command in nmtui. Type 'exit' to return.`]);
+      setInput("");
+      return;
+    }
     if (subshell === "fdisk") { handleFdiskSubmit(raw); return; }
 
     const lower = raw.toLowerCase();
 
     if (lower === "archinstall") {
       if (!wifiConnected) {
-        addTerminal([`[root@archiso ~]# ${raw}`, "  ✗ No internet. Connect to WiFi first:", "    iwctl → station wlan0 get-networks", "    station wlan0 connect <SSID>", "    exit → ping archlinux.org"]);
+        addTerminal([`[root@archiso ~]# ${raw}`, "  ✗ No internet. Connect to WiFi first:", "    nmtui → connect to a network", "    exit → ping archlinux.org"]);
         setInput("");
         return;
       }
@@ -619,32 +540,21 @@ export default function ArchInstall({ config, speed, onComplete }: {
     }
 
     if (lower === "iwctl") {
-      playClick();
-      setInput("");
-      setSubshell("iwctl");
       addTerminal(["[root@archiso ~]# iwctl",
         "iwctl v2.11  (iNet Wireless Daemon)",
-        "  Type 'help' for commands, 'exit' to return to shell",
+        "  Tip: Use 'nmtui' for a simpler WiFi setup.",
       ]);
+      setInput("");
       return;
     }
 
     if (lower === "nmtui") {
       playClick();
       setInput("");
+      setSubshell("nmtui");
       addTerminal(["[root@archiso ~]# nmtui",
-        "┌─────────────────────────────────────────────────┐",
-        "│            NetworkManager TUI 1.48              │",
-        "├─────────────────────────────────────────────────┤",
-        "│  > Edit a connection                            │",
-        "│    Activate a connection                        │",
-        "│    Set system hostname                          │",
-        "│    Exit nmtui                                   │",
-        "└─────────────────────────────────────────────────┘",
-        "  ✓ Opening NetworkManager text interface...",
-        "  Use the WiFi tab above to scan & connect.",
+        "  ✓ NetworkManager TUI opened. Select a network below.",
       ]);
-      if (wifiConnected) { setShellStep(2); }
       return;
     }
 
@@ -817,7 +727,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
   if (phase === "shell") {
     const prompt = "[root@archiso ~]# ";
     const promptColor = "#00e676";
-    const activeTab = subshell === "bash" ? "terminal" : subshell;
 
     const nextHint = (() => {
       if (!wifiConnected) return { cmd: "nmtui", desc: "Open Network Manager (WiFi)", step: "❶ WiFi" };
@@ -825,52 +734,12 @@ export default function ArchInstall({ config, speed, onComplete }: {
       return { cmd: "archinstall", desc: "Launch installer", step: "❸ Install" };
     })();
 
-    const tabs = [
-      { id: "terminal", label: "Terminal", icon: "⌨️", badge: "" },
-      { id: "iwctl", label: "WiFi", icon: "📶", badge: wifiConnected ? "✓" : "" },
-      { id: "fdisk", label: "Disk", icon: "💾", badge: "" },
-    ] as const;
-
-    function switchTab(id: string) {
-      playClick();
-      if (id === "terminal") { setSubshell("bash"); return; }
-      if (id === "iwctl") { setSubshell("iwctl"); return; }
-      if (id === "fdisk") { setSubshell("fdisk"); return; }
-    }
-
     return (
       <div data-no-auto-advance className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
-          {/* ── Tab bar ── */}
-          <div className="flex items-stretch border-b border-white/10 bg-[#0a0a0e] shrink-0 overflow-x-auto">
-            {tabs.map(t => {
-              const isActive = activeTab === t.id;
-              const isDisabled = (t.id === "fdisk" && !fdiskDisk);
-              return (
-                <button key={t.id} onClick={() => { if (!isDisabled) switchTab(t.id); }}
-                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 text-[10px] font-mono border-b-2 transition-all shrink-0 ${
-                    isActive
-                      ? "border-[#60a5fa] text-white bg-[#60a5fa]/8"
-                      : isDisabled
-                        ? "border-transparent text-white/20 cursor-default"
-                        : "border-transparent text-white/40 hover:text-white/70 hover:bg-white/[0.03]"
-                  }`}>
-                  <span>{t.icon}</span>
-                  <span className="truncate">{t.label}</span>
-                  {t.badge && <span className="text-[#4ade80] text-[9px] ml-0.5">{t.badge}</span>}
-                </button>
-              );
-            })}
-            <div className="flex-1" />
-            <div className="flex items-center gap-2 px-3 text-[9px] font-mono">
-              <span className={!wifiConnected ? "text-[#f87171]" : shellStep < 3 ? "text-[#fbbf24]" : "text-[#4ade80]"}>
-                {!wifiConnected ? "✗ No internet" : shellStep < 3 ? "◉ Verify" : "✓ Ready"}
-              </span>
-            </div>
-          </div>
 
-          {/* ── WiFi tab content ── */}
-          {activeTab === "iwctl" && (
+          {/* ── nmtui WiFi panel ── */}
+          {subshell === "nmtui" && (
             <div className="flex-1 p-4 sm:p-6 font-mono text-xs flex flex-col overflow-y-auto">
               <div className="text-[#60a5fa] font-bold text-[10px] mb-3 uppercase tracking-wider">Available Networks</div>
               <div className="space-y-2 flex-1">
@@ -910,13 +779,17 @@ export default function ArchInstall({ config, speed, onComplete }: {
                 ))}
               </div>
               <div className="mt-3 text-[9px] text-white/30">
-                {wifiConnected ? "✓ WiFi connected. Switch to Terminal tab to verify with ping." : "Click Connect on your WiFi network."}
+                {wifiConnected ? "✓ WiFi connected. Type 'ping archlinux.org' to verify." : "Click Connect on your WiFi network."}
               </div>
+              <button onClick={() => { playClick(); setSubshell("bash"); }}
+                className="mt-2 self-start px-3 py-1.5 rounded border border-white/10 text-white/40 hover:text-white/70 text-[10px] font-mono transition-colors">
+                ← Back to terminal
+              </button>
             </div>
           )}
 
           {/* ── Disk tab content ── */}
-          {activeTab === "fdisk" && (
+          {subshell === "fdisk" && (
             <div className="flex-1 p-4 sm:p-6 font-mono text-xs overflow-y-auto">
               <div className="overflow-x-auto">
                 <table className="w-full text-[11px]">
@@ -969,8 +842,8 @@ export default function ArchInstall({ config, speed, onComplete }: {
             </div>
           )}
 
-          {/* ── Terminal tab content ── */}
-          {activeTab === "terminal" && (
+          {/* ── Terminal (always shown when no subshell) ── */}
+          {subshell === "bash" && (
             <div className="flex-1 flex flex-col bg-[#0a0a0a]" onClick={() => inputRef.current?.focus()}>
               <div className="flex-1 overflow-y-auto p-4 pb-0 font-mono text-xs leading-relaxed" ref={termRef}
                 style={{ fontFamily: "'Courier New', 'JetBrains Mono', 'Fira Code', monospace" }}>
