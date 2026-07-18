@@ -76,7 +76,11 @@ export default function GrubMenu({ config, onComplete }: { config: OSConfig; onC
       const t = setTimeout(() => setPhase("windows_desktop"), 2500);
       return () => clearTimeout(t);
     }
-  }, [phase]);
+    if (phase === "windows_desktop") {
+      const t = setTimeout(() => onComplete(), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [phase, onComplete]);
 
   if (phase === "bios_setup") {
     return (
@@ -124,7 +128,7 @@ export default function GrubMenu({ config, onComplete }: { config: OSConfig; onC
 
   if (phase === "windows_desktop") {
     return (
-      <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl backdrop-blur-xl w-full max-w-2xl mx-auto">
+      <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl backdrop-blur-xl w-full max-w-2xl mx-auto cursor-pointer" onClick={() => onComplete()}>
         <div className="relative h-[400px]" style={{ background: "linear-gradient(135deg, #0078D4, #005a9e, #003f7f)" }}>
           <div className="absolute inset-0 p-6">
             <div className="grid grid-cols-2 gap-3 w-fit">
@@ -153,11 +157,14 @@ export default function GrubMenu({ config, onComplete }: { config: OSConfig; onC
               <span className="text-white/40">This confirms dual-boot is working.</span>
             </div>
           </div>
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-[9px] text-white/30 bg-black/40 px-2 py-1 rounded-full">
+            Click anywhere or wait for OOBE setup to start
+          </div>
         </div>
         <div className="bg-[#1a1a2e] p-4 text-center">
-          <button onClick={() => setPhase("menu")}
+          <button onClick={(e) => { e.stopPropagation(); onComplete(); }}
             className="rounded-xl bg-white/10 border border-white/10 px-6 py-3 text-sm font-bold text-white/80 hover:bg-white/20 transition-colors">
-            🔄 Restart to GRUB menu
+            Continue to OOBE Setup →
           </button>
         </div>
       </div>
