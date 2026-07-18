@@ -113,7 +113,7 @@ const ARCH_STEPS: GuideStep[] = [
     description: "Let archinstall handle partitioning automatically. Choose the target drive and filesystem.",
     kind: "gui",
     guiAction: "Disk configuration → Best effort → Select drive (e.g. /dev/sda or /dev/nvme0n1) → Filesystem: ext4 → Confirm",
-    image: "/images/arch/10-disk-config.png",
+    image: "/images/arch/06-best-effort.png",
     tip: "For dual-boot: choose your existing drive. archinstall will create partitions alongside Windows. A separate /home partition is optional but recommended.",
   },
   {
@@ -131,17 +131,17 @@ const ARCH_STEPS: GuideStep[] = [
     tip: "GRUB is recommended for dual-boot. Use systemd-boot for UEFI-only single-boot setups.",
   },
   {
-    title: "Hostname & Users",
+    title: "User Accounts",
     description: "Set the machine hostname, root password, and create a user account with sudo privileges.",
     kind: "gui",
     guiAction: "Hostname → archlinux → Root password: [set password] → User account → Add user → [username] → [password] → Super user: Yes → Confirm",
-    image: "/images/arch/11-hostname.png",
+    image: "/images/arch/12-user-accounts.png",
   },
   {
-    title: "User Password",
-    description: "Set a strong password for your user account.",
+    title: "Set Passwords",
+    description: "Enter and confirm strong passwords for the root account and your user account.",
     kind: "gui",
-    guiAction: "User account → Set password → [your password] → Confirm → Back",
+    guiAction: "Root password → [set password] → Confirm → User password → [set password] → Confirm → Back",
     image: "/images/arch/11-user-password.png",
   },
   {
