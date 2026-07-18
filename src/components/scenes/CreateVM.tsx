@@ -115,38 +115,30 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                   ))}
                 </div>
 
-                {/* Inline wizard panel — feels like the real VirtualBox dialog */}
-                <div className="absolute inset-0 z-10 flex items-center justify-center">
-                  <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    onClick={e => e.stopPropagation()}
-                    className="rounded-xl border border-white/15 bg-[#1e1e1e]/95 backdrop-blur-md shadow-2xl w-72 overflow-hidden">
-
-                    {/* Overview */}
+                {/* Bottom overlay — fields sit IN the screenshot, not as a separate card */}
+                <div className="absolute bottom-0 inset-x-0 z-10"
+                  style={{
+                    background: `linear-gradient(to top, ${config.branding.surface} 0%, ${config.branding.surface}dd 50%, transparent 100%)`,
+                  }}>
+                  <div className="px-4 pt-10 pb-3 max-w-sm mx-auto">
                     {current.key === "overview" && (
-                      <div className="p-4">
+                      <div>
                         <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>
                           Create a Virtual Machine
                         </div>
                         <p className="text-xs text-white/50 mb-3 leading-relaxed">
-                          Press the <strong className="text-white/80">New</strong> button (⭐) in the toolbar to create a new virtual machine.
+                          Press the <strong className="text-white/80">New</strong> button (⭐) in the toolbar above to create a new virtual machine.
                         </p>
                         <button onClick={next}
                           className="w-full rounded-lg py-2 text-xs font-bold text-white transition-all hover:scale-[1.02]"
                           style={{ background: accent }}>
                           + New Virtual Machine
                         </button>
-                        <div className="mt-2.5 flex items-center justify-center gap-1 text-[8px] text-white/30">
-                          <span className="inline-block w-3 h-px bg-white/10" />
-                          <span>or click the toolbar "New" button</span>
-                          <span className="inline-block w-3 h-px bg-white/10" />
-                        </div>
                       </div>
                     )}
 
-                    {/* Name & ISO */}
                     {current.key === "name" && (
-                      <div className="p-4">
+                      <div>
                         <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>
                           VM Name & ISO
                         </div>
@@ -176,9 +168,8 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                       </div>
                     )}
 
-                    {/* Memory & CPU */}
                     {current.key === "memory" && (
-                      <div className="p-4">
+                      <div>
                         <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>
                           Memory & CPU
                         </div>
@@ -191,8 +182,7 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                             onChange={e => setMemory(Number(e.target.value))}
                             className="w-full h-1.5" style={{ accentColor: accent }} />
                           <div className="flex justify-between text-[7px] text-white/20 mt-0.5">
-                            <span>1 GB</span>
-                            <span>8 GB</span>
+                            <span>1 GB</span><span>8 GB</span>
                           </div>
                         </div>
                         <div className="mb-3">
@@ -204,8 +194,7 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                             onChange={e => setCpus(Number(e.target.value))}
                             className="w-full h-1.5" style={{ accentColor: accent }} />
                           <div className="flex justify-between text-[7px] text-white/20 mt-0.5">
-                            <span>1</span>
-                            <span>8</span>
+                            <span>1</span><span>8</span>
                           </div>
                         </div>
                         <button onClick={next}
@@ -216,9 +205,8 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                       </div>
                     )}
 
-                    {/* Disk */}
                     {current.key === "disk" && (
-                      <div className="p-4">
+                      <div>
                         <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>
                           Virtual Hard Disk
                         </div>
@@ -231,8 +219,7 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                             onChange={e => setDiskSize(Number(e.target.value))}
                             className="w-full h-1.5" style={{ accentColor: accent }} />
                           <div className="flex justify-between text-[7px] text-white/20 mt-0.5">
-                            <span>10 GB</span>
-                            <span>100 GB</span>
+                            <span>10 GB</span><span>100 GB</span>
                           </div>
                         </div>
                         <button onClick={next}
@@ -243,13 +230,12 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                       </div>
                     )}
 
-                    {/* Summary */}
                     {current.key === "summary" && (
-                      <div className="p-4">
+                      <div>
                         <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>
                           Ready to create
                         </div>
-                        <div className="rounded-lg border border-white/10 bg-white/5 p-3 space-y-1.5 text-[10px] mb-3">
+                        <div className="rounded-lg border border-white/10 bg-black/40 p-3 space-y-1.5 text-[10px] mb-3">
                           {[["Name", vmName], ["Memory", `${memory} MB`], ["CPU", `${cpus} cores`],
                             ["Disk", `${diskSize} GB VDI`],
                             ["ISO", config.iso.filename.length > 22 ? config.iso.filename.slice(0, 22) + "…" : config.iso.filename],
@@ -267,7 +253,7 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                         </button>
                       </div>
                     )}
-                  </motion.div>
+                  </div>
                 </div>
               </motion.div>
             </AnimatePresence>
