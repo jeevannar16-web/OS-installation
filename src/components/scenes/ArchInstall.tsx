@@ -184,6 +184,8 @@ function processCommand(input: string, setWifi: (v: boolean) => void): string[] 
       return [
         "── Arch Linux Installation Commands ─────────────────",
         "  archinstall   Launch guided installer (TUI menu)",
+        "  nmtui        Network Manager text UI (WiFi setup)",
+        "  nmcli        Network Manager command line",
         "  ping         Test internet (check WiFi first!)",
         "  iwctl        iNet Wireless Daemon (interactive)",
         "  timedatectl  Check/sync system clock",
@@ -193,10 +195,9 @@ function processCommand(input: string, setWifi: (v: boolean) => void): string[] 
         "  ls, cat, uname, ip, free, df, neofetch, clear",
         "",
         "  ── Internet is REQUIRED before archinstall ──",
-        "  Step 1: iwctl → station wlan0 get-networks",
-        "  Step 2: iwctl → station wlan0 connect <SSID>",
-        "  Step 3: ping archlinux.org (verify)",
-        "  Step 4: archinstall",
+        "  Step 1: nmtui     → Connect to WiFi",
+        "  Step 2: ping archlinux.org (verify)",
+        "  Step 3: archinstall",
       ];
     case "archinstall":
       return [];
@@ -209,6 +210,13 @@ function processCommand(input: string, setWifi: (v: boolean) => void): string[] 
         "    Neighbor    ██  28%  WPA3", "",
         "  Connect: station wlan0 connect <SSID>",
         "  After connecting, type: ping archlinux.org",
+      ];
+    case "nmtui":
+      return [
+        "nmtui 1.48  (NetworkManager TUI)", "",
+        "  A visual network manager will open.",
+        "  Use the WiFi tab above to connect.",
+        "  Or run: nmcli device wifi connect <SSID> password <pass>",
       ];
     case "station": {
       if (args.includes("wlan0") && args.includes("connect")) {
@@ -326,7 +334,8 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [completionIdx, setCompletionIdx] = useState(-1);
   const COMMANDS = [
     { cmd: "archinstall", desc: "Launch guided installer (TUI)" },
-    { cmd: "iwctl", desc: "WiFi connection manager" },
+    { cmd: "nmtui", desc: "Network Manager text UI (WiFi config)" },
+    { cmd: "iwctl", desc: "iNet Wireless Daemon (advanced)" },
     { cmd: "ping", desc: "Test internet connectivity" },
     { cmd: "fdisk", desc: "Partition manager (use fdisk -l, fdisk /dev/sdX)" },
     { cmd: "lsblk", desc: "List block devices" },
@@ -355,7 +364,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const setWifi = useCallback((v: boolean) => setWifiConnected(v), []);
 
   useEffect(() => {
-    if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight;
+    if (termRef.current) requestAnimationFrame(() => { termRef.current!.scrollTop = termRef.current!.scrollHeight; });
   }, [terminal, bootIdx, phase]);
 
   useEffect(() => {
@@ -368,7 +377,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       const t = setTimeout(() => {
         setPhase("shell");
         setShellStep(1);
-        setTerminal(["── Arch Linux Dual-Boot Installation ──────────────", "  Internet is required. Follow the 3 steps below:", "", "  ❶ iwctl     → Connect to WiFi", "  ❷ ping      → Verify internet", "  ❸ archinstall → Start guided installer", "────────────────────────────────────────────────────"]);
+        setTerminal(["── Arch Linux Dual-Boot Installation ──────────────", "  Internet is required. Follow the 3 steps below:", "", "  ❶ nmtui     → Connect to WiFi", "  ❷ ping      → Verify internet", "  ❸ archinstall → Start guided installer", "────────────────────────────────────────────────────"]);
       }, 300);
       return () => clearTimeout(t);
     }
@@ -620,6 +629,25 @@ export default function ArchInstall({ config, speed, onComplete }: {
       return;
     }
 
+    if (lower === "nmtui") {
+      playClick();
+      setInput("");
+      addTerminal(["[root@archiso ~]# nmtui",
+        "┌─────────────────────────────────────────────────┐",
+        "│            NetworkManager TUI 1.48              │",
+        "├─────────────────────────────────────────────────┤",
+        "│  > Edit a connection                            │",
+        "│    Activate a connection                        │",
+        "│    Set system hostname                          │",
+        "│    Exit nmtui                                   │",
+        "└─────────────────────────────────────────────────┘",
+        "  ✓ Opening NetworkManager text interface...",
+        "  Use the WiFi tab above to scan & connect.",
+      ]);
+      if (wifiConnected) { setShellStep(2); }
+      return;
+    }
+
     if (lower.startsWith("fdisk")) {
       const parts = raw.trim().split(/\s+/);
       if (parts.length >= 2 && parts[1] !== "-l") {
@@ -792,7 +820,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
     const activeTab = subshell === "bash" ? "terminal" : subshell;
 
     const nextHint = (() => {
-      if (!wifiConnected) return { cmd: "iwctl", desc: "Open WiFi manager", step: "❶ WiFi" };
+      if (!wifiConnected) return { cmd: "nmtui", desc: "Open Network Manager (WiFi)", step: "❶ WiFi" };
       if (shellStep < 3) return { cmd: "ping archlinux.org", desc: "Verify internet", step: "❷ Verify" };
       return { cmd: "archinstall", desc: "Launch installer", step: "❸ Install" };
     })();
@@ -943,26 +971,11 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
           {/* ── Terminal tab content ── */}
           {activeTab === "terminal" && (
-            <div className="flex-1 flex flex-col relative overflow-hidden"
-              onClick={() => inputRef.current?.focus()}>
-              {/* Terminal output */}
-              <div className="flex-1 overflow-y-auto p-4 font-mono text-xs leading-relaxed bg-[#0a0a0a]" ref={termRef}
+            <div className="flex-1 flex flex-col bg-[#0a0a0a]" onClick={() => inputRef.current?.focus()}>
+              <div className="flex-1 overflow-y-auto p-4 pb-0 font-mono text-xs leading-relaxed" ref={termRef}
                 style={{ fontFamily: "'Courier New', 'JetBrains Mono', 'Fira Code', monospace" }}>
                 <div className="text-[#60a5fa] font-bold mb-1 text-[11px]">Arch Linux 6.8.9-arch1-1 (tty1)</div>
                 <div className="text-[#4ade80] mb-2 text-[11px]">archiso login: root (automatic)</div>
-                <div className="mb-3 flex items-center gap-2 text-[10px] flex-wrap">
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold ${
-                    wifiConnected ? "bg-[#4ade80]/15 text-[#4ade80]" : "bg-[#f87171]/15 text-[#f87171]"
-                  }`}>
-                    <span>{wifiConnected ? "●" : "○"}</span>
-                    {wifiConnected ? "Connected" : "No internet"}
-                  </span>
-                  {shellStep >= 3 && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#fbbf24]/15 text-[#fbbf24] font-bold">
-                      ● Internet verified
-                    </span>
-                  )}
-                </div>
                 {terminal.map((line, i) => (
                   <div key={i} className="whitespace-pre-wrap" style={{
                     color: line.startsWith("[root@") ? "#00e676"
@@ -972,11 +985,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                       : "#c0c0c0"
                   }}>{line}</div>
                 ))}
-              </div>
-
-              {/* Input line */}
-              <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-2.5">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 py-1">
                   <span className="shrink-0 text-sm leading-none" style={{ color: promptColor }}>{prompt}</span>
                   <input ref={inputRef} type="text" value={input} autoFocus autoComplete="off" spellCheck={false}
                     onChange={(e) => { setInput(e.target.value); setCompletionIdx(-1); playKeyClick(); }}
@@ -1315,8 +1324,12 @@ export default function ArchInstall({ config, speed, onComplete }: {
         onKeyDown={handleTuiKey} tabIndex={0}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
           {/* Header bar */}
-          <div className="bg-[#0a0a0e] px-4 py-2 border-b border-white/10 shrink-0">
-            <span className="text-white/50 text-[10px] font-mono font-bold">archinstall 4.0</span>
+          <div className="bg-[#0a0a0e] px-4 py-2 border-b border-white/10 flex items-center gap-2 shrink-0">
+            <span className="text-white/50 text-[10px] font-mono font-bold tracking-wider flex-1">archinstall 4.0</span>
+            <button onClick={() => { setGuideView(true); setShowHelp(false); playClick(); }}
+              className="text-white/20 hover:text-white/60 text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors">
+              Guided
+            </button>
           </div>
           <div className="h-px bg-white/5 shrink-0" />
 
