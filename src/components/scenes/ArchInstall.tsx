@@ -40,8 +40,9 @@ type TuiConfig = {
   required?: boolean;
 };
 
-function freshOptions(): TuiConfig[] {
+function freshOptions(diskChecked: boolean): TuiConfig[] {
   const diskSub: TuiConfig[] = [
+    { id: "disk_check", label: "Check disk space", summary: diskChecked ? "✓ 26.2 GB available (OK)" : "Not checked", kind: "action", textValue: "" },
     { id: "disk_partitioning", label: "Partitioning", summary: "Best-effort", kind: "menu",
       items: [
         { label: "Best-effort", desc: "Auto partition (default)" },
@@ -312,6 +313,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState(-1);
   const [wifiConnected, setWifiConnected] = useState(false);
+  const [nmtuiError, setNmtuiError] = useState(false);
+  const [diskChecked, setDiskChecked] = useState(false);
+  const [grubError, setGrubError] = useState(false);
   type SubShell = "bash" | "nmtui" | "fdisk";
   const [subshell, setSubshell] = useState<SubShell>("bash");
   const [fdiskDisk, setFdiskDisk] = useState("");
@@ -390,12 +394,15 @@ export default function ArchInstall({ config, speed, onComplete }: {
   // Auto-advance postinstall sub-steps
   useEffect(() => {
     if (phase !== "postinstall") return;
+    if (grubError && postStep === 0) return;
+    const offset = grubError ? 1 : 0;
     const delays = speed === "fast" ? [400, 900, 1400, 2000] : [800, 2500, 4500, 7000];
-    if (postStep < 4) {
-      const t = setTimeout(() => setPostStep(p => p + 1), delays[postStep] || 800);
+    const maxStep = grubError ? 5 : 4;
+    if (postStep < maxStep) {
+      const t = setTimeout(() => setPostStep(p => p + 1), delays[postStep - offset] || 800);
       return () => clearTimeout(t);
     }
-  }, [phase, postStep, speed]);
+  }, [phase, postStep, speed, grubError]);
   useEffect(() => {
     if (phase === "done") { const t = setTimeout(() => onComplete(), speed === "fast" ? 800 : 2000); return () => clearTimeout(t); }
   }, [phase, onComplete, speed]);
@@ -521,7 +528,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       }
       playClick();
       setInput("");
-      setTuiOptions(freshOptions());
+      setTuiOptions(freshOptions(diskChecked));
       setTuiSelected(0);
       setTuiConfiguring(false);
       setTuiSubIdx(0);
@@ -795,7 +802,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
                       </div>
                     </div>
                     <button onClick={() => {
-                      playClick(); setWifiConnected(true); setShellStep(2);
+                      playClick();
+                      if (!nmtuiError) { setNmtuiError(true); return; }
+                      setNmtuiError(false); setWifiConnected(true); setShellStep(2);
                       addTerminal(["✓ Connected to " + net.name, "WiFi ready! Type 'ping archlinux.org' to verify."]);
                     }}
                       className={`shrink-0 px-3 py-1.5 rounded text-[10px] font-bold transition-all border ${
@@ -809,7 +818,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                 ))}
               </div>
               <div className="mt-3 text-[9px] text-white/30">
-                {wifiConnected ? "✓ WiFi connected. Type 'ping archlinux.org' to verify." : "Click Connect on your WiFi network."}
+                {nmtuiError ? "✗ Authentication failed: Wrong password. Try again." : wifiConnected ? "✓ WiFi connected. Type 'ping archlinux.org' to verify." : "Click Connect on your WiFi network."}
               </div>
               <button onClick={() => { playClick(); setSubshell("bash"); }}
                 className="mt-2 self-start px-3 py-1.5 rounded border border-white/10 text-white/40 hover:text-white/70 text-[10px] font-mono transition-colors">
@@ -944,11 +953,15 @@ export default function ArchInstall({ config, speed, onComplete }: {
         if (opt.id === "install") {
           const missing = getMissingRequired(tuiOptions);
           if (missing.length > 0) { setTuiMsg("  ✗ Required: " + missing.join(", ")); return; }
+          if (!diskChecked) { setTuiMsg("  ✗ Check disk space first (Disk configuration → Check disk space)"); return; }
           playClick(); setPhase("installing");
         } else if (opt.id === "abort") {
           setTuiMsg(""); setPhase("shell");
         } else if (opt.id === "save_config") {
           setTuiMsg("  ✓ Configuration saved to /root/archinstall.json");
+        } else if (opt.id === "disk_check") {
+          setDiskChecked(true); setTuiSubCfg(false); setTuiSubMenu(null); setTuiMsg("  ✓ /dev/nvme0n1: 26.2 GB available — sufficient");
+          playClick();
         }
         return;
       }
@@ -1178,16 +1191,25 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   // ─── Post-Install: GRUB → Boot → Login → Desktop ───
   if (phase === "postinstall") {
-    const steps = [
-      { label: "Rebooting", icon: "🔁" },
-      { label: "GRUB menu", icon: "📋" },
-      { label: "Booting kernel", icon: "⚙️" },
-      { label: "Login", icon: "👤" },
-      { label: "Desktop", icon: "🖥️" },
-    ];
+    const steps = grubError
+      ? [
+          { label: "GRUB Error", icon: "⚠️" },
+          { label: "Rebooting", icon: "🔁" },
+          { label: "GRUB menu", icon: "📋" },
+          { label: "Booting kernel", icon: "⚙️" },
+          { label: "Login", icon: "👤" },
+          { label: "Desktop", icon: "🖥️" },
+        ]
+      : [
+          { label: "Rebooting", icon: "🔁" },
+          { label: "GRUB menu", icon: "📋" },
+          { label: "Booting kernel", icon: "⚙️" },
+          { label: "Login", icon: "👤" },
+          { label: "Desktop", icon: "🖥️" },
+        ];
     return (
       <div data-no-auto-advance className="w-full max-w-6xl mx-auto h-full"
-        onClick={() => { if (postStep < 4) setPostStep(4); }}>
+        onClick={() => { if (grubError && postStep === 0) { setGrubError(false); setPostStep(1); return; } if (postStep < steps.length - 1) setPostStep(steps.length - 1); }}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2 border-b border-white/10 flex items-center gap-2 shrink-0">
@@ -1195,7 +1217,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
               Arch Linux — First Boot
             </span>
             <span className="text-white/20 text-[9px] font-mono">
-              {postStep + 1} / 5
+              {postStep + 1} / {steps.length}
             </span>
           </div>
 
@@ -1214,7 +1236,29 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
             {/* Content */}
             <div className="p-4">
-              {postStep === 0 && (
+              {grubError && postStep === 0 && (
+                <div>
+                  <div className="text-[#f87171] font-bold mb-2">⚠️ GRUB Installation Failed</div>
+                  <div className="text-white/60 mb-3">grub-install: error: failed to install GRUB to /dev/nvme0n1. The bootloader was not installed correctly.</div>
+                  <div className="bg-black/60 rounded-lg p-4 border border-white/10 mb-3">
+                    <div className="text-[#fbbf24] text-[10px] mb-2 font-mono"># Enter chroot and reinstall GRUB manually:</div>
+                    <div className="text-white/70 space-y-1 text-[11px]">
+                      <div className="text-emerald-400/90">arch-chroot /mnt</div>
+                      <div className="text-emerald-400/90">pacman -S grub efibootmgr</div>
+                      <div className="text-emerald-400/90">grub-install --target=x86_64-efi --efi-directory=/boot</div>
+                      <div className="text-emerald-400/90">grub-mkconfig -o /boot/grub/grub.cfg</div>
+                      <div className="text-emerald-400/90">exit</div>
+                    </div>
+                  </div>
+                  <button onClick={() => { setGrubError(false); setPostStep(1); }}
+                    className="px-4 py-2 rounded text-[10px] font-bold text-white bg-[#60a5fa]/30 hover:bg-[#60a5fa]/50 transition-colors">
+                    ✓ Fixed — Continue boot
+                  </button>
+                  <div className="mt-2 text-white/20 text-[9px]">Click anywhere to skip to GRUB menu</div>
+                </div>
+              )}
+              {(() => { const n = postStep - (grubError ? 1 : 0); return (
+              <>{n === 0 && (
                 <div>
                   <div className="text-[#fbbf24] font-bold mb-2">Rebooting system...</div>
                   <div className="text-white/60">Unmounting filesystems...</div>
@@ -1223,7 +1267,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   <div className="mt-4 text-white/20 text-[9px]">Click to skip to desktop</div>
                 </div>
               )}
-              {postStep === 1 && (
+              {n === 1 && (
                 <div className="space-y-3">
                   <div className="bg-black/60 rounded-lg p-4 border border-white/10">
                     <div className="text-[#60a5fa] font-bold text-sm mb-3">GNU GRUB version 2.12</div>
@@ -1239,7 +1283,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   </div>
                 </div>
               )}
-              {postStep === 2 && (
+              {n === 2 && (
                 <div>
                   <div className="text-[#888] space-y-1">
                     <div>[    0.000000] Linux version 6.8.9-arch1-1 (root@archiso) (gcc 13.2.1)</div>
@@ -1264,7 +1308,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                     className="mt-3 text-[#60a5fa]">Arch Linux 6.8.9-arch1-1 (tty1)</motion.div>
                 </div>
               )}
-              {postStep === 3 && (
+              {n === 3 && (
                 <div className="bg-black/60 rounded-lg p-5 border border-white/10 max-w-sm mx-auto">
                   <div className="text-center mb-4">
                     <div className="text-[#60a5fa] font-bold">Arch Linux 6.8.9-arch1-1 (tty1)</div>
@@ -1286,7 +1330,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   </div>
                 </div>
               )}
-              {postStep === 4 && (
+              {n === 4 && (
                 <div className="flex flex-col items-center justify-center py-4">
                   <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden border border-white/10 mb-3">
                     <img src="/images/arch/12-desktop-profile.png" alt="KDE Plasma Desktop"
@@ -1300,6 +1344,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   </motion.div>
                 </div>
               )}
+              </> ); })()}
             </div>
           </div>
 
