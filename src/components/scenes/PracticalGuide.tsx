@@ -206,6 +206,16 @@ function getInstallerSteps(config: OSConfig): GuideStep[] {
       restart: "/images/zorin/11-installer.png",
       desktop: "/images/zorin/02-live-desktop.png",
     },
+    windows: {
+      language: "/images/win11-setup/01-setup-language.webp",
+      boot: "/images/win11-setup/03-install-option.webp",
+      network: "/images/win11-setup/05-choose-edition.webp",
+      installType: "/images/win11-setup/07-partition-select.webp",
+      createUser: "/images/win11-setup/13-oobe-account.webp",
+      copying: "/images/win11-setup/08-clean-install.webp",
+      restart: "/images/win11-setup/17-oobe-new-pc.webp",
+      desktop: "/images/win11-setup/17-oobe-new-pc.webp",
+    },
   }[config.id] || {
     language: "/images/ubuntu/02-language.png",
     boot: "/images/ubuntu/01-try-or-install.png",

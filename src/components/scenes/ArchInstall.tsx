@@ -130,9 +130,12 @@ const WIZARD_STEPS: WizardStep[] = [
   },
 ];
 
-export default function ArchInstall({ config: _config, speed, onComplete }: {
+export default function ArchInstall({ config, speed, onComplete }: {
   config: OSConfig; speed: "normal" | "fast"; onComplete: () => void;
 }) {
+  const { branding } = config;
+  const accent = branding.accent;
+  const osName = branding.name;
   const { register: registerAdvance } = useSceneAdvance();
   const [phase, setPhase] = useState<WizardPhase>("boot");
   const [stepIdx, setStepIdx] = useState(0);
@@ -198,7 +201,7 @@ export default function ArchInstall({ config: _config, speed, onComplete }: {
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black cursor-pointer"
           onClick={() => setShowPopup("boot")}>
-          <img src="/images/arch/07-boot-menu.png" alt="Arch Linux boot menu"
+          <img src="/images/arch/07-boot-menu.png" alt={`${osName} boot menu`}
             className="absolute inset-0 w-full h-full object-cover bg-[#111]" />
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-white/50 bg-black/40 px-3 py-1 rounded-full pointer-events-none">
             Click anywhere to boot
@@ -210,12 +213,13 @@ export default function ArchInstall({ config: _config, speed, onComplete }: {
                 onClick={() => setShowPopup(null)}>
                 <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="rounded-xl border border-[#1793D1]/20 bg-[#1e1e1e] p-4 shadow-2xl w-72 text-center">
-                  <div className="text-[10px] text-[#1793D1] font-semibold uppercase tracking-wider mb-2">Arch Linux Live USB</div>
+                  className="rounded-xl border border-white/15 bg-[#1e1e1e] p-4 shadow-2xl w-72 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: accent }}>{osName} Live USB</div>
                   <p className="text-xs text-white/60 mb-3">Boot into the live environment to begin installation.</p>
                   <button onClick={() => { playClick(); setPhase("live"); setShowPopup(null); }}
-                    className="w-full rounded-lg bg-[#1793D1] px-4 py-2 text-sm font-bold text-white transition-all hover:scale-[1.02] shadow-lg shadow-[#1793D1]/30">
-                    Boot Arch Linux →
+                    className="w-full rounded-lg px-4 py-2 text-sm font-bold text-white transition-all hover:scale-[1.02] shadow-lg"
+                    style={{ background: accent, boxShadow: `0 10px 15px -3px ${accent}4d` }}>
+                    Boot {osName} →
                   </button>
                 </motion.div>
               </motion.div>
@@ -232,7 +236,7 @@ export default function ArchInstall({ config: _config, speed, onComplete }: {
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black cursor-pointer"
           onClick={() => setShowPopup("live")}>
-          <img src="/images/arch/08-live-login.png" alt="Arch Linux live login"
+          <img src="/images/arch/08-live-login.png" alt={`${osName} live login`}
             className="absolute inset-0 w-full h-full object-cover bg-[#111]" />
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-white/50 bg-black/40 px-3 py-1 rounded-full pointer-events-none">
             Click anywhere to launch installer
@@ -244,11 +248,12 @@ export default function ArchInstall({ config: _config, speed, onComplete }: {
                 onClick={() => setShowPopup(null)}>
                 <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="rounded-xl border border-[#1793D1]/20 bg-[#1e1e1e] p-4 shadow-2xl w-72 text-center">
-                  <div className="text-[10px] text-[#1793D1] font-semibold uppercase tracking-wider mb-2">Live Environment</div>
+                  className="rounded-xl border border-white/15 bg-[#1e1e1e] p-4 shadow-2xl w-72 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: accent }}>Live Environment</div>
                   <p className="text-xs text-white/60 mb-3">You're logged in as root. Check internet, then run archinstall.</p>
                   <button onClick={() => { playClick(); setPhase("wizard"); setShowPopup(null); }}
-                    className="w-full rounded-lg bg-[#1793D1] px-4 py-2 text-sm font-bold text-white transition-all hover:scale-[1.02] shadow-lg shadow-[#1793D1]/30">
+                    className="w-full rounded-lg px-4 py-2 text-sm font-bold text-white transition-all hover:scale-[1.02] shadow-lg"
+                    style={{ background: accent, boxShadow: `0 10px 15px -3px ${accent}4d` }}>
                     Run archinstall →
                   </button>
                 </motion.div>
@@ -265,18 +270,18 @@ export default function ArchInstall({ config: _config, speed, onComplete }: {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-[#111]">
-          <img src="/images/arch/15-install-progress.png" alt="Installing Arch Linux"
+          <img src="/images/arch/15-install-progress.png" alt={`Installing ${osName}`}
             className="absolute inset-0 w-full h-full object-cover opacity-30" />
           <div className="absolute inset-0 bg-[#12121a]/80 flex items-center justify-center">
             <div className="text-center space-y-6 px-6">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                 <div className="text-4xl">🏹</div>
-                <h2 className="text-xl font-bold text-[#1793D1]">Installing Arch Linux...</h2>
+                <h2 className="text-xl font-bold" style={{ color: accent }}>Installing {osName}...</h2>
                 <p className="text-xs text-white/40 max-w-sm mx-auto">
                   Packages are being downloaded and configured. This takes a few minutes.
                 </p>
                 <div className="max-w-xs mx-auto h-2 rounded-full bg-white/10 overflow-hidden">
-                  <motion.div className="h-full rounded-full bg-[#1793D1]"
+                  <motion.div className="h-full rounded-full" style={{ background: accent }}
                     initial={{ width: "0%" }} animate={{ width: "100%" }}
                     transition={{ duration: speed === "fast" ? 1.2 : 2.8, ease: "easeInOut" }} />
                 </div>
@@ -301,16 +306,16 @@ export default function ArchInstall({ config: _config, speed, onComplete }: {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-[#111]">
-          <img src="/images/arch/16-install-complete.png" alt="Arch Linux install complete"
+          <img src="/images/arch/16-install-complete.png" alt={`${osName} install complete`}
             className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-              className="text-center space-y-4 bg-black/60 backdrop-blur-sm rounded-2xl p-8 border border-[#1793D1]/20">
+              className="text-center space-y-4 bg-black/60 backdrop-blur-sm rounded-2xl p-8" style={{ borderColor: `${accent}33`, borderWidth: 1 }}>
               <SparkleBurst trigger={true} />
               <div className="text-3xl">🏹</div>
-              <h2 className="text-lg font-bold text-[#1793D1]">Arch Linux installed!</h2>
+              <h2 className="text-lg font-bold" style={{ color: accent }}>{osName} installed!</h2>
               <p className="text-xs text-white/50 max-w-xs mx-auto">
-                You completed the archinstall guided installer. Welcome to Arch.
+                You completed the archinstall guided installer. Welcome to {osName}.
               </p>
             </motion.div>
           </div>
@@ -337,7 +342,7 @@ export default function ArchInstall({ config: _config, speed, onComplete }: {
 
         <div className="absolute top-3 left-4 right-4 flex items-center gap-3 pointer-events-none">
           <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-            <motion.div className="h-full rounded-full bg-[#1793D1]"
+            <motion.div className="h-full rounded-full" style={{ background: accent }}
               animate={{ width: `${(completedSteps / WIZARD_STEPS.length) * 100}%` }}
               transition={{ duration: 0.3 }} />
           </div>
@@ -357,7 +362,7 @@ export default function ArchInstall({ config: _config, speed, onComplete }: {
                 onClick={(e) => e.stopPropagation()}
                 className="rounded-xl border border-white/15 bg-[#1e1e1e] p-4 shadow-2xl w-80">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[9px] font-mono text-[#1793D1] font-bold px-1.5 py-0.5 rounded bg-[#1793D1]/10 border border-[#1793D1]/20">
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border" style={{ color: accent, background: `${accent}1a`, borderColor: `${accent}33` }}>
                     STEP {completedSteps + 1}
                   </span>
                   <span className="text-xs font-bold text-white/80">{currentStep.title}</span>
@@ -365,7 +370,7 @@ export default function ArchInstall({ config: _config, speed, onComplete }: {
                 <p className="text-[10px] text-white/40 leading-relaxed mb-3">{currentStep.description}</p>
 
                 <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#0c0c0c] px-3 py-2">
-                  <span className="text-[#1793D1] font-mono text-sm">$</span>
+                  <span className="font-mono text-sm" style={{ color: accent }}>$</span>
                   <input type="text" value={inputValue}
                     onChange={(e) => { setInputValue(e.target.value); playKeyClick(); }}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSubmit(); } }}
@@ -373,7 +378,8 @@ export default function ArchInstall({ config: _config, speed, onComplete }: {
                     className="flex-1 bg-transparent text-white/90 outline-none font-mono text-xs placeholder:text-white/20"
                     autoFocus autoComplete="off" spellCheck={false} />
                   <button onClick={() => { handleSubmit(); }}
-                    className="rounded bg-[#1793D1] px-2.5 py-1 text-[11px] font-bold text-white hover:bg-[#1380b8] shrink-0">
+                    className="rounded px-2.5 py-1 text-[11px] font-bold text-white shrink-0"
+                    style={{ background: accent }}>
                     ↵
                   </button>
                 </div>

@@ -109,25 +109,7 @@ function getStepImg(osId: string, step: InstallerStep): string {
   return STEP_IMG[step];
 }
 
-function getAccent(osId: string): string {
-  if (osId === "zorin") return "#15A66E";
-  if (osId === "mint") return "#88C999";
-  return "#E95420";
-}
 
-function getSurface(osId: string): string {
-  if (osId === "windows") return "#002060";
-  if (osId === "zorin") return "#1a1a2e";
-  if (osId === "mint") return "#1a1a2e";
-  return "#2c001e";
-}
-
-function getOSName(osId: string): string {
-  if (osId === "windows") return "Windows 11";
-  if (osId === "zorin") return "Zorin OS";
-  if (osId === "mint") return "Linux Mint";
-  return "Ubuntu";
-}
 
 const LANGUAGES = [
   "English", "Español", "Français", "Deutsch", "Português (Brasil)",
@@ -167,9 +149,9 @@ export default function Install({ config, speed, onComplete, path }: {
 }) {
   const { register: registerAdvance } = useSceneAdvance();
   const isWindows = config.id === "windows";
-  const accent = getAccent(config.id);
-  const surface = getSurface(config.id);
-  const osName = getOSName(config.id);
+  const accent = config.branding.accent;
+  const surface = config.branding.surface;
+  const osName = config.branding.name;
   const [phase, setPhase] = useState<WizardPhase>(isWindows ? "installing" : "boot");
   const [bootSplash, setBootSplash] = useState(false);
   const [step, setStep] = useState<InstallerStep>("language");

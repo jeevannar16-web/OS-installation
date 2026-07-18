@@ -31,6 +31,20 @@ function getPartitionImg(osId: string): Record<string, string> {
     home: "/images/zorin/11-installer.png",
     swap: "/images/zorin/11-installer.png",
   };
+  if (osId === "arch") return {
+    manual: "/images/arch/08-disk-partitioning.png",
+    boot: "/images/arch/08-disk-partitioning.png",
+    root: "/images/arch/08-disk-partitioning.png",
+    home: "/images/arch/08-disk-partitioning.png",
+    swap: "/images/arch/08-disk-partitioning.png",
+  };
+  if (osId === "windows") return {
+    manual: "/images/win11-setup/07-partition-select.webp",
+    boot: "/images/win11-setup/07-partition-select.webp",
+    root: "/images/win11-setup/07-partition-select.webp",
+    home: "/images/win11-setup/07-partition-select.webp",
+    swap: "/images/win11-setup/07-partition-select.webp",
+  };
   return {
     manual: "/images/ubuntu/16-manual-partition.webp",
     boot: "/images/ubuntu/17-boot-partition.png",

@@ -36,6 +36,7 @@ const OS_WALLPAPER: Record<string, string> = {
   zorin: "/images/zorin/02-live-desktop.png",
   mint: "/images/mint/02-live-desktop.png",
   arch: "/images/arch/08-live-login.png",
+  windows: "/images/win11-setup/17-oobe-new-pc.webp",
 };
 
 export default function LiveDesktop({
