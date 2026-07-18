@@ -284,24 +284,25 @@ export default function Install({ config, speed, onComplete, path }: {
             className="absolute inset-0 w-full h-full object-cover" style={{ background: surface }} />
           <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/[0.02] pointer-events-none" />
 
-          {/* Inline try/install card */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="rounded-xl border border-white/15 bg-[#1e1e1e]/95 backdrop-blur-sm shadow-2xl w-72 overflow-hidden">
-              <div className="p-4">
-                <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Try or Install {osName}</div>
-                <div className="space-y-2 mb-2">
-                  <button onClick={() => { playClick(); setBootSplash(true); }}
-                    className="w-full rounded-lg px-4 py-2.5 text-sm font-bold text-white text-left transition-all hover:scale-[1.02]"
-                    style={{ background: accent }}>
-                    Install {osName}
-                  </button>
-                  <button onClick={() => { playClick(); setBootSplash(true); }}
-                    className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all text-left">
-                    Try {osName}
-                  </button>
-                </div>
-                <p className="text-[10px] text-white/40 text-center">You can try before installing. This won't change anything.</p>
+          {/* Bottom overlay — Try/Install buttons sit IN the image */}
+          <div className="absolute bottom-0 inset-x-0 z-10"
+            style={{
+              background: `linear-gradient(to top, ${surface} 0%, ${surface}dd 50%, transparent 100%)`,
+            }}>
+            <div className="px-5 pt-10 pb-4 max-w-sm mx-auto text-center">
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Try or Install {osName}</div>
+              <div className="space-y-2 mb-2">
+                <button onClick={() => { playClick(); setBootSplash(true); }}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm font-bold text-white text-left transition-all hover:scale-[1.02]"
+                  style={{ background: accent }}>
+                  Install {osName}
+                </button>
+                <button onClick={() => { playClick(); setBootSplash(true); }}
+                  className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all text-left">
+                  Try {osName}
+                </button>
               </div>
+              <p className="text-[10px] text-white/40">You can try before installing. This won't change anything.</p>
             </div>
           </div>
         </div>

@@ -16,6 +16,7 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
   const bgImg = OS_LIVE_IMG[config.id] || OS_LIVE_IMG.ubuntu;
   const osName = config.branding.name;
   const accent = config.branding.accent;
+  const surface = config.branding.surface;
 
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
@@ -23,12 +24,13 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
         <img src={bgImg} alt={`${osName} Try or Install`}
           className="absolute inset-0 w-full h-full object-cover" draggable={false} />
 
-        {/* Inline try/install card */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="rounded-xl border border-white/15 bg-[#1e1e1e]/95 backdrop-blur-sm shadow-2xl w-72 text-center overflow-hidden">
-            <div className="p-5">
+        {/* Bottom overlay — buttons sit IN the image */}
+        <div className="absolute bottom-0 inset-x-0 z-10"
+          style={{
+            background: `linear-gradient(to top, ${surface} 0%, ${surface}dd 50%, transparent 100%)`,
+          }}>
+          <div className="px-5 pt-10 pb-4 text-center max-w-sm mx-auto">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>
                 {osName}
               </div>
@@ -44,8 +46,8 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
                   Try {osName}
                 </button>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </div>
     </div>

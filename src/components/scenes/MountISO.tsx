@@ -94,31 +94,29 @@ export default function MountISO({ config, onComplete }: { config: OSConfig; onC
               )}
             </AnimatePresence>
 
-            {/* Browsing modal (inline) */}
+            {/* Browsing overlay — blends into bottom of the settings window */}
             <AnimatePresence>
               {browsing && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                  <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }}
-                    className="rounded-xl bg-[#1e1e1e] border border-white/10 p-4 shadow-2xl w-80">
-                    <div className="flex items-center gap-2 border-b border-white/10 pb-2 mb-3">
-                      <span className="text-lg text-white/60">📂</span>
-                      <span className="text-xs text-white/60 font-medium">Select a disk image...</span>
-                    </div>
-                    <div className="rounded-lg bg-[#2a2a2b] p-4 text-center">
+                <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }}
+                  className="absolute bottom-0 inset-x-0 z-20"
+                  style={{
+                    background: `linear-gradient(to top, ${config.branding.surface} 0%, ${config.branding.surface}dd 50%, transparent 100%)`,
+                  }}>
+                  <div className="px-4 pt-8 pb-3 text-center">
+                    <div className="flex items-center justify-center gap-2 text-xs text-white/60 font-medium mb-2">
                       <motion.div animate={{ rotate: 360 }}
                         transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                        className="inline-block text-3xl">💿</motion.div>
-                      <div className="mt-2 text-xs text-white/50">Browsing for {config.branding.shortName} ISO...</div>
-                      <div className="mt-1 text-[10px] text-white/30 font-mono">{config.iso.filename}</div>
+                        className="inline-block text-lg">💿</motion.div>
+                      <span>Selecting {config.branding.shortName} disk image...</span>
                     </div>
-                    <motion.div className="mt-2 h-1 rounded-full bg-white/10 overflow-hidden">
+                    <div className="text-[10px] text-white/30 font-mono mb-2">{config.iso.filename}</div>
+                    <motion.div className="h-1 rounded-full bg-white/10 mx-auto max-w-[200px] overflow-hidden">
                       <motion.div className="h-full rounded-full"
                         initial={{ width: 0 }} animate={{ width: "100%" }}
                         transition={{ duration: 1.4, ease: "easeInOut" }}
                         style={{ background: accent }} />
                     </motion.div>
-                  </motion.div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
