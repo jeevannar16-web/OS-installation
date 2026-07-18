@@ -183,15 +183,18 @@ function processCommand(input: string, setWifi: (v: boolean) => void): string[] 
         "── Arch Linux Installation Commands ─────────────────",
         "  archinstall   Launch guided installer (TUI menu)",
         "  ping         Test internet (check WiFi first!)",
-        "  iwctl        Connect to WiFi",
+        "  iwctl        iNet Wireless Daemon (interactive)",
         "  timedatectl  Check/sync system clock",
-        "  fdisk -l     List disks and partitions",
+        "  fdisk        Partition tool: fdisk -l or fdisk /dev/sdX",
+        "  cfdisk       TUI partition manager",
+        "  lsblk        List block devices",
         "  ls, cat, uname, ip, free, df, neofetch, clear",
         "",
         "  ── Internet is REQUIRED before archinstall ──",
-        "  Step 1: iwctl → connect to WiFi",
-        "  Step 2: ping archlinux.org (verify)",
-        "  Step 3: archinstall",
+        "  Step 1: iwctl → station wlan0 get-networks",
+        "  Step 2: iwctl → station wlan0 connect <SSID>",
+        "  Step 3: ping archlinux.org (verify)",
+        "  Step 4: archinstall",
       ];
     case "archinstall":
       return [];
@@ -232,6 +235,30 @@ function processCommand(input: string, setWifi: (v: boolean) => void): string[] 
         "/dev/nvme0n1p4       6.2G  Linux swap",
       ];
       return ["Usage: fdisk -l"];
+    case "lsblk":
+      return [
+        "NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS",
+        "nvme0n1     259:0    0 512.1G  0 disk",
+        "├─nvme0n1p1 259:1    0   500M  0 part /boot",
+        "├─nvme0n1p2 259:2    0   444G  0 part",
+        "├─nvme0n1p3 259:3    0  26.2G  0 part /",
+        "└─nvme0n1p4 259:4    0   6.2G  0 part [SWAP]",
+      ];
+    case "cfdisk":
+      return [
+        "┌─────────────────────────────────────────────────────┐",
+        "│                cfdisk (partition manager)           │",
+        "├──────────┬──────────┬──────┬──────────┬────────────┤",
+        "│ Device   │   Size   │ Type │ Mount    │ Filesystem │",
+        "├──────────┼──────────┼──────┼──────────┼────────────┤",
+        "│ nvme0n1p1│   500M   │ EFI  │ /boot    │ vfat       │",
+        "│ nvme0n1p2│   444G   │ Win  │ —        │ ntfs       │",
+        "│ nvme0n1p3│  26.2G   │ Linux│ /        │ ext4       │",
+        "│ nvme0n1p4│   6.2G   │ Swap │ [SWAP]   │ swap       │",
+        "├──────────┴──────────┴──────┴──────────┴────────────┤",
+        "│ [Write] [Quit]  ↑↓ navigate, Enter to select       │",
+        "└─────────────────────────────────────────────────────┘",
+      ];
     case "ls": {
       const dir = args[0] || "";
       if (dir === "/") return ["bin   boot   dev   etc   home   lib   mnt   opt   proc   root   run   sbin   sys   tmp   usr   var"];
@@ -275,6 +302,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState(-1);
   const [wifiConnected, setWifiConnected] = useState(false);
+  type SubShell = "bash" | "iwctl" | "fdisk";
+  const [subshell, setSubshell] = useState<SubShell>("bash");
+  const [floatingImg, setFloatingImg] = useState<string | null>(null);
+  const [fdiskDisk, setFdiskDisk] = useState("");
 
   const [tuiOptions, setTuiOptions] = useState<TuiConfig[]>([]);
   const [tuiSelected, setTuiSelected] = useState(0);
@@ -333,6 +364,155 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   function addTerminal(lines: string[]) { setTerminal(prev => [...prev, ...lines]); }
 
+  function showImageFor(img: string) {
+    setFloatingImg(img);
+    setTimeout(() => setFloatingImg(null), speed === "fast" ? 1500 : 3500);
+  }
+
+  function handleIwctlSubmit(raw: string) {
+    const parts = raw.trim().split(/\s+/);
+    const cmd = parts[0]?.toLowerCase();
+    const args = parts.slice(1);
+
+    if (cmd === "exit" || cmd === "quit") {
+      playClick();
+      setSubshell("bash");
+      addTerminal(["[iwctl]# exit", "  Back to shell"]);
+      setInput("");
+      return;
+    }
+    if (cmd === "help") {
+      addTerminal(["[iwctl]# help",
+        "── iwctl commands ───────────────────────",
+        "  station list               Show WiFi stations",
+        "  station wlan0 scan         Scan for networks",
+        "  station wlan0 get-networks Show available networks",
+        "  station wlan0 connect <S>  Connect to a network",
+        "  exit                       Return to shell",
+      ]);
+      setInput("");
+      return;
+    }
+    if (cmd === "device") {
+      addTerminal(["[iwctl]# device list", "                Devices",
+        "┌──────┬──────────┬──────────┬──────────┐",
+        "│ Name │ Address  │ Powered  │ Adapter  │",
+        "├──────┼──────────┼──────────┼──────────┤",
+        "│ wlan0│ 00:1a:2b:3c:4d:5e │ on       │ phy0    │",
+        "└──────┴──────────┴──────────┴──────────┘",
+      ]);
+      setInput("");
+      return;
+    }
+    if (cmd === "station") {
+      const sub = args[0];
+      if (sub === "list") {
+        addTerminal(["[iwctl]# station list", "                Stations",
+          "┌──────┬──────────┬──────────┬──────────┐",
+          "│ Name │ State    │ Network  │  Address │",
+          "├──────┼──────────┼──────────┼──────────┤",
+          `│ wlan0│ ${wifiConnected ? "connected" : "disconnected"} │ ${wifiConnected ? "HomeWiFi" : "—"}      │ 00:1a:2b:3c:4d:5e│`,
+          "└──────┴──────────┴──────────┴──────────┘",
+        ]);
+      } else if (sub === "wlan0") {
+        if (args[1] === "scan") {
+          showImageFor("/images/arch/13-network-config.png");
+          addTerminal(["[iwctl]# station wlan0 scan", "  ✓ Scan completed", "  Type 'station wlan0 get-networks' to see results"]);
+        } else if (args[1] === "get-networks") {
+          addTerminal(["[iwctl]# station wlan0 get-networks",
+            "                              Available Networks",
+            "┌─────┬──────────────────────────┬──────────┬──────────┐",
+            "│ Nr. │ Network name             │ Security │ Strength │",
+            "├─────┼──────────────────────────┼──────────┼──────────┤",
+            "│   1 │ HomeWiFi                 │ WPA2     │ ████ 54% │",
+            "│   2 │ Neighbor                 │ WPA3     │ ██  28%  │",
+            "│   3 │ Starbucks_Guest          │ Open     │ ███ 40%  │",
+            "│   4 │ Library_Public           │ Open     │ █    12%  │",
+            "└─────┴──────────────────────────┴──────────┴──────────┘",
+          ]);
+        } else if (args[1] === "connect") {
+          const ssid = args.slice(2).join(" ");
+          if (ssid) {
+            setWifiConnected(true);
+            showImageFor("/images/arch/13-network-config.png");
+            addTerminal(["[iwctl]# station wlan0 connect " + ssid,
+              "  ✓ Authentication completed",
+              "  ✓ DHCP lease obtained",
+              `  ✓ Connected to ${ssid}`,
+              "  Internet ready! exit iwctl → ping → archinstall",
+            ]);
+          } else {
+            addTerminal(["[iwctl]# station wlan0 connect <SSID>", "  Usage: station wlan0 connect HomeWiFi"]);
+          }
+        } else {
+          addTerminal(["[iwctl]# station wlan0 ...", "  Commands: scan, get-networks, connect <SSID>"]);
+        }
+      } else {
+        addTerminal(["[iwctl]# station ...", "  Usage: station list | station wlan0 <command>"]);
+      }
+      setInput("");
+      return;
+    }
+    // fallback
+    addTerminal([`[iwctl]# ${raw}`, `  Unknown iwctl command. Type 'help'`]);
+    setInput("");
+  }
+
+  function handleFdiskSubmit(raw: string) {
+    const cmd = raw.trim().toLowerCase();
+    if (cmd === "q" || cmd === "quit") {
+      playClick();
+      setSubshell("bash");
+      addTerminal([`Command (m for help): ${cmd}`, "  Back to shell"]);
+      setInput("");
+      return;
+    }
+    if (cmd === "w" || cmd === "write") {
+      addTerminal([`Command (m for help): ${cmd}`, "  The partition table has been altered.", "  Calling ioctl() to re-read partition table.", "  Syncing disks."]);
+      setInput("");
+      return;
+    }
+    if (cmd === "p" || cmd === "print") {
+      addTerminal([`Command (m for help): ${cmd}`,
+        "Disk /dev/" + fdiskDisk + ": 512.11 GiB",
+        "Device                Size  Type",
+        "/dev/" + fdiskDisk + "p1       500M  EFI System",
+        "/dev/" + fdiskDisk + "p2       444G  Windows 11",
+        "/dev/" + fdiskDisk + "p3      26.2G  Linux root",
+        "/dev/" + fdiskDisk + "p4       6.2G  Linux swap",
+      ]);
+    } else if (cmd === "m" || cmd === "help") {
+      addTerminal([`Command (m for help): ${cmd}`,
+        "  p   print partition table",
+        "  n   new partition",
+        "  d   delete partition",
+        "  w   write to disk",
+        "  q   quit",
+      ]);
+    } else if (cmd === "n" || cmd === "new") {
+      addTerminal([`Command (m for help): ${cmd}`,
+        "Partition type",
+        "  p   primary (4 max)",
+        "  e   extended",
+        "Select (default p): p",
+        "Partition number (1-4, default 4): ",
+        "  (pressed Enter - using default)",
+        "First sector (2048-1073741823, default 2048): ",
+        "  (pressed Enter - using default)",
+        "Last sector: +10G",
+        "  Created new partition 4 of type 'Linux filesystem'",
+      ]);
+    } else if (cmd === "d" || cmd === "delete") {
+      addTerminal([`Command (m for help): ${cmd}`,
+        "Partition number (1-4): 4",
+        "  Partition 4 has been deleted.",
+      ]);
+    } else {
+      addTerminal([`Command (m for help): ${cmd}`, `  Unknown command. Type 'm' for help.`]);
+    }
+    setInput("");
+  }
+
   function handleShellSubmit() {
     const raw = input.trim();
     if (!raw) return;
@@ -340,9 +520,14 @@ export default function ArchInstall({ config, speed, onComplete }: {
     setHistory(prev => [...prev, raw]);
     setHistIdx(-1);
 
-    if (raw.toLowerCase() === "archinstall") {
+    if (subshell === "iwctl") { handleIwctlSubmit(raw); return; }
+    if (subshell === "fdisk") { handleFdiskSubmit(raw); return; }
+
+    const lower = raw.toLowerCase();
+
+    if (lower === "archinstall") {
       if (!wifiConnected) {
-        addTerminal([`[root@archiso ~]# ${raw}`, "  ✗ No internet connection. Connect to WiFi first:", "    iwctl → station wlan0 connect <SSID>", "    ping archlinux.org"]);
+        addTerminal([`[root@archiso ~]# ${raw}`, "  ✗ No internet. Connect to WiFi first:", "    iwctl → station wlan0 get-networks", "    station wlan0 connect <SSID>", "    exit → ping archlinux.org"]);
         setInput("");
         return;
       }
@@ -361,8 +546,46 @@ export default function ArchInstall({ config, speed, onComplete }: {
       return;
     }
 
+    if (lower === "iwctl") {
+      playClick();
+      setInput("");
+      setSubshell("iwctl");
+      addTerminal(["[root@archiso ~]# iwctl",
+        "iwctl v2.11  (iNet Wireless Daemon)",
+        "  Type 'help' for commands, 'exit' to return to shell",
+      ]);
+      return;
+    }
+
+    if (lower.startsWith("fdisk")) {
+      const parts = raw.trim().split(/\s+/);
+      if (parts.length >= 2 && parts[1] !== "-l") {
+        const dev = parts[1].replace("/dev/", "");
+        playClick();
+        setInput("");
+        setFdiskDisk(dev);
+        setSubshell("fdisk");
+        showImageFor("/images/arch/08-disk-partitioning.png");
+        addTerminal([`[root@archiso ~]# fdisk /dev/${dev}`,
+          `Welcome to fdisk (util-linux 2.39.3).`,
+          `Changes will remain in memory only until you write them.`,
+          `Be careful before using the write command.`,
+          ``,
+          `Command (m for help): `,
+        ]);
+        return;
+      }
+    }
+
+    // Normal bash commands
     const output = processCommand(raw, setWifi);
     addTerminal([`[root@archiso ~]# ${raw}`, ...output]);
+    if (lower === "lsblk" || lower === "cfdisk" || lower === "fdisk -l") {
+      showImageFor("/images/arch/08-disk-partitioning.png");
+    }
+    if (lower === "ping" || lower.startsWith("ping ")) {
+      if (wifiConnected) showImageFor("/images/arch/13-network-config.png");
+    }
     setInput("");
   }
 
@@ -497,20 +720,51 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   // ─── Shell ───
   if (phase === "shell") {
+    const prompt = subshell === "iwctl" ? "[iwctl]# " : subshell === "fdisk" ? "Command (m for help): " : "[root@archiso ~]# ";
+    const promptColor = subshell === "iwctl" ? "#60a5fa" : subshell === "fdisk" ? "#fbbf24" : "#00e676";
+
     return (
       <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
-        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col"
+        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col relative"
           onClick={() => inputRef.current?.focus()}>
+          {/* Floating image overlay */}
+          {floatingImg && (
+            <div className="absolute inset-0 z-20 bg-black/60 flex items-center justify-center p-4 sm:p-8"
+              onClick={() => setFloatingImg(null)}>
+              <div className="relative max-w-2xl w-full rounded-lg overflow-hidden border border-white/20 shadow-2xl"
+                onClick={e => e.stopPropagation()}>
+                <img src={floatingImg} alt="screenshot"
+                  className="w-full h-auto object-contain max-h-[50vh]" />
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-3">
+                  <div className="text-[9px] text-white/50 font-mono">Click anywhere to close</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex-1 overflow-y-auto p-4 font-mono text-xs leading-relaxed" ref={termRef}>
             <div className="text-[#60a5fa] font-bold mb-1">Arch Linux 6.8.9-arch1-1 (tty1)</div>
             <div className="text-[#4ade80] mb-1">archiso login: root (automatic)</div>
-            <div className="text-[#888] mb-2">Connection: {wifiConnected ? "✓ Connected" : "✗ No internet — connect WiFi first"}</div>
+            <div className="text-[#888] mb-2">
+              {subshell === "iwctl" ? "iwctl — iNet Wireless Daemon"
+                : subshell === "fdisk" ? `fdisk — editing /dev/${fdiskDisk}`
+                : `Connection: ${wifiConnected ? "✓ Connected" : "✗ No internet — connect WiFi first"}`}
+            </div>
             {terminal.map((line, i) => (
               <div key={i} className="whitespace-pre-wrap"
-                style={{ color: line.startsWith("[root@") ? "#00e676" : line.startsWith("  ✗") ? "#f87171" : line.startsWith("──") ? "#888" : "#c0c0c0" }}>{line}</div>
+                style={{
+                  color: line.startsWith("[iwctl]#") ? "#60a5fa"
+                    : line.startsWith("Command (m for help):") ? "#fbbf24"
+                    : line.startsWith("[root@") ? "#00e676"
+                    : line.startsWith("  ✓") ? "#4ade80"
+                    : line.startsWith("  ✗") ? "#f87171"
+                    : line.startsWith("──") ? "#888"
+                    : line.startsWith("┌") || line.startsWith("│") || line.startsWith("├") || line.startsWith("└") ? "#888"
+                    : "#c0c0c0"
+                }}>{line}</div>
             ))}
             <div className="flex items-center gap-1 mt-1">
-              <span className="text-[#00e676] shrink-0">[root@archiso ~]#</span>
+              <span className="shrink-0" style={{ color: promptColor }}>{prompt}</span>
               <input ref={inputRef} type="text" value={input} autoFocus autoComplete="off" spellCheck={false}
                 onChange={(e) => { setInput(e.target.value); playKeyClick(); }}
                 onKeyDown={(e) => {
@@ -521,9 +775,18 @@ export default function ArchInstall({ config, speed, onComplete }: {
                 className="flex-1 bg-transparent text-white/90 outline-none font-mono text-xs caret-white/70" />
             </div>
           </div>
-          <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/20 font-mono flex justify-between">
-            <span>{wifiConnected ? "✓ WiFi • type 'archinstall'" : "✗ Connect WiFi: iwctl → station wlan0 connect <SSID>"}</span>
-            <span className="text-[#00e676]/30">tty1</span>
+          <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/30 font-mono flex justify-between">
+            <span>
+              {subshell === "iwctl" ? "iwctl • exit to return"
+                : subshell === "fdisk" ? "fdisk • q=quit w=write"
+                : wifiConnected ? "✓ WiFi • archinstall to begin"
+                : "✗ WiFi • iwctl → station wlan0 connect <SSID>"}
+            </span>
+            <span className="text-white/20">
+              {subshell === "iwctl" ? "iwd 2.11"
+                : subshell === "fdisk" ? `util-linux 2.39.3`
+                : "tty1"}
+            </span>
           </div>
         </div>
       </div>
