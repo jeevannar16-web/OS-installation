@@ -116,6 +116,7 @@ function freshOptions(): TuiConfig[] {
       ], selectedIdx: 0, textValue: "" },
     { id: "disk", label: "Disk configuration", desc: "Set up partitions, filesystem type, and encryption for your installation", summary: "Best-effort, ext4", kind: "menu",
       selectedIdx: 0, textValue: "", subItems: diskSub, required: true },
+    // Disk starts with a default but user must at least open & confirm it
     { id: "swap", label: "Swap", desc: "Configure swap space — used when RAM is full", summary: "2 GB", kind: "menu",
       items: [
         { label: "None", desc: "No swap" },
@@ -138,7 +139,7 @@ function freshOptions(): TuiConfig[] {
         { label: "linux-hardened", desc: "Security-hardened kernel" },
         { label: "linux-zen", desc: "Performance-tuned kernel" },
       ], selectedIdx: 0, textValue: "" },
-    { id: "hostname", label: "Hostname", desc: "Set your computer's network name", summary: "archlinux", kind: "text", textValue: "archlinux", required: true },
+    { id: "hostname", label: "Hostname", desc: "Set your computer's network name", summary: "", kind: "text", textValue: "archlinux", required: true },
     { id: "authentication", label: "Authentication", desc: "Set the root password and create a user account with sudo", summary: "root + user", kind: "menu",
       selectedIdx: 0, textValue: "", subItems: authSub, required: true },
     { id: "profile", label: "Profile", desc: "Choose your desktop environment — the look and feel of your system", summary: "KDE Plasma", kind: "menu", required: true,
@@ -161,7 +162,7 @@ function freshOptions(): TuiConfig[] {
         { label: "None", desc: "No network config" },
       ], selectedIdx: 0, textValue: "" },
     { id: "additional_packages", label: "Additional packages", desc: "Install extra packages (space-separated, e.g. vim firefox)", summary: "(none)", kind: "text", textValue: "" },
-    { id: "timezone", label: "Timezone", desc: "Set your timezone (e.g. America/New_York, Europe/Berlin, Asia/Kolkata)", summary: "UTC", kind: "text", textValue: "UTC", required: true },
+    { id: "timezone", label: "Timezone", desc: "Set your timezone (e.g. America/New_York, Europe/Berlin, Asia/Kolkata)", summary: "", kind: "text", textValue: "UTC", required: true },
     { id: "ntp", label: "Automatic time sync (NTP)", desc: "Keep your system clock accurate automatically", summary: "Yes", kind: "menu",
       items: [
         { label: "Yes", desc: "Enable NTP time sync" },
@@ -305,7 +306,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [wifiConnected, setWifiConnected] = useState(false);
   type SubShell = "bash" | "iwctl" | "fdisk";
   const [subshell, setSubshell] = useState<SubShell>("bash");
-  const [floatingImg, setFloatingImg] = useState<string | null>(null);
   const [fdiskDisk, setFdiskDisk] = useState("");
 
   const [tuiOptions, setTuiOptions] = useState<TuiConfig[]>([]);
@@ -417,11 +417,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   function addTerminal(lines: string[]) { setTerminal(prev => [...prev, ...lines]); }
 
-  function showImageFor(img: string) {
-    setFloatingImg(img);
-    setTimeout(() => setFloatingImg(null), speed === "fast" ? 1500 : 3500);
-  }
-
   function getMissingRequired(opts: TuiConfig[]): string[] {
     const missing: string[] = [];
     for (const o of opts) {
@@ -483,7 +478,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
         ]);
       } else if (sub === "wlan0") {
         if (args[1] === "scan") {
-          showImageFor("/images/arch/13-network-config.png");
           addTerminal(["[iwctl]# station wlan0 scan", "  ✓ Scan completed", "  Type 'station wlan0 get-networks' to see results"]);
         } else if (args[1] === "get-networks") {
           addTerminal(["[iwctl]# station wlan0 get-networks",
@@ -502,7 +496,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
           if (ssid) {
             setWifiConnected(true);
             setShellStep(2);
-            showImageFor("/images/arch/13-network-config.png");
             addTerminal(["[iwctl]# station wlan0 connect " + ssid,
               "  ✓ Authentication completed",
               "  ✓ DHCP lease obtained",
@@ -611,7 +604,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       setTuiSubCfgIdx(0);
       setTuiMsg("");
       setGuideStep(0);
-      setGuideView(true);
+      setGuideView(false);
       setPhase("tui");
       return;
     }
@@ -635,7 +628,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
         setInput("");
         setFdiskDisk(dev);
         setSubshell("fdisk");
-        showImageFor("/images/arch/08-disk-partitioning.png");
         addTerminal([`[root@archiso ~]# fdisk /dev/${dev}`,
           `Welcome to fdisk (util-linux 2.39.3).`,
           `Changes will remain in memory only until you write them.`,
@@ -647,14 +639,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
       }
     }
 
-    // Normal bash commands
     const output = processCommand(raw, setWifi);
     addTerminal([`[root@archiso ~]# ${raw}`, ...output]);
-    if (lower === "lsblk" || lower === "cfdisk" || lower === "fdisk -l") {
-      showImageFor("/images/arch/08-disk-partitioning.png");
-    }
     if (lower === "ping" || lower.startsWith("ping ")) {
-      if (wifiConnected) { showImageFor("/images/arch/13-network-config.png"); setShellStep(3); }
+      if (wifiConnected) setShellStep(3);
     }
     setInput("");
   }
@@ -767,6 +755,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
       }
       if (opt.kind === "text") { setTuiConfiguring(true); setTuiMsg(""); return; }
     }
+    if (showHelp && (e.key === "Escape" || e.key === "?" || e.key.toLowerCase() === "h")) {
+      e.preventDefault(); setShowHelp(false); playClick(); return;
+    }
     if (e.key === "?" || e.key.toLowerCase() === "h") {
       e.preventDefault(); setShowHelp(p => !p); playClick(); return;
     }
@@ -876,7 +867,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
                     <button onClick={() => {
                       playClick(); setWifiConnected(true); setShellStep(2);
                       addTerminal(["✓ Connected to " + net.name, "WiFi ready! Type 'ping archlinux.org' to verify."]);
-                      showImageFor("/images/arch/13-network-config.png");
                     }}
                       className={`shrink-0 px-3 py-1.5 rounded text-[10px] font-bold transition-all border ${
                         wifiConnected && net.connected
@@ -952,20 +942,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
           {activeTab === "terminal" && (
             <div className="flex-1 flex flex-col relative overflow-hidden"
               onClick={() => inputRef.current?.focus()}>
-              {/* Floating image */}
-              {floatingImg && (
-                <div className="absolute inset-0 z-20 bg-black/60 flex items-center justify-center p-4 sm:p-8"
-                  onClick={() => setFloatingImg(null)}>
-                  <div className="relative max-w-2xl w-full rounded-lg overflow-hidden border border-white/20 shadow-2xl"
-                    onClick={e => e.stopPropagation()}>
-                    <img src={floatingImg} alt="screenshot" className="w-full h-auto object-contain max-h-[50vh]" />
-                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-3">
-                      <div className="text-[9px] text-white/50 font-mono">Click anywhere to close</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Terminal output */}
               <div className="flex-1 overflow-y-auto p-4 font-mono text-xs leading-relaxed bg-[#0a0a0a]" ref={termRef}
                 style={{ fontFamily: "'Courier New', 'JetBrains Mono', 'Fira Code', monospace" }}>
@@ -1334,27 +1310,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
       <div data-no-auto-advance ref={tuiRef} className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}
         onKeyDown={handleTuiKey} tabIndex={0}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
-          {/* Header bar — matches real archinstall minimal header */}
-          <div className="bg-[#0a0a0e] px-4 py-2 border-b border-white/10 flex items-center gap-2 shrink-0">
-            <span className="text-white/50 text-[10px] font-mono font-bold tracking-wider flex-1">
-              archinstall 4.0
-            </span>
-            <div className="flex items-center gap-2">
-              {tuiSubMenu || tuiConfiguring ? null : (
-                <>
-                  <button onClick={() => { setGuideView(true); playClick(); }}
-                    className="text-white/20 hover:text-white/60 text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors">
-                    Guided
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); setShowHelp(p => !p); playClick(); }}
-                    className="text-white/30 hover:text-white/70 text-[11px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors"
-                    title="Help">?</button>
-                </>
-              )}
-            </div>
+          {/* Header bar */}
+          <div className="bg-[#0a0a0e] px-4 py-2 border-b border-white/10 shrink-0">
+            <span className="text-white/50 text-[10px] font-mono font-bold">archinstall 4.0</span>
           </div>
-
-          {/* Separator line */}
           <div className="h-px bg-white/5 shrink-0" />
 
           {/* Help overlay */}
@@ -1474,10 +1433,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
               </div>
             ) : (
               /* Level 1: main menu */
-              <div>
-                <div className="px-4 pt-3 pb-1 text-[10px] text-white/30 uppercase tracking-wider">
-                  Arch Linux Installation — configure options:
-                </div>
+              <div className="pt-2">
                 {tuiOptions.map((opt, i) => tuiRow(opt, i))}
                 {tuiMsg && (
                   <div className="px-4 pt-2 pb-1 text-[10px] font-mono" style={{ color: tuiMsg.includes("✗") ? "#f87171" : "#4ade80" }}>
