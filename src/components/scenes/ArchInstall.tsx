@@ -408,6 +408,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
   }, [phase]);
 
   useEffect(() => {
+    if (!tuiConfiguring && phase === "tui") tuiRef.current?.focus();
+  }, [tuiConfiguring, phase]);
+
+  useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (phase === "shell" && inputRef.current && document.activeElement !== inputRef.current) {
         if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) { inputRef.current.focus(); setInput(e.key); }
@@ -620,7 +624,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
         if (e.key === "Escape") {
           e.preventDefault(); playClick(); setTuiSubCfg(false); return;
         }
-        playKeyClick();
         return;
       }
     }
@@ -673,7 +676,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
         if (e.key === "Escape") {
           e.preventDefault(); playClick(); setTuiConfiguring(false); return;
         }
-        playKeyClick();
         return;
       }
       return;
@@ -1019,7 +1021,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   <div>
                     <div>Enter value:</div>
                     <input type="text" defaultValue={tuiSubMenu[tuiSubSel]?.textValue || ""} autoFocus
-                      onKeyDown={handleTuiKey} onChange={() => playKeyClick()}
+                      onChange={() => playKeyClick()}
                       style={{background:"#000", border:"1px solid #333", color:"#fff", fontFamily:"'Courier New', monospace", padding: "1px"}} />
                   </div>
                 )}
@@ -1058,7 +1060,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   <div>
                     <div>Enter value:</div>
                     <input type="text" defaultValue={tuiOptions[tuiSelected]?.textValue || ""} autoFocus
-                      onKeyDown={handleTuiKey} onChange={() => playKeyClick()}
+                      onChange={() => playKeyClick()}
                       style={{background:"#000", border:"1px solid #333", color:"#fff", fontFamily:"'Courier New', monospace", padding: "1px"}} />
                   </div>
                 )}
