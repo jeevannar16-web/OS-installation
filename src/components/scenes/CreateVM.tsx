@@ -1,267 +1,218 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { playClick, playKeyClick, playSuccess } from "../shared/sounds";
 import type { OSConfig } from "../../data/types";
-import { playClick } from "../shared/sounds";
-import { useSceneAdvance } from "../shared/SceneAdvance";
 
 type Step = "overview" | "name" | "memory" | "disk" | "summary";
 
-const VM_STEPS: { key: Step; label: string; img: string }[] = [
+const STEPS: { key: Step; label: string; img: string }[] = [
   { key: "overview", label: "VirtualBox Manager", img: "/images/virtualbox/01-new-vm-wizard.jpg" },
   { key: "name", label: "Name and Operating System", img: "/images/virtualbox/02-name-vm.jpg" },
   { key: "memory", label: "Memory and CPU", img: "/images/virtualbox/03-allocate-resources.jpg" },
   { key: "disk", label: "Hard Disk", img: "/images/virtualbox/04-allocate-disk.jpg" },
-  { key: "summary", label: "Summary", img: "/images/virtualbox/01-new-vm-wizard.jpg" },
+  { key: "summary", label: "Summary", img: "/images/virtualbox/06-start-vm.jpg" },
 ];
 
-export default function CreateVM({
-  config,
-  onComplete,
-}: {
-  config: OSConfig;
-  onComplete: () => void;
-}) {
-  const { register: registerAdvance } = useSceneAdvance();
-  const [step, setStep] = useState(0);
+type Area = { top: number; left: number; width: number; height: number };
+
+function ClickArea({ area, onClick, hint }: { area: Area; onClick: () => void; hint?: string }) {
+  return (
+    <div
+      className="absolute z-10 cursor-pointer rounded border-2 border-transparent transition-all duration-200 hover:border-white/40 hover:bg-white/[0.08] group"
+      style={{ top: `${area.top}%`, left: `${area.left}%`, width: `${area.width}%`, height: `${area.height}%` }}
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+    >
+      {hint && (
+        <div className="pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-black shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+          {hint}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function CreateVM({ config, onComplete }: { config: OSConfig; onComplete: () => void }) {
+  const [stepIdx, setStepIdx] = useState(0);
   const [vmName, setVmName] = useState(`${config.branding.shortName} VM`);
   const [memory, setMemory] = useState(config.vmConfig.defaultMemoryMB);
   const [cpus, setCpus] = useState(2);
   const [diskSize, setDiskSize] = useState(config.vmConfig.defaultDiskGB);
   const [isoSelected, setIsoSelected] = useState(false);
   const [showIsoPicker, setShowIsoPicker] = useState(false);
+  const [showInput, setShowInput] = useState<"name" | null>(null);
+  const [showSlider, setShowSlider] = useState<"memory" | "cpu" | "disk" | null>(null);
 
-  const current = VM_STEPS[step];
-
-  useEffect(() => {
-    if (step === VM_STEPS.length - 1) {
-      registerAdvance(() => onComplete());
-    }
-  }, [step, registerAdvance, onComplete]);
+  const current = STEPS[stepIdx];
+  const isLast = stepIdx === STEPS.length - 1;
+  const accent = config.branding.accent;
 
   function next() {
-    playClick();
-    if (step < VM_STEPS.length - 1) setStep(step + 1);
-    else onComplete();
-  }
-
-  function prev() {
-    playClick();
-    if (step > 0) setStep(step - 1);
+    if (isLast) { playSuccess(); onComplete(); }
+    else { playClick(); setStepIdx(p => p + 1); }
   }
 
   function handleSelectIso() {
-    playClick();
     setShowIsoPicker(true);
-    setTimeout(() => { setShowIsoPicker(false); setIsoSelected(true); }, 1500);
+    setTimeout(() => { setShowIsoPicker(false); setIsoSelected(true); playSuccess(); }, 1500);
   }
 
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-      <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black">
+      <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-[#2a2a2b]">
         <AnimatePresence mode="wait">
           <motion.div key={current.key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }} className="absolute inset-0">
 
-            {/* Real VirtualBox screenshot as full background */}
             <img src={current.img} alt={current.label}
-              className="absolute inset-0 w-full h-full object-cover bg-[#2a2a2b]" />
+              className="absolute inset-0 w-full h-full object-cover" />
 
-            {/* Interactive overlay */}
-            <div className="absolute inset-x-0 bottom-0">
-              <div className="bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/60 to-transparent pt-20 pb-4 px-6">
-                <div className="max-w-lg mx-auto space-y-3">
+            {/* Step 0: VBox main window — "New" button in toolbar */}
+            {current.key === "overview" && (
+              <ClickArea area={{ top: 8.5, left: 1.8, width: 5.5, height: 4.5 }}
+                onClick={next} hint="New (Ctrl+N)" />
+            )}
 
-                  {/* Step 0: Overview — Click New */}
-                  {current.key === "overview" && (
-                    <div className="space-y-2">
-                      <div className="text-[10px] text-accent font-semibold uppercase tracking-wider">Create a new virtual machine</div>
-                      <p className="text-xs text-white/60">Click the <strong className="text-white/80">New</strong> button in the toolbar to start the wizard.</p>
-                      <button onClick={next}
-                        className="rounded-lg bg-accent px-5 py-2.5 text-xs font-bold text-white hover:bg-accent/80 transition-all hover:scale-[1.02] shadow-lg shadow-accent/30">
-                        + New
-                      </button>
-                    </div>
-                  )}
+            {/* Step 1: Create VM — name, ISO selector, Continue button */}
+            {current.key === "name" && (
+              <>
+                <ClickArea area={{ top: 15, left: 27, width: 32, height: 3.5 }}
+                  onClick={() => setShowInput("name")} hint="Click to name VM" />
+                <ClickArea area={{ top: 29, left: 27, width: 18, height: 4 }}
+                  onClick={handleSelectIso} hint={isoSelected ? "✓ ISO selected" : "Select ISO image"} />
+                <ClickArea area={{ top: 76, left: 64, width: 13, height: 5 }}
+                  onClick={() => isoSelected && next()} hint={isoSelected ? "Continue" : "Select ISO first"} />
+              </>
+            )}
 
-                  {/* Step 1: Name + ISO selection */}
-                  {current.key === "name" && (
-                    <div className="space-y-3">
-                      <div className="text-[10px] text-accent font-semibold uppercase tracking-wider">Name your virtual machine</div>
-                      <div>
-                        <label className="mb-1 block text-[10px] text-white/50">Name:</label>
-                        <input value={vmName} onChange={(e) => setVmName(e.target.value)}
-                          className="w-full rounded-lg border border-white/20 bg-[#1e1e1e] px-3 py-2 text-xs text-white outline-none focus:border-accent" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="mb-1 block text-[10px] text-white/50">Type:</label>
-                          <select className="w-full rounded-lg border border-white/20 bg-[#1e1e1e] px-3 py-2 text-xs text-white outline-none">
-                            <option>{config.vmConfig.osType}</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-[10px] text-white/50">Version:</label>
-                          <select className="w-full rounded-lg border border-white/20 bg-[#1e1e1e] px-3 py-2 text-xs text-white outline-none">
-                            <option>{config.vmConfig.osVersion}</option>
-                          </select>
-                        </div>
-                      </div>
-                      {/* ISO selection */}
-                      <div>
-                        <label className="mb-1 block text-[10px] text-white/50">ISO Image:</label>
-                        <button onClick={handleSelectIso} disabled={isoSelected}
-                          className={`w-full rounded-lg border px-3 py-2 text-xs text-left transition-all ${
-                            isoSelected
-                              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                              : "border-white/20 bg-[#1e1e1e] text-white/50 hover:bg-white/10"
-                          }`}>
-                          {isoSelected ? `✓ ${config.iso.filename}` : "📁 Click to select ISO file..."}
-                        </button>
-                      </div>
-                    </div>
-                  )}
+            {/* Step 2: Memory + CPU */}
+            {current.key === "memory" && (
+              <>
+                <ClickArea area={{ top: 14, left: 24, width: 38, height: 5 }}
+                  onClick={() => setShowSlider("memory")} hint={`${memory} MB`} />
+                <ClickArea area={{ top: 26, left: 24, width: 38, height: 5 }}
+                  onClick={() => setShowSlider("cpu")} hint={`${cpus} CPU`} />
+                <ClickArea area={{ top: 76, left: 64, width: 13, height: 5 }}
+                  onClick={() => memory >= 2048 && next()} hint="Continue" />
+              </>
+            )}
 
-                  {/* Step 2: Memory + CPU */}
-                  {current.key === "memory" && (
-                    <div className="space-y-3">
-                      <div className="text-[10px] text-accent font-semibold uppercase tracking-wider">Allocate hardware resources</div>
-                      <div>
-                        <label className="mb-1 block text-[10px] text-white/50">Base Memory: <span className="text-white/80">{memory} MB ({(memory / 1024).toFixed(1)} GB)</span></label>
-                        <input type="range" min={1024} max={8192} step={256} value={memory}
-                          onChange={(e) => setMemory(Number(e.target.value))} className="w-full accent-accent" />
-                        <div className="flex justify-between text-[10px] text-white/30 mt-0.5">
-                          <span>1 GB</span>
-                          <span className={memory >= 4096 ? "text-emerald-400" : "text-amber-400"}>
-                            {memory >= 4096 ? "✓ Recommended" : "⚠ Below minimum"}
-                          </span>
-                          <span>8 GB</span>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-[10px] text-white/50">Processors: <span className="text-white/80">{cpus} CPU</span></label>
-                        <input type="range" min={1} max={8} step={1} value={cpus}
-                          onChange={(e) => setCpus(Number(e.target.value))} className="w-full accent-accent" />
-                        <div className="flex justify-between text-[10px] text-white/30 mt-0.5">
-                          <span>1</span>
-                          <span className={cpus >= 2 ? "text-emerald-400" : "text-amber-400"}>
-                            {cpus >= 2 ? "✓ Good" : "⚠ Too low"}
-                          </span>
-                          <span>8</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-1.5">
-                        {[{ r: 2048, c: 2 }, { r: 4096, c: 2 }, { r: 4096, c: 4 }].map((p) => (
-                          <button key={`${p.r}-${p.c}`} onClick={() => { setMemory(p.r); setCpus(p.c); playClick(); }}
-                            className={`rounded-full border px-3 py-1 text-[10px] transition-colors ${
-                              memory === p.r && cpus === p.c
-                                ? "border-accent bg-accent/20 text-white" : "border-white/10 text-white/50 hover:text-white"
-                            }`}>{p.r / 1024} GB / {p.c} CPU</button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+            {/* Step 3: Hard disk */}
+            {current.key === "disk" && (
+              <>
+                <ClickArea area={{ top: 17, left: 24, width: 38, height: 5 }}
+                  onClick={() => setShowSlider("disk")} hint={`${diskSize} GB`} />
+                <ClickArea area={{ top: 76, left: 64, width: 13, height: 5 }}
+                  onClick={next} hint="Create" />
+              </>
+            )}
 
-                  {/* Step 3: Hard Disk */}
-                  {current.key === "disk" && (
-                    <div className="space-y-3">
-                      <div className="text-[10px] text-accent font-semibold uppercase tracking-wider">Virtual Hard Disk</div>
-                      <div className="space-y-1.5">
-                        {[
-                          { id: "create", label: "Create a virtual hard disk now", checked: true },
-                          { id: "existing", label: "Use an existing virtual hard disk file", checked: false },
-                          { id: "none", label: "Do not add a virtual hard disk", checked: false },
-                        ].map((opt) => (
-                          <label key={opt.id} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-all cursor-pointer ${
-                            opt.checked ? "border-accent/30 bg-accent/5 text-white" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
-                          }`}>
-                            <input type="radio" name="disk" defaultChecked={opt.checked} className="accent-accent" readOnly />
-                            {opt.label}
-                          </label>
-                        ))}
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-[10px] text-white/50">Disk size: <span className="text-white/80">{diskSize} GB</span></label>
-                        <input type="range" min={10} max={100} step={5} value={diskSize}
-                          onChange={(e) => setDiskSize(Number(e.target.value))} className="w-full accent-accent" />
-                        <div className="flex justify-between text-[10px] text-white/30 mt-0.5">
-                          <span>10 GB</span>
-                          <span className={diskSize >= 25 ? "text-emerald-400" : "text-amber-400"}>
-                            {diskSize >= 25 ? "✓ Good for most installs" : "⚠ Might be tight"}
-                          </span>
-                          <span>100 GB</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step 4: Summary */}
-                  {current.key === "summary" && (
-                    <div className="space-y-2">
-                      <div className="text-[10px] text-accent font-semibold uppercase tracking-wider">Ready to create</div>
-                      <div className="rounded-lg border border-white/10 bg-white/5 p-3 space-y-1 text-xs">
-                        {[
-                          ["Name", vmName],
-                          ["Type", `${config.vmConfig.osType} / ${config.vmConfig.osVersion}`],
-                          ["Memory", `${memory} MB (${(memory / 1024).toFixed(1)} GB)`],
-                          ["CPU", `${cpus} cores`],
-                          ["Disk", `Create ${diskSize} GB VDI`],
-                          ["Graphics", "VMSVGA + 128 MB VRAM"],
-                          ["Network", "NAT"],
-                        ].map(([l, v]) => (
-                          <div key={l} className="flex justify-between">
-                            <span className="text-white/40">{l}</span>
-                            <span className="text-white/80">{v}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-emerald-300">
-                        <span>✓</span> Virtual machine is ready to be created. Click <strong>Finish</strong>.
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            {/* Step 4: Summary — Finish button */}
+            {current.key === "summary" && (
+              <ClickArea area={{ top: 76, left: 64, width: 13, height: 5 }}
+                onClick={next} hint="Finish" />
+            )}
           </motion.div>
         </AnimatePresence>
 
-        {/* ISO file picker overlay */}
-        {showIsoPicker && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }}
-              className="rounded-xl bg-[#1e1e1e] border border-white/10 p-4 shadow-2xl w-80">
-              <div className="flex items-center gap-2 border-b border-white/10 pb-2 mb-3">
-                <span className="text-sm">📂</span>
-                <span className="text-xs text-white/60">Select ISO disk image…</span>
-              </div>
-              <div className="rounded-lg bg-[#2a2a2b] p-3 text-center">
-                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                  className="inline-block text-2xl">💿</motion.div>
-                <div className="mt-2 text-xs text-white/50">Browsing Downloads…</div>
-                <div className="mt-1 text-[10px] text-white/30 font-mono">{config.iso.filename}</div>
-              </div>
+        {/* ISO picker */}
+        <AnimatePresence>
+          {showIsoPicker && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }}
+                className="rounded-xl bg-[#1e1e1e] border border-white/10 p-4 shadow-2xl w-80">
+                <div className="flex items-center gap-2 border-b border-white/10 pb-2 mb-3">
+                  <span className="text-lg text-white/60">📂</span>
+                  <span className="text-xs text-white/60 font-medium">Select ISO image…</span>
+                </div>
+                <div className="rounded-lg bg-[#2a2a2b] p-3 text-center">
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                    className="inline-block text-2xl">💿</motion.div>
+                  <div className="mt-2 text-xs text-white/50">Browsing Downloads…</div>
+                  <div className="mt-1 text-[10px] text-white/30 font-mono">{config.iso.filename}</div>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </div>
+          )}
+        </AnimatePresence>
 
-      {/* Bottom nav */}
-      <div className="flex items-center justify-between border-t border-white/10 bg-[#1a1a24] px-4 py-2.5 rounded-b-2xl shrink-0">
-        <button onClick={prev} disabled={step === 0}
-          className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/60 hover:bg-white/10 transition-colors disabled:opacity-30">
-          ← Back
-        </button>
-        <div className="flex items-center gap-1.5">
-          {VM_STEPS.map((_, i) => (
-            <div key={i} className={`h-1.5 rounded-full transition-all ${i <= step ? "bg-accent w-4" : "bg-white/15 w-1.5"}`} />
+        {/* Name popup */}
+        <AnimatePresence>
+          {showInput === "name" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowInput(null)}>
+              <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+                onClick={(e) => e.stopPropagation()}
+                className="rounded-xl border border-white/15 bg-[#1e1e1e] p-4 shadow-2xl w-72">
+                <div className="text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-2">Virtual Machine Name</div>
+                <input value={vmName} onChange={(e) => { setVmName(e.target.value); playKeyClick(); }}
+                  autoFocus
+                  className="w-full rounded-lg border border-white/20 bg-[#2a2a2b] px-3 py-2 text-sm text-white outline-none focus:border-accent"
+                  onKeyDown={(e) => e.key === "Enter" && setShowInput(null)} />
+                <button onClick={() => { playClick(); setShowInput(null); }}
+                  className="mt-2 w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors"
+                  style={{ background: accent }}>OK</button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Slider popups */}
+        <AnimatePresence>
+          {showSlider === "memory" && (
+            <SliderPopup title="Memory" value={memory} min={1024} max={8192} step={256}
+              onChange={setMemory} onClose={() => setShowSlider(null)}
+              label={`${memory} MB (${(memory / 1024).toFixed(1)} GB)`} accent={accent} />
+          )}
+          {showSlider === "cpu" && (
+            <SliderPopup title="Processors" value={cpus} min={1} max={8} step={1}
+              onChange={setCpus} onClose={() => setShowSlider(null)}
+              label={`${cpus} CPU core${cpus > 1 ? "s" : ""}`} accent={accent} />
+          )}
+          {showSlider === "disk" && (
+            <SliderPopup title="Disk Size" value={diskSize} min={10} max={100} step={5}
+              onChange={setDiskSize} onClose={() => setShowSlider(null)}
+              label={`${diskSize} GB`} accent={accent} />
+          )}
+        </AnimatePresence>
+
+        {/* Step dots */}
+        <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5">
+          {STEPS.map((_, i) => (
+            <div key={i} className={`h-1.5 rounded-full transition-all ${i <= stepIdx ? "w-3.5" : "w-1.5"}`}
+              style={{ background: i <= stepIdx ? accent : "rgba(255,255,255,0.15)" }} />
           ))}
         </div>
-        <button onClick={next} className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent/80 transition-colors">
-          {step === VM_STEPS.length - 1 ? "Finish" : "Next"} <ArrowRight className="w-3 h-3" />
-        </button>
       </div>
     </div>
+  );
+}
+
+function SliderPopup({ title, value, min, max, step, onChange, onClose, label, accent }: {
+  title: string; value: number; min: number; max: number; step: number;
+  onChange: (v: number) => void; onClose: () => void; label: string; accent: string;
+}) {
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={onClose}>
+      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}
+        className="rounded-xl border border-white/15 bg-[#1e1e1e] p-4 shadow-2xl w-72">
+        <div className="text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-2">{title}</div>
+        <div className="text-xs text-white/80 text-center mb-2">{label}</div>
+        <input type="range" min={min} max={max} step={step} value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="w-full" style={{ accentColor: accent }} />
+        <div className="flex justify-between text-[10px] text-white/30 mt-0.5">
+          <span>{min >= 1024 ? `${min / 1024} GB` : min >= 10 ? `${min} GB` : `${min}`}</span>
+          <span>{max >= 1024 ? `${max / 1024} GB` : max >= 10 ? `${max} GB` : `${max}`}</span>
+        </div>
+        <button onClick={() => { playClick(); onClose(); }}
+          className="mt-2 w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors"
+          style={{ background: accent }}>OK</button>
+      </motion.div>
+    </motion.div>
   );
 }
