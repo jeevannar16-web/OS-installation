@@ -35,17 +35,24 @@ function getStepOrder(osId: string): InstallerStep[] {
 function getBootImg(osId: string): string {
   if (osId === "zorin") return "/images/zorin/03-installer-welcome.png";
   if (osId === "mint") return "/images/mint/03-language-select.png";
+  if (osId === "arch") return "/images/arch/01-welcome-page.png";
+  if (osId === "windows") return "/images/win11-setup/01-setup-language.webp";
   return "/images/ubuntu/01-try-or-install.png";
 }
 
 function getInstallProgressImg(osId: string): string {
   if (osId === "zorin") return "/images/zorin/11-installer.png";
   if (osId === "mint") return "/images/mint/10-installing.png";
+  if (osId === "arch") return "/images/arch/15-install-progress.png";
+  if (osId === "windows") return "/images/win11-setup/08-clean-install.webp";
   return "/images/ubuntu/10-progress.png";
 }
 
 function getRestartImg(osId: string): string {
   if (osId === "mint") return "/images/mint/11-install-complete.png";
+  if (osId === "arch") return "/images/arch/16-install-complete.png";
+  if (osId === "zorin") return "/images/zorin/11-installer.png";
+  if (osId === "windows") return "/images/win11-setup/19-oobe-edge.webp";
   return "/images/ubuntu/11-restart.png";
 }
 

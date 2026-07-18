@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useSceneAdvance } from "../shared/SceneAdvance";
 import type { OSConfig } from "../../data/types";
 
-type Phase = "menu" | "windows_booting" | "windows_desktop";
+type Phase = "menu" | "windows_booting" | "windows_desktop" | "bios_setup";
 
 function getGrubEntries(osId: string) {
   const osName = osId === "zorin" ? "Zorin OS" : osId === "mint" ? "Linux Mint" : osId === "arch" ? "Arch Linux" : osId === "windows" ? "Windows 11" : "Ubuntu";
@@ -28,6 +28,7 @@ export default function GrubMenu({ config, onComplete }: { config: OSConfig; onC
   const entries = getGrubEntries(config.id);
   const linuxIdx = config.id === "windows" ? -1 : 0;
   const windowsIdx = config.id === "windows" ? 0 : 2;
+  const uefiIdx = config.id === "windows" ? 1 : 3;
 
   useEffect(() => {
     registerAdvance(() => {
@@ -48,6 +49,7 @@ export default function GrubMenu({ config, onComplete }: { config: OSConfig; onC
         e.preventDefault();
         if (selected === linuxIdx) onComplete();
         else if (selected === windowsIdx) setPhase("windows_booting");
+        else if (selected === uefiIdx) setPhase("bios_setup");
       }
     }
     window.addEventListener("keydown", handleKey);
@@ -75,6 +77,31 @@ export default function GrubMenu({ config, onComplete }: { config: OSConfig; onC
       return () => clearTimeout(t);
     }
   }, [phase]);
+
+  if (phase === "bios_setup") {
+    return (
+      <div className="rounded-2xl border border-gray-600/30 overflow-hidden shadow-2xl w-full max-w-3xl mx-auto font-mono">
+        <div className="rounded-t-2xl bg-[#003399] px-6 py-3 text-white font-bold text-center tracking-wider text-sm">
+          UEFI Firmware Setup — Aptio Setup Utility
+        </div>
+        <div className="bg-[#cccccc] text-[#000000] p-6 min-h-[320px] text-xs">
+          <div className="text-[#003399] font-bold mb-3 border-b border-[#999999] pb-1">System Information</div>
+          <Row label="BIOS Vendor" value="American Megatrends Inc." />
+          <Row label="BIOS Version" value="2.40.1287" />
+          <Row label="Boot Mode" value="UEFI" />
+          <Row label="Secure Boot" value={config.id === "windows" ? "Enabled" : "Disabled"} />
+          <Row label="Boot Priority" value={`1. USB Drive  2. ${config.branding.shortName}  3. Windows Boot Manager`} />
+        </div>
+        <div className="bg-[#003399] text-[#cccccc] text-[10px] px-4 py-1.5 flex justify-between">
+          <span>↑↓: Select Item &nbsp; Enter: Change</span>
+          <button onClick={() => { setPhase("menu"); setCountdown(10); }}
+            className="text-white font-bold hover:underline">
+            Exit & Discard Changes →
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (phase === "windows_booting") {
     return (
@@ -157,6 +184,7 @@ export default function GrubMenu({ config, onComplete }: { config: OSConfig; onC
               setSelected(i);
               if (i === linuxIdx) onComplete();
               else if (i === windowsIdx) setPhase("windows_booting");
+              else if (i === uefiIdx) setPhase("bios_setup");
             }}
             className={`rounded px-3 py-2 cursor-pointer transition-colors ${
               i === selected ? "bg-white/90 text-black" : "text-white/70 hover:bg-white/10"
@@ -177,6 +205,15 @@ export default function GrubMenu({ config, onComplete }: { config: OSConfig; onC
           <span className="text-white/70 font-bold">{countdown}</span> seconds.
         </span>
       </div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-4 py-1.5 text-xs">
+      <span className="w-44 text-[#333] font-medium">{label}</span>
+      <span className="font-bold text-[#000]">{value}</span>
     </div>
   );
 }
