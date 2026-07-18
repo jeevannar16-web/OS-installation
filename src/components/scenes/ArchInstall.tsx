@@ -875,12 +875,12 @@ export default function ArchInstall({ config, speed, onComplete }: {
           {/* ── Terminal (always shown when no subshell) ── */}
           {subshell === "bash" && (
             <div className="flex-1 flex flex-col bg-[#0a0a0a]" onClick={() => inputRef.current?.focus()}>
-              <div className="flex-1 overflow-y-auto p-4 pb-0 font-mono text-xs leading-relaxed" ref={termRef}
+              <div className="flex-1 overflow-y-auto p-4 pb-2 font-mono text-xs leading-relaxed" ref={termRef}
                 style={{ fontFamily: "'Courier New', 'JetBrains Mono', 'Fira Code', monospace" }}>
                 <div className="text-[#60a5fa] font-bold mb-1 text-[11px]">Arch Linux 6.8.9-arch1-1 (tty1)</div>
                 <div className="text-[#4ade80] mb-2 text-[11px]">archiso login: root (automatic)</div>
                 {terminal.map((line, i) => (
-                  <div key={i} className="whitespace-pre-wrap" style={{
+                  <div key={i} className="whitespace-pre-wrap py-[1px]" style={{
                     color: line.startsWith("[root@") ? "#00e676"
                       : line.startsWith("  ✓") ? "#4ade80"
                       : line.startsWith("  ✗") ? "#f87171"
@@ -888,9 +888,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                       : "#c0c0c0"
                   }}>{line}</div>
                 ))}
-              </div>
-              <div className="shrink-0 px-4 py-2 border-t border-white/5">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 py-[1px]">
                   <span className="shrink-0 text-sm leading-none" style={{ color: promptColor }}>{prompt}</span>
                   <input ref={inputRef} type="text" value={input} autoFocus autoComplete="off" spellCheck={false}
                     onChange={(e) => { setInput(e.target.value); setCompletionIdx(-1); playKeyClick(); }}
@@ -913,9 +911,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
                     }}
                     className="flex-1 bg-transparent text-[#e8e8e8] outline-none font-mono text-xs caret-[#00e676] selection:bg-white/10"
                     style={{ fontFamily: "'Courier New', 'JetBrains Mono', 'Fira Code', monospace" }} />
-          </div>
-        </div>
-      </div>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* ── Bottom hint bar (always visible) ── */}
