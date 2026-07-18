@@ -34,76 +34,141 @@ const BOOT_LINES: { text: string; color?: string; delay: number }[] = [
 type SubItem = { label: string; desc: string };
 type TuiConfig = {
   id: string; label: string; summary: string;
-  kind: "menu" | "text" | "toggle";
+  kind: "menu" | "text" | "action";
   items?: SubItem[]; selectedIdx?: number; textValue: string;
+  subItems?: TuiConfig[];
 };
 
 function freshOptions(): TuiConfig[] {
-  return [
-    { id: "locales", label: "Locales", summary: "Keyboard: us, Locale: en_US.UTF-8", kind: "menu",
+  const diskSub: TuiConfig[] = [
+    { id: "disk_partitioning", label: "Partitioning", summary: "Best-effort", kind: "menu",
       items: [
-        { label: "us", desc: "English (US) — default" },
+        { label: "Best-effort", desc: "Auto partition (default)" },
+        { label: "Manual", desc: "Manual partitioning" },
+        { label: "Wipe", desc: "Wipe entire disk" },
+      ], selectedIdx: 0, textValue: "" },
+    { id: "disk_filesystem", label: "Filesystem", summary: "ext4", kind: "menu",
+      items: [
+        { label: "ext4", desc: "Standard Linux filesystem (default)" },
+        { label: "btrfs", desc: "CoW with snapshots" },
+        { label: "xfs", desc: "High-performance 64-bit" },
+        { label: "f2fs", desc: "Flash-friendly" },
+      ], selectedIdx: 0, textValue: "" },
+    { id: "disk_encryption", label: "Encryption", summary: "None", kind: "menu",
+      items: [
+        { label: "None", desc: "No encryption" },
+        { label: "LUKS2", desc: "Full disk encryption" },
+      ], selectedIdx: 0, textValue: "" },
+  ];
+  const authSub: TuiConfig[] = [
+    { id: "auth_root_pass", label: "Root password", summary: "********", kind: "text", textValue: "********" },
+    { id: "auth_user", label: "Create superuser", summary: "Yes", kind: "menu",
+      items: [
+        { label: "Yes", desc: "Create user with sudo privileges" },
+        { label: "No", desc: "No user account" },
+      ], selectedIdx: 0, textValue: "" },
+    { id: "auth_username", label: "Username", summary: "user", kind: "text", textValue: "user" },
+    { id: "auth_user_pass", label: "User password", summary: "********", kind: "text", textValue: "********" },
+  ];
+  const appSub: TuiConfig[] = [
+    { id: "app_audio", label: "Audio", summary: "PipeWire", kind: "menu",
+      items: [
+        { label: "PipeWire", desc: "Modern audio server (recommended)" },
+        { label: "PulseAudio", desc: "Traditional audio server" },
+        { label: "None", desc: "No audio setup" },
+      ], selectedIdx: 0, textValue: "" },
+    { id: "app_bluetooth", label: "Bluetooth", summary: "Yes", kind: "menu",
+      items: [
+        { label: "Yes", desc: "Install BlueZ bluetooth stack" },
+        { label: "No", desc: "Skip bluetooth" },
+      ], selectedIdx: 0, textValue: "" },
+    { id: "app_printing", label: "Printing", summary: "Yes", kind: "menu",
+      items: [
+        { label: "Yes", desc: "Install CUPS printing system" },
+        { label: "No", desc: "Skip printing" },
+      ], selectedIdx: 0, textValue: "" },
+  ];
+  return [
+    { id: "language", label: "Archinstall language", summary: "English", kind: "menu",
+      items: [
+        { label: "English", desc: "English (default)" },
+        { label: "Deutsch", desc: "German" },
+        { label: "Français", desc: "French" },
+        { label: "Español", desc: "Spanish" },
+      ], selectedIdx: 0, textValue: "" },
+    { id: "locales", label: "Locales", summary: "us / en_US.UTF-8", kind: "menu",
+      items: [
+        { label: "us", desc: "English (US)" },
         { label: "uk", desc: "English (UK)" },
         { label: "de", desc: "German" },
         { label: "fr", desc: "French" },
-        { label: "it", desc: "Italian" },
         { label: "es", desc: "Spanish" },
         { label: "jp", desc: "Japanese" },
         { label: "br", desc: "Portuguese (Brazil)" },
       ], selectedIdx: 0, textValue: "" },
-    { id: "mirrors", label: "Mirror selection", summary: "Region: Worldwide", kind: "menu",
+    { id: "mirrors", label: "Mirrors and repositories", summary: "Worldwide", kind: "menu",
       items: [
         { label: "Worldwide", desc: "Auto-select fastest mirror" },
         { label: "United States", desc: "US-based mirrors" },
         { label: "Europe", desc: "EU-based mirrors" },
         { label: "Asia", desc: "Asia-based mirrors" },
-        { label: "India", desc: "India-based mirrors" },
       ], selectedIdx: 0, textValue: "" },
-    { id: "disk", label: "Disk configuration", summary: "Best effort: ext4 + swap", kind: "menu",
+    { id: "disk", label: "Disk configuration", summary: "Best-effort, ext4", kind: "menu",
+      selectedIdx: 0, textValue: "", subItems: diskSub },
+    { id: "swap", label: "Swap", summary: "2 GB", kind: "menu",
       items: [
-        { label: "Best-effort", desc: "Automatically partition (default)" },
-        { label: "Manual", desc: "Manually configure disk layout" },
-        { label: "Wipe", desc: "Wipe entire disk and install" },
-      ], selectedIdx: 0, textValue: "" },
+        { label: "None", desc: "No swap" },
+        { label: "512 MB", desc: "512 MB swap" },
+        { label: "1 GB", desc: "1 GB swap" },
+        { label: "2 GB", desc: "2 GB swap (recommended)" },
+        { label: "4 GB", desc: "4 GB swap" },
+        { label: "Zram", desc: "Compressed RAM swap" },
+      ], selectedIdx: 3, textValue: "" },
     { id: "bootloader", label: "Bootloader", summary: "GRUB (dual-boot)", kind: "menu",
       items: [
         { label: "GRUB", desc: "GRUB — detects Windows for dual-boot" },
-        { label: "systemd-boot", desc: "systemd-boot — simple UEFI only" },
-        { label: "efistub", desc: "EFISTUB — direct UEFI boot entry" },
+        { label: "systemd-boot", desc: "Simple UEFI boot" },
+        { label: "efistub", desc: "Direct UEFI boot entry" },
+      ], selectedIdx: 0, textValue: "" },
+    { id: "kernels", label: "Kernels", summary: "linux", kind: "menu",
+      items: [
+        { label: "linux", desc: "Stable kernel (default)" },
+        { label: "linux-lts", desc: "Long-term support kernel" },
+        { label: "linux-hardened", desc: "Security-hardened kernel" },
+        { label: "linux-zen", desc: "Performance-tuned kernel" },
       ], selectedIdx: 0, textValue: "" },
     { id: "hostname", label: "Hostname", summary: "archlinux", kind: "text", textValue: "archlinux" },
-    { id: "users", label: "Users", summary: "user (sudo)", kind: "text", textValue: "user" },
+    { id: "authentication", label: "Authentication", summary: "root + user", kind: "menu",
+      selectedIdx: 0, textValue: "", subItems: authSub },
     { id: "profile", label: "Profile", summary: "KDE Plasma", kind: "menu",
       items: [
         { label: "KDE Plasma", desc: "Full-featured KDE desktop" },
         { label: "GNOME", desc: "Modern GNOME desktop" },
         { label: "XFCE", desc: "Lightweight XFCE desktop" },
-        { label: "i3", desc: "Tiling window manager i3" },
+        { label: "i3", desc: "Tiling window manager" },
         { label: "Sway", desc: "Wayland tiling compositor" },
+        { label: "Hyprland", desc: "Dynamic Wayland compositor" },
         { label: "None", desc: "No desktop (minimal)" },
       ], selectedIdx: 0, textValue: "" },
-    { id: "graphics", label: "Graphics driver", summary: "All open-source", kind: "menu",
-      items: [
-        { label: "All open-source", desc: "AMD / Intel / NVIDIA (open)" },
-        { label: "AMD", desc: "AMD only" },
-        { label: "Intel", desc: "Intel only" },
-        { label: "NVIDIA", desc: "Proprietary NVIDIA driver" },
-        { label: "NVIDIA Optimus", desc: "Hybrid Intel + NVIDIA" },
-      ], selectedIdx: 0, textValue: "" },
-    { id: "network", label: "Network", summary: "NetworkManager", kind: "menu",
+    { id: "applications", label: "Applications", summary: "Audio, BT, Print", kind: "menu",
+      selectedIdx: 0, textValue: "", subItems: appSub },
+    { id: "network", label: "Network configuration", summary: "NetworkManager", kind: "menu",
       items: [
         { label: "NetworkManager", desc: "Full network manager (default)" },
         { label: "systemd-networkd", desc: "Minimal systemd networking" },
         { label: "iwd", desc: "Standalone WiFi daemon" },
         { label: "None", desc: "No network config" },
       ], selectedIdx: 0, textValue: "" },
+    { id: "additional_packages", label: "Additional packages", summary: "(none)", kind: "text", textValue: "" },
     { id: "timezone", label: "Timezone", summary: "UTC", kind: "text", textValue: "UTC" },
-    { id: "audio", label: "Audio", summary: "PipeWire", kind: "menu",
+    { id: "ntp", label: "Automatic time sync (NTP)", summary: "Yes", kind: "menu",
       items: [
-        { label: "PipeWire", desc: "Modern audio server (recommended)" },
-        { label: "PulseAudio", desc: "Traditional audio server" },
-        { label: "None", desc: "No audio setup" },
+        { label: "Yes", desc: "Enable NTP time sync" },
+        { label: "No", desc: "Disable NTP" },
       ], selectedIdx: 0, textValue: "" },
+    { id: "save_config", label: "Save configuration", summary: "", kind: "action", textValue: "" },
+    { id: "install", label: "Install", summary: "", kind: "action", textValue: "" },
+    { id: "abort", label: "Abort", summary: "", kind: "action", textValue: "" },
   ];
 }
 
@@ -215,6 +280,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [tuiSelected, setTuiSelected] = useState(0);
   const [tuiConfiguring, setTuiConfiguring] = useState(false);
   const [tuiSubIdx, setTuiSubIdx] = useState(0);
+  const [tuiSubMenu, setTuiSubMenu] = useState<TuiConfig[] | null>(null);
+  const [tuiSubSel, setTuiSubSel] = useState(0);
+  const [tuiSubCfg, setTuiSubCfg] = useState(false);
+  const [tuiSubCfgIdx, setTuiSubCfgIdx] = useState(0);
   const [tuiMsg, setTuiMsg] = useState("");
 
   const termRef = useRef<HTMLDivElement>(null);
@@ -282,6 +351,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
       setTuiSelected(0);
       setTuiConfiguring(false);
       setTuiSubIdx(0);
+      setTuiSubMenu(null);
+      setTuiSubSel(0);
+      setTuiSubCfg(false);
+      setTuiSubCfgIdx(0);
       setTuiMsg("");
       setPhase("tui");
       return;
@@ -304,56 +377,98 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   // ─── TUI keyboard handling ───
   function handleTuiKey(e: React.KeyboardEvent) {
-    if (tuiConfiguring) {
-      const opt = tuiOptions[tuiSelected];
-      if (!opt) return;
-      if (opt.kind === "menu" && opt.items) {
-        if (e.key === "ArrowUp") { e.preventDefault(); setTuiSubIdx(p => Math.max(0, p - 1)); playClick(); return; }
-        if (e.key === "ArrowDown") { e.preventDefault(); setTuiSubIdx(p => Math.min(opt.items!.length - 1, p + 1)); playClick(); return; }
+    // Level 3: configuring a sub-menu item's value
+    if (tuiSubCfg && tuiSubMenu) {
+      const subOpt = tuiSubMenu[tuiSubSel];
+      if (!subOpt) return;
+      if (subOpt.kind === "menu" && subOpt.items) {
+        if (e.key === "ArrowUp") { e.preventDefault(); setTuiSubCfgIdx(p => Math.max(0, p - 1)); playClick(); return; }
+        if (e.key === "ArrowDown") { e.preventDefault(); setTuiSubCfgIdx(p => Math.min(subOpt.items!.length - 1, p + 1)); playClick(); return; }
         if (e.key === "Enter") {
           e.preventDefault(); playClick();
-          const val = opt.items[tuiSubIdx].label;
-          setTuiOptions(prev => prev.map((o, i) => i === tuiSelected ? { ...o, summary: val, selectedIdx: tuiSubIdx } : o));
-          setTuiConfiguring(false);
-          setTuiMsg(`  ✓ ${opt.label}: ${val}`);
+          const val = subOpt.items![tuiSubCfgIdx].label;
+          setTuiSubMenu(prev => prev!.map((o, i) => i === tuiSubSel ? { ...o, summary: val, selectedIdx: tuiSubCfgIdx } : o));
+          setTuiSubCfg(false);
+          setTuiMsg(`  ✓ ${subOpt.label}: ${val}`);
           return;
         }
         if (e.key === "Escape" || e.key === "Backspace") {
-          e.preventDefault(); playClick(); setTuiConfiguring(false); setTuiMsg(""); return;
+          e.preventDefault(); playClick(); setTuiSubCfg(false); return;
         }
       }
-      if (opt.kind === "text") {
+      if (subOpt.kind === "text") {
         if (e.key === "Enter") {
           e.preventDefault(); playClick();
-          const val = (e.target as HTMLInputElement).value.trim() || opt.textValue;
-          setTuiOptions(prev => prev.map((o, i) => i === tuiSelected ? { ...o, textValue: val, summary: val } : o));
-          setTuiConfiguring(false);
-          setTuiMsg(`  ✓ ${opt.label}: ${val}`);
+          const val = (e.target as HTMLInputElement).value.trim() || subOpt.textValue;
+          setTuiSubMenu(prev => prev!.map((o, i) => i === tuiSubSel ? { ...o, textValue: val, summary: val } : o));
+          setTuiSubCfg(false);
+          setTuiMsg(`  ✓ ${subOpt.label}: ${val}`);
           return;
         }
         if (e.key === "Escape") {
-          e.preventDefault(); playClick(); setTuiConfiguring(false); setTuiMsg(""); return;
+          e.preventDefault(); playClick(); setTuiSubCfg(false); return;
         }
         playKeyClick();
         return;
       }
     }
 
-    // Main menu navigation
+    // Level 2: in a sub-menu (e.g., Disk config, Authentication, Applications)
+    if (tuiSubMenu) {
+      if (e.key === "ArrowUp") { e.preventDefault(); setTuiSubSel(p => Math.max(0, p - 1)); playClick(); return; }
+      if (e.key === "ArrowDown") { e.preventDefault(); setTuiSubSel(p => Math.min(tuiSubMenu.length - 1, p + 1)); playClick(); return; }
+      if (e.key === "Enter") {
+        e.preventDefault(); playClick();
+        const opt = tuiSubMenu[tuiSubSel];
+        if (!opt) return;
+        if (opt.kind === "menu") { setTuiSubCfgIdx(opt.selectedIdx || 0); setTuiSubCfg(true); setTuiMsg(""); return; }
+        if (opt.kind === "text") { setTuiSubCfg(true); setTuiMsg(""); return; }
+      }
+      if (e.key === "Escape" || e.key === "Backspace") {
+        e.preventDefault(); playClick(); setTuiSubMenu(null); setTuiSubCfg(false); setTuiMsg(""); return;
+      }
+      return;
+    }
+
+    // Level 1: Main menu navigation
     if (e.key === "ArrowUp") { e.preventDefault(); setTuiSelected(p => Math.max(0, p - 1)); playClick(); return; }
     if (e.key === "ArrowDown") { e.preventDefault(); setTuiSelected(p => Math.min(tuiOptions.length - 1, p + 1)); playClick(); return; }
     if (e.key === "Enter") {
       e.preventDefault(); playClick();
       const opt = tuiOptions[tuiSelected];
       if (!opt) return;
-      if (opt.kind === "menu") { setTuiSubIdx(opt.selectedIdx || 0); setTuiConfiguring(true); setTuiMsg(""); return; }
+      if (opt.kind === "action") {
+        if (opt.id === "install") {
+          const allConfigurable = tuiOptions.filter(o => o.kind !== "action");
+          const allDone = allConfigurable.every(o => o.summary !== "");
+          if (!allDone) { setTuiMsg("  ✗ Configure all options first"); return; }
+          playClick(); setPhase("installing");
+          return;
+        }
+        if (opt.id === "abort") {
+          playClick(); setTuiMsg(""); setPhase("shell");
+          return;
+        }
+        if (opt.id === "save_config") {
+          setTuiMsg("  ✓ Configuration saved to /root/archinstall.json");
+          return;
+        }
+        return;
+      }
+      if (opt.subItems) {
+        setTuiSubMenu(opt.subItems);
+        setTuiSubSel(0);
+        setTuiSubCfg(false);
+        setTuiMsg("");
+        return;
+      }
+      if (opt.kind === "menu" && opt.items) {
+        setTuiSubIdx(opt.selectedIdx || 0);
+        setTuiConfiguring(true);
+        setTuiMsg("");
+        return;
+      }
       if (opt.kind === "text") { setTuiConfiguring(true); setTuiMsg(""); return; }
-    }
-    if (e.key === "i" || e.key === "I") {
-      // Type 'i' or 'I' to install
-      const allDone = tuiOptions.every(o => o.summary !== "");
-      if (!allDone) { setTuiMsg("  ✗ Configure all options first"); return; }
-      playClick(); setPhase("installing");
     }
   }
 
@@ -414,7 +529,8 @@ export default function ArchInstall({ config, speed, onComplete }: {
   // ─── TUI ───
   if (phase === "tui") {
     const configuring = tuiOptions[tuiSelected];
-    const allDone = tuiOptions.every(o => o.summary !== "");
+    const configurable = tuiOptions.filter(o => o.kind !== "action");
+    const allDone = configurable.every(o => o.summary !== "");
 
     return (
       <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}
@@ -429,13 +545,78 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
                   <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
                 </div>
-                <span className="text-white/30 text-[9px] uppercase tracking-widest flex-1 text-center">archinstall — Guided Installer</span>
+                <span className="text-white/30 text-[9px] uppercase tracking-widest flex-1 text-center">archinstall 4.0 — Textual UI</span>
               </div>
 
               {/* Body */}
-              <div className="p-3 sm:p-4 min-h-[280px]">
-                {tuiConfiguring && configuring ? (
-                  /* ── Configuring pane ── */
+              <div className="p-3 sm:p-4 min-h-[280px] max-h-[400px] overflow-y-auto">
+                {tuiSubMenu && tuiSubCfg ? (
+                  /* ── Level 3: configuring a sub-menu item's value ── */
+                  <div>
+                    <div className="text-[#60a5fa] font-bold mb-3 text-xs uppercase tracking-wider border-b border-white/10 pb-1">
+                      {tuiSubMenu[tuiSubSel]?.label || ""}
+                    </div>
+                    {tuiSubMenu[tuiSubSel]?.kind === "menu" && tuiSubMenu[tuiSubSel]?.items ? (
+                      <div className="space-y-0.5 mb-2">
+                        {tuiSubMenu[tuiSubSel]!.items!.map((item, i) => (
+                          <div key={item.label}
+                            className={`flex items-center justify-between px-3 py-1.5 rounded text-[11px] cursor-pointer transition-colors ${
+                              i === tuiSubCfgIdx ? "bg-[#60a5fa]/20 text-white border border-[#60a5fa]/30" : "text-white/60 hover:bg-white/5"
+                            }`}
+                            onClick={() => { setTuiSubCfgIdx(i); }}>
+                            <div>
+                              <span className={i === tuiSubCfgIdx ? "text-white font-bold" : ""}>{item.label}</span>
+                              <span className="text-white/30 ml-2">— {item.desc}</span>
+                            </div>
+                            {i === tuiSubCfgIdx && <span className="text-[#60a5fa] text-[10px]">◀</span>}
+                          </div>
+                        ))}
+                        <div className="text-[9px] text-white/20 mt-3 pt-2 border-t border-white/5">
+                          ↑↓ navigate • Enter select • Esc back
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-2">
+                        <div className="text-white/40 text-[10px] mb-2">Enter value for {tuiSubMenu[tuiSubSel]?.label}:</div>
+                        <input type="text" defaultValue={tuiSubMenu[tuiSubSel]?.textValue || ""} autoFocus
+                          onKeyDown={handleTuiKey}
+                          onChange={() => playKeyClick()}
+                          className="w-full bg-[#1a1a2e] border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
+                        <div className="text-[9px] text-white/20 mt-2">Enter to confirm • Esc to cancel</div>
+                      </div>
+                    )}
+                  </div>
+                ) : tuiSubMenu ? (
+                  /* ── Level 2: sub-menu items (Disk, Auth, Apps) ── */
+                  <div>
+                    <div className="text-white/50 font-bold text-[11px] text-center mb-2 uppercase tracking-wider">
+                      {tuiOptions[tuiSelected]?.label || ""}
+                    </div>
+                    <div className="border-t border-white/10 mb-1" />
+                    {tuiSubMenu.map((opt, i) => (
+                      <div key={opt.id}
+                        className={`flex justify-between items-center px-3 py-1.5 rounded cursor-pointer transition-all ${
+                          i === tuiSubSel
+                            ? "bg-[#60a5fa]/15 text-white border border-[#60a5fa]/20"
+                            : "text-white/60 hover:bg-white/[0.03]"
+                        }`}
+                        onClick={() => setTuiSubSel(i)}>
+                        <div className="flex items-center gap-2">
+                          {i === tuiSubSel && <span className="text-[#60a5fa] text-[10px]">▶</span>}
+                          <span className={i === tuiSubSel ? "font-bold" : ""}>{opt.label}</span>
+                        </div>
+                        <span className={i === tuiSubSel ? "text-white/60 text-[10px]" : "text-white/30 text-[10px]"}>
+                          {opt.summary}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="border-t border-white/10 mt-2 pt-2" />
+                    <div className="text-[9px] text-white/20">
+                      ↑↓ navigate • Enter configure • Esc back
+                    </div>
+                  </div>
+                ) : tuiConfiguring && configuring ? (
+                  /* ── Level 2b: simple sub-menu (value picking) ── */
                   <div>
                     <div className="text-[#60a5fa] font-bold mb-3 text-xs uppercase tracking-wider border-b border-white/10 pb-1">
                       {configuring.label}
@@ -472,37 +653,50 @@ export default function ArchInstall({ config, speed, onComplete }: {
                     )}
                   </div>
                 ) : (
-                  /* ── Main menu ── */
+                  /* ── Level 1: Main menu ── */
                   <div>
                     <div className="text-white/50 font-bold text-[11px] text-center mb-2 uppercase tracking-wider">Arch Linux Guided Installer</div>
                     <div className="border-t border-white/10 mb-1" />
-                    {tuiOptions.map((opt, i) => (
-                      <div key={opt.id}
-                        className={`flex justify-between items-center px-3 py-1.5 rounded cursor-pointer transition-all ${
-                          i === tuiSelected
-                            ? "bg-[#60a5fa]/15 text-white border border-[#60a5fa]/20"
-                            : "text-white/60 hover:bg-white/[0.03]"
-                        }`}
-                        onClick={() => setTuiSelected(i)}>
-                        <div className="flex items-center gap-2">
-                          {i === tuiSelected && <span className="text-[#60a5fa] text-[10px]">▶</span>}
-                          <span className={i === tuiSelected ? "font-bold" : ""}>{opt.label}</span>
+                    {tuiOptions.map((opt, i) => {
+                      const isInstall = opt.id === "install";
+                      const isAbort = opt.id === "abort";
+                      const isSave = opt.id === "save_config";
+                      return (
+                        <div key={opt.id}
+                          className={`flex justify-between items-center px-3 py-1.5 rounded cursor-pointer transition-all ${
+                            i === tuiSelected
+                              ? isAbort ? "bg-[#f87171]/15 text-white border border-[#f87171]/20"
+                                : isInstall && allDone ? "bg-[#4ade80]/15 text-white border border-[#4ade80]/20"
+                                : "bg-[#60a5fa]/15 text-white border border-[#60a5fa]/20"
+                              : "text-white/60 hover:bg-white/[0.03]"
+                          }`}
+                          onClick={() => setTuiSelected(i)}>
+                          <div className="flex items-center gap-2">
+                            {i === tuiSelected && isAbort && <span className="text-[#f87171] text-[10px]">▶</span>}
+                            {i === tuiSelected && isInstall && allDone && <span className="text-[#4ade80] text-[10px]">▶</span>}
+                            {i === tuiSelected && !isInstall && !isAbort && <span className="text-[#60a5fa] text-[10px]">▶</span>}
+                            <span className={i === tuiSelected ? "font-bold" : ""} style={{
+                              color: isAbort ? "#f87171" : isSave ? "#fbbf24" : isInstall && allDone ? "#4ade80" : undefined
+                            }}>{opt.label}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {opt.summary && (
+                              <span className={i === tuiSelected ? "text-white/60 text-[10px]" : "text-white/30 text-[10px]"}>
+                                {opt.summary}
+                              </span>
+                            )}
+                            {i === tuiSelected && !isInstall && !isAbort && !isSave && <span className="text-[#4ade80] text-[10px]">←</span>}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className={i === tuiSelected ? "text-white/60 text-[10px]" : "text-white/30 text-[10px]"}>
-                            {opt.summary}
-                          </span>
-                          {i === tuiSelected && <span className="text-[#4ade80] text-[10px]">←</span>}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <div className="border-t border-white/10 mt-2 pt-2" />
                     <div className="flex justify-between text-[9px]">
                       <span className="text-white/20">
-                        ↑↓ navigate • Enter configure • <span className={allDone ? "text-[#4ade80]" : "text-white/20"}>I</span> install
+                        ↑↓ navigate • Enter configure • Install to begin
                       </span>
                       <span className={allDone ? "text-[#4ade80]" : "text-white/20"}>
-                        {tuiOptions.filter(o => o.summary !== "").length}/{tuiOptions.length}
+                        {configurable.filter(o => o.summary !== "").length}/{configurable.length}
                       </span>
                     </div>
                   </div>
@@ -517,8 +711,15 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
           {/* Bottom status bar */}
           <div className="border-t border-white/10 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/20 font-mono flex justify-between">
-            <span>{tuiConfiguring ? "Esc to go back" : (allDone ? "Press I to install" : "Configure all options then press I")}</span>
-            <span>{tuiConfiguring ? `Configuring: ${configuring.label}` : `WiFi: ${wifiConnected ? "Connected" : "No internet"}`}</span>
+            <span>
+              {tuiSubMenu ? "Esc to go back" : tuiConfiguring ? "Esc to cancel" : "Select Install then Enter to begin"}
+            </span>
+            <span>
+              {tuiSubCfg ? `Setting: ${tuiSubMenu?.[tuiSubSel]?.label || ""}`
+                : tuiSubMenu ? `Sub-menu: ${tuiOptions[tuiSelected]?.label || ""}`
+                : tuiConfiguring ? `Configuring: ${configuring?.label || ""}`
+                : `WiFi: ${wifiConnected ? "Connected" : "No internet"}`}
+            </span>
           </div>
         </div>
       </div>
