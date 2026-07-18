@@ -253,6 +253,58 @@ export default function Partition({
                 </div>
               )}
             </div>
+
+            {/* Inline create/edit partition form */}
+            <AnimatePresence>
+              {showDialog && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }} className="max-w-3xl mx-auto mt-2 overflow-hidden">
+                  <div className="rounded-xl border border-white/15 bg-[#12121a] p-4 shadow-lg">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="rounded-lg overflow-hidden border border-white/10 shrink-0">
+                        <img src={PARTITION_IMG[form.mount === "/boot" ? "boot" : form.mount === "/home" ? "home" : form.mount === "[swap]" ? "swap" : "root"]}
+                          alt="Partition type" className="w-20 h-14 object-cover" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white/90">{editIdx !== null ? "Edit partition" : "Create partition"}</h3>
+                        <p className="text-[10px] text-white/50">Configure the new partition for {config.branding.name}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-medium text-white/60 mb-1">Size (GB)</label>
+                        <input type="number" min={1} max={Math.floor(freeGB + (editIdx !== null ? partitions[editIdx].sizeGB : 0))}
+                          value={form.sizeGB} onChange={(e) => setForm((p) => ({ ...p, sizeGB: Number(e.target.value) }))}
+                          className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-medium text-white/60 mb-1">Filesystem</label>
+                        <select value={form.fs} onChange={(e) => setForm((p) => ({ ...p, fs: e.target.value }))}
+                          className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
+                          {FILESYSTEMS.map((fs) => <option key={fs} value={fs}>{fs}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-medium text-white/60 mb-1">Mount point</label>
+                        <select value={form.mount} onChange={(e) => setForm((p) => ({ ...p, mount: e.target.value }))}
+                          className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
+                          {MOUNT_POINTS.map((mp) => <option key={mp} value={mp}>{mp}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-3">
+                      <button onClick={() => { playClick(); setShowDialog(false); setEditIdx(null); }}
+                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white/60 hover:bg-white/[0.03] transition-colors">Cancel</button>
+                      <button onClick={handleSubmit} disabled={form.sizeGB < 1}
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
+                        style={{ background: accent }}>
+                        {editIdx !== null ? "Save" : "Create"}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -268,61 +320,6 @@ export default function Partition({
             canConfirm ? "hover:opacity-90" : "bg-white/10 text-white/30 cursor-not-allowed"
           }`} style={canConfirm ? { background: accent } : {}}>Install now →</button>
       </div>
-
-      {/* Create / Edit Dialog */}
-      <AnimatePresence>
-        {showDialog && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowDialog(false)}>
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 8 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-xl border border-white/10 bg-[#12121a] p-5 shadow-2xl">
-
-              {/* Show relevant partition screenshot as header */}
-              <div className="rounded-lg overflow-hidden mb-4 border border-white/10">
-                <img src={PARTITION_IMG[form.mount === "/boot" ? "boot" : form.mount === "/home" ? "home" : form.mount === "[swap]" ? "swap" : "root"]}
-                  alt="Partition type" className="w-full h-28 object-cover" />
-              </div>
-
-              <h3 className="text-sm font-bold text-white/90 mb-3">{editIdx !== null ? "Edit partition" : "Create partition"}</h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-[10px] font-medium text-white/60 mb-1">Size (GB)</label>
-                  <input type="number" min={1} max={Math.floor(freeGB + (editIdx !== null ? partitions[editIdx].sizeGB : 0))}
-                    value={form.sizeGB} onChange={(e) => setForm((p) => ({ ...p, sizeGB: Number(e.target.value) }))}
-                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]"
-                    style={{ borderColor: undefined }} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-medium text-white/60 mb-1">Filesystem</label>
-                  <select value={form.fs} onChange={(e) => setForm((p) => ({ ...p, fs: e.target.value }))}
-                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
-                    {FILESYSTEMS.map((fs) => <option key={fs} value={fs}>{fs}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-medium text-white/60 mb-1">Mount point</label>
-                  <select value={form.mount} onChange={(e) => setForm((p) => ({ ...p, mount: e.target.value }))}
-                    className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
-                    {MOUNT_POINTS.map((mp) => <option key={mp} value={mp}>{mp}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 mt-4">
-                <button onClick={() => { playClick(); setShowDialog(false); setEditIdx(null); }}
-                  className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white/60 hover:bg-white/[0.03] transition-colors">Cancel</button>
-                <button onClick={handleSubmit} disabled={form.sizeGB < 1}
-                  className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-                  style={{ background: accent }}>
-                  {editIdx !== null ? "Save" : "Create"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

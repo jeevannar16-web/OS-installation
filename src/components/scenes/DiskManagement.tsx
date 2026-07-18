@@ -241,16 +241,12 @@ export default function DiskManagement({
           )}
         </AnimatePresence>
 
-        {/* Shrink Dialog Modal */}
+        {/* Inline Shrink Dialog */}
         <AnimatePresence>
           {showModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="w-full max-w-md rounded-xl border border-white/10 bg-[#2b2b2e] p-5 shadow-2xl text-white space-y-4"
-              >
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }} className="mt-4 overflow-hidden">
+              <div className="rounded-xl border border-white/10 bg-[#2b2b2e] p-5 shadow-xl text-white space-y-4">
                 <div className="flex items-center justify-between border-b border-white/10 pb-2">
                   <h3 className="text-sm font-bold">Shrink C:</h3>
                   <button onClick={() => { playClick(); setShowModal(false); }} className="text-white/40 hover:text-white text-sm font-bold">✕</button>
@@ -293,8 +289,8 @@ export default function DiskManagement({
                     Shrink
                   </button>
                 </div>
-              </motion.div>
-            </div>
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
