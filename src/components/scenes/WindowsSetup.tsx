@@ -94,8 +94,6 @@ export default function WindowsSetup({
   const [selectedEdition, setSelectedEdition] = useState(0);
   const [partitions, setPartitions] = useState(INITIAL_PARTITIONS);
   const [selectedPart, setSelectedPart] = useState<string | null>(null);
-  const [installProgress, setInstallProgress] = useState(0);
-  const [installPhase, setInstallPhase] = useState("Copying files");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const go = useCallback((next: SetupStep) => setStep(next), []);
@@ -117,25 +115,6 @@ export default function WindowsSetup({
     setPartitions((p) => p.filter((x) => x.id !== selectedPart));
     setSelectedPart(null);
     setConfirmDelete(false);
-  }
-
-  function startInstall() {
-    go("installing");
-    const iv = setInterval(() => {
-      setInstallProgress((p) => {
-        const next = Math.min(100, p + 1);
-        if (next < 25) setInstallPhase("Copying Windows files");
-        else if (next < 50) setInstallPhase("Getting files ready for installation");
-        else if (next < 75) setInstallPhase("Installing features");
-        else if (next < 90) setInstallPhase("Installing updates");
-        else setInstallPhase("Finishing up");
-        if (next >= 100) {
-          clearInterval(iv);
-          setTimeout(onComplete, 1500);
-        }
-        return next;
-      });
-    }, 120);
   }
 
   return (
@@ -461,33 +440,8 @@ export default function WindowsSetup({
 
                   <div className="flex justify-between">
                     <button onClick={() => go("license")} className="text-gray-500 text-sm hover:text-black">← Back</button>
-                    <button onClick={startInstall} className="bg-[#0078d4] text-white px-8 py-2 text-sm font-semibold rounded-md hover:bg-[#006cbd] transition-colors">Install</button>
+                    <button onClick={onComplete} className="bg-[#0078d4] text-white px-8 py-2 text-sm font-semibold rounded-md hover:bg-[#006cbd] transition-colors">Install</button>
                   </div>
-                </motion.div>
-              )}
-
-              {/* ── Installing ── */}
-              {step === "installing" && (
-                <motion.div
-                  key="install"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="w-full max-w-lg bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl p-8 text-center"
-                >
-                  <WindowsLogo className="mb-6 mx-auto justify-center" />
-                  <h2 className="text-black text-xl font-light mb-1">Installing {config.branding.name}</h2>
-                  <p className="text-gray-500 text-sm mb-6">{installPhase}… {installProgress}%</p>
-
-                  <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden mb-4">
-                    <motion.div
-                      className="h-full bg-[#0078d4] rounded-full"
-                      style={{ width: `${installProgress}%` }}
-                    />
-                  </div>
-
-                  <p className="text-gray-400 text-[11px]">
-                    Your PC will restart several times. Sit back and relax.
-                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
