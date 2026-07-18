@@ -320,7 +320,31 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [shellStep, setShellStep] = useState(1);
   const [postStep, setPostStep] = useState(0);
   const [completionIdx, setCompletionIdx] = useState(-1);
-  const ALL_COMMANDS = ["archinstall", "iwctl", "ping", "fdisk", "lsblk", "cfdisk", "timedatectl", "ls", "cat", "uname", "ip", "free", "df", "neofetch", "echo", "clear", "help", "pwd", "cd", "exit"];
+  const [suggestionIdx, setSuggestionIdx] = useState(-1);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const COMMANDS = [
+    { cmd: "archinstall", desc: "Launch guided installer (TUI)" },
+    { cmd: "iwctl", desc: "WiFi connection manager" },
+    { cmd: "ping", desc: "Test internet connectivity" },
+    { cmd: "fdisk", desc: "Partition manager (use fdisk -l, fdisk /dev/sdX)" },
+    { cmd: "lsblk", desc: "List block devices" },
+    { cmd: "cfdisk", desc: "ASCII partition table viewer" },
+    { cmd: "timedatectl", desc: "Check system clock" },
+    { cmd: "ls", desc: "List directory contents" },
+    { cmd: "cat", desc: "Show file contents" },
+    { cmd: "uname", desc: "Print system info" },
+    { cmd: "ip", desc: "Show network addresses" },
+    { cmd: "free", desc: "Show memory usage" },
+    { cmd: "df", desc: "Show disk usage" },
+    { cmd: "neofetch", desc: "System info with logo" },
+    { cmd: "echo", desc: "Print text" },
+    { cmd: "clear", desc: "Clear terminal" },
+    { cmd: "help", desc: "Show all commands" },
+    { cmd: "pwd", desc: "Print working directory" },
+    { cmd: "cd", desc: "Change directory" },
+    { cmd: "exit", desc: "Exit current shell" },
+  ];
+  const ALL_COMMANDS = COMMANDS.map(c => c.cmd);
 
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -808,18 +832,54 @@ export default function ArchInstall({ config, speed, onComplete }: {
                     : "#c0c0c0"
                 }}>{line}</div>
             ))}
-            <div className="flex items-center gap-1 mt-1">
+            <div className="relative flex items-center gap-1 mt-1">
               <span className="shrink-0" style={{ color: promptColor }}>{prompt}</span>
               <input ref={inputRef} type="text" value={input} autoFocus autoComplete="off" spellCheck={false}
-                onChange={(e) => { setInput(e.target.value); setCompletionIdx(-1); playKeyClick(); }}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setInput(val);
+                  setCompletionIdx(-1);
+                  setSuggestionIdx(-1);
+                  playKeyClick();
+                  if (subshell === "bash" && val.trim()) {
+                    const prefix = val.trim().toLowerCase();
+                    const matches = COMMANDS.filter(c => c.cmd.startsWith(prefix));
+                    setShowSuggestions(matches.length > 0 && matches.length < ALL_COMMANDS.length);
+                  } else if (subshell === "bash" && val.trim() === "" && document.activeElement === inputRef.current) {
+                    setShowSuggestions(true);
+                    setSuggestionIdx(0);
+                  } else {
+                    setShowSuggestions(false);
+                  }
+                }}
+                onFocus={() => { if (subshell === "bash" && !input.trim()) { setShowSuggestions(true); setSuggestionIdx(0); } }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") { e.preventDefault(); handleShellSubmit(); setCompletionIdx(-1); }
-                  if (e.key === "ArrowUp") { e.preventDefault(); handleHistory("up"); }
-                  if (e.key === "ArrowDown") { e.preventDefault(); handleHistory("down"); }
-                  if (e.key === "Tab" && subshell === "bash") {
+                  const getMatches = () => {
+                    const prefix = input.trim().toLowerCase();
+                    return prefix ? COMMANDS.filter(c => c.cmd.startsWith(prefix) && c.cmd !== prefix) : COMMANDS;
+                  };
+                  if (showSuggestions && e.key === "ArrowDown") { e.preventDefault(); const m = getMatches(); setSuggestionIdx(p => Math.min(m.length - 1, p + 1)); void m; return; }
+                  if (showSuggestions && e.key === "ArrowUp") { e.preventDefault(); setSuggestionIdx(p => Math.max(0, p - 1)); return; }
+                  if (showSuggestions && (e.key === "Enter" || e.key === "Tab")) {
+                    e.preventDefault();
+                    const m = getMatches();
+                    if (m.length > 0 && suggestionIdx >= 0 && suggestionIdx < m.length) {
+                      setInput(m[suggestionIdx].cmd + " ");
+                    }
+                    setShowSuggestions(false);
+                    setSuggestionIdx(-1);
+                    inputRef.current?.focus();
+                    return;
+                  }
+                  if (e.key === "Enter") { e.preventDefault(); handleShellSubmit(); setCompletionIdx(-1); setShowSuggestions(false); setSuggestionIdx(-1); }
+                  if (e.key === "ArrowUp") { e.preventDefault(); if (!showSuggestions) handleHistory("up"); }
+                  if (e.key === "ArrowDown") { e.preventDefault(); if (!showSuggestions) handleHistory("down"); }
+                  if (e.key === "Escape") { e.preventDefault(); setShowSuggestions(false); setSuggestionIdx(-1); }
+                  if (e.key === "Tab" && !showSuggestions && subshell === "bash") {
                     e.preventDefault();
                     const prefix = input.trim().toLowerCase();
-                    if (!prefix) { setInput("archinstall "); setCompletionIdx(-1); return; }
+                    if (!prefix) { setShowSuggestions(true); setSuggestionIdx(0); return; }
                     const matches = ALL_COMMANDS.filter(c => c.startsWith(prefix) && c !== prefix);
                     if (matches.length === 0) return;
                     const next = (completionIdx + 1) % matches.length;
@@ -827,7 +887,34 @@ export default function ArchInstall({ config, speed, onComplete }: {
                     setInput(matches[next] + " ");
                   }
                 }}
-                className="flex-1 bg-transparent text-white/90 outline-none font-mono text-xs caret-white/70" />
+                className="flex-1 bg-transparent text-white/90 outline-none font-mono text-xs caret-white/70"
+                placeholder={subshell === "bash" ? "Type a command... (Tab ⇥ for autocomplete)" : ""} />
+
+              {/* Suggestions dropdown */}
+              {showSuggestions && subshell === "bash" && (
+                <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-2xl overflow-hidden z-30"
+                  onMouseDown={e => e.preventDefault()}>
+                  {(() => {
+                    const prefix = input.trim().toLowerCase();
+                    const matches = prefix ? COMMANDS.filter(c => c.cmd.startsWith(prefix) && c.cmd !== prefix) : COMMANDS;
+                    return matches.slice(0, 10).map((c, i) => (
+                      <div key={c.cmd}
+                        className={`flex items-center justify-between px-3 py-1.5 text-[10px] cursor-pointer transition-colors ${
+                          i === suggestionIdx ? "bg-[#60a5fa]/20 text-white" : "text-white/60 hover:bg-white/5"
+                        }`}
+                        onClick={() => { setInput(c.cmd + " "); setShowSuggestions(false); inputRef.current?.focus(); }}
+                        onMouseEnter={() => setSuggestionIdx(i)}>
+                        <span className="font-bold text-[11px]" style={{ color: i === suggestionIdx ? "#60a5fa" : "#c0c0c0" }}>{c.cmd}</span>
+                        <span className="text-white/30 ml-2 truncate">{c.desc}</span>
+                      </div>
+                    ));
+                  })()}
+                  <div className="border-t border-white/5 px-3 py-1 text-[8px] text-white/20 flex justify-between">
+                    <span>↑↓ navigate • Enter select</span>
+                    <span>{COMMANDS.filter(c => !input.trim() || c.cmd.startsWith(input.trim().toLowerCase())).length} commands</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/30 font-mono flex justify-between">
