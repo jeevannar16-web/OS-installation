@@ -10,7 +10,7 @@ const STEPS: { key: Step; label: string; img: string }[] = [
   { key: "name", label: "Name and Operating System", img: "/images/virtualbox/02-name-vm.jpg" },
   { key: "memory", label: "Memory and CPU", img: "/images/virtualbox/03-allocate-resources.jpg" },
   { key: "disk", label: "Hard Disk", img: "/images/virtualbox/04-allocate-disk.jpg" },
-  { key: "summary", label: "Summary", img: "/images/virtualbox/05-select-iso.jpg" },
+  { key: "summary", label: "Summary", img: "/images/virtualbox/06-start-vm.jpg" },
 ];
 
 export default function CreateVM({ config, onComplete }: { config: OSConfig; onComplete: () => void }) {

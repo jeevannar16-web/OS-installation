@@ -199,11 +199,11 @@ function getInstallerSteps(config: OSConfig): GuideStep[] {
     zorin: {
       language: "/images/zorin/03-installer-welcome.png",
       boot: "/images/zorin/01-grub-boot-menu.png",
-      network: "/images/zorin/03-installer-welcome.png",
+      network: "/images/zorin/10-welcome-menu.png",
       installType: "/images/zorin/11-installer.png",
-      createUser: "/images/zorin/11-installer.png",
-      copying: "/images/zorin/11-installer.png",
-      restart: "/images/zorin/11-installer.png",
+      createUser: "/images/zorin/09-files-manager.png",
+      copying: "/images/zorin/05-version-check.png",
+      restart: "/images/zorin/07-apt-update.png",
       desktop: "/images/zorin/02-live-desktop.png",
     },
     windows: {
