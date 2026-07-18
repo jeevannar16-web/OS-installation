@@ -5,7 +5,7 @@ import { playClick, playKeyClick } from "../shared/sounds";
 import { SparkleBurst } from "../shared/InteractiveEffects";
 import { useSceneAdvance } from "../shared/SceneAdvance";
 
-type Phase = "boot" | "shell" | "tui" | "installing" | "done";
+type Phase = "boot" | "shell" | "tui" | "installing" | "postinstall" | "done";
 
 const BOOT_LINES: { text: string; color?: string; delay: number }[] = [
   { text: "Booting Arch Linux 6.8.9-arch1-1...", color: "#888", delay: 200 },
@@ -317,6 +317,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [tuiSubCfgIdx, setTuiSubCfgIdx] = useState(0);
   const [tuiMsg, setTuiMsg] = useState("");
   const [showHelp, setShowHelp] = useState(false);
+  const [shellStep, setShellStep] = useState(1);
+  const [postStep, setPostStep] = useState(0);
+  const [completionIdx, setCompletionIdx] = useState(-1);
+  const ALL_COMMANDS = ["archinstall", "iwctl", "ping", "fdisk", "lsblk", "cfdisk", "timedatectl", "ls", "cat", "uname", "ip", "free", "df", "neofetch", "echo", "clear", "help", "pwd", "cd", "exit"];
 
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -336,15 +340,29 @@ export default function ArchInstall({ config, speed, onComplete }: {
     } else {
       const t = setTimeout(() => {
         setPhase("shell");
-        setTerminal(["Connect to WiFi first: iwctl → station wlan0 connect <SSID>", "Then: ping archlinux.org → archinstall"]);
+        setShellStep(1);
+        setTerminal(["── Arch Linux Dual-Boot Installation ──────────────", "  Internet is required. Follow the 3 steps below:", "", "  ❶ iwctl     → Connect to WiFi", "  ❷ ping      → Verify internet", "  ❸ archinstall → Start guided installer", "────────────────────────────────────────────────────"]);
       }, 300);
       return () => clearTimeout(t);
     }
   }, [phase, bootIdx, speed]);
 
   useEffect(() => {
-    if (phase === "installing") { const t = setTimeout(() => setPhase("done"), speed === "fast" ? 1500 : 3000); return () => clearTimeout(t); }
+    if (phase === "installing") { const t = setTimeout(() => setPhase("postinstall"), speed === "fast" ? 1500 : 3000); return () => clearTimeout(t); }
   }, [phase, speed]);
+  useEffect(() => {
+    if (phase === "postinstall") { const t = setTimeout(() => setPhase("done"), speed === "fast" ? 4000 : 10000); return () => clearTimeout(t); }
+  }, [phase, speed]);
+
+  // Auto-advance postinstall sub-steps
+  useEffect(() => {
+    if (phase !== "postinstall") return;
+    const delays = speed === "fast" ? [400, 900, 1400, 2000] : [800, 2500, 4500, 7000];
+    if (postStep < 4) {
+      const t = setTimeout(() => setPostStep(p => p + 1), delays[postStep] || 800);
+      return () => clearTimeout(t);
+    }
+  }, [phase, postStep, speed]);
   useEffect(() => {
     if (phase === "done") { const t = setTimeout(() => onComplete(), speed === "fast" ? 800 : 2000); return () => clearTimeout(t); }
   }, [phase, onComplete, speed]);
@@ -434,6 +452,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
           const ssid = args.slice(2).join(" ");
           if (ssid) {
             setWifiConnected(true);
+            setShellStep(2);
             showImageFor("/images/arch/13-network-config.png");
             addTerminal(["[iwctl]# station wlan0 connect " + ssid,
               "  ✓ Authentication completed",
@@ -584,7 +603,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       showImageFor("/images/arch/08-disk-partitioning.png");
     }
     if (lower === "ping" || lower.startsWith("ping ")) {
-      if (wifiConnected) showImageFor("/images/arch/13-network-config.png");
+      if (wifiConnected) { showImageFor("/images/arch/13-network-config.png"); setShellStep(3); }
     }
     setInput("");
   }
@@ -750,6 +769,32 @@ export default function ArchInstall({ config, speed, onComplete }: {
                 : subshell === "fdisk" ? `fdisk — editing /dev/${fdiskDisk}`
                 : `Connection: ${wifiConnected ? "✓ Connected" : "✗ No internet — connect WiFi first"}`}
             </div>
+            {subshell === "bash" && (
+              <div className="mb-3 p-2 rounded border border-white/5 bg-white/[0.02]">
+                <div className="flex items-center gap-3 text-[10px]">
+                  {[
+                    { num: 1, label: "WiFi", done: wifiConnected },
+                    { num: 2, label: "Verify", done: shellStep >= 3 },
+                    { num: 3, label: "Install", done: false },
+                  ].map((s, i) => (
+                    <div key={i} className={`flex items-center gap-1.5 ${
+                      (i === 0 && !wifiConnected) || (i === 1 && wifiConnected && shellStep < 3) || (i === 2 && shellStep >= 3)
+                        ? "text-[#60a5fa] font-bold" : s.done ? "text-[#4ade80]" : "text-white/30"
+                    }`}>
+                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold border ${
+                        (i === 0 && !wifiConnected) || (i === 1 && wifiConnected && shellStep < 3) || (i === 2 && shellStep >= 3)
+                          ? "border-[#60a5fa] bg-[#60a5fa]/20" : s.done ? "border-[#4ade80] bg-[#4ade80]/20" : "border-white/10"
+                      }`}>{s.done ? "✓" : s.num}</span>
+                      <span className="hidden sm:inline">{s.label}</span>
+                    </div>
+                  ))}
+                  <span className="flex-1" />
+                  {!wifiConnected && <span className="text-[#f87171]">✗ No internet</span>}
+                  {wifiConnected && shellStep < 3 && <span className="text-[#fbbf24]">✓ WiFi — verify with ping</span>}
+                  {shellStep >= 3 && <span className="text-[#4ade80]">✓ Ready — type archinstall</span>}
+                </div>
+              </div>
+            )}
             {terminal.map((line, i) => (
               <div key={i} className="whitespace-pre-wrap"
                 style={{
@@ -766,11 +811,21 @@ export default function ArchInstall({ config, speed, onComplete }: {
             <div className="flex items-center gap-1 mt-1">
               <span className="shrink-0" style={{ color: promptColor }}>{prompt}</span>
               <input ref={inputRef} type="text" value={input} autoFocus autoComplete="off" spellCheck={false}
-                onChange={(e) => { setInput(e.target.value); playKeyClick(); }}
+                onChange={(e) => { setInput(e.target.value); setCompletionIdx(-1); playKeyClick(); }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") { e.preventDefault(); handleShellSubmit(); }
+                  if (e.key === "Enter") { e.preventDefault(); handleShellSubmit(); setCompletionIdx(-1); }
                   if (e.key === "ArrowUp") { e.preventDefault(); handleHistory("up"); }
                   if (e.key === "ArrowDown") { e.preventDefault(); handleHistory("down"); }
+                  if (e.key === "Tab" && subshell === "bash") {
+                    e.preventDefault();
+                    const prefix = input.trim().toLowerCase();
+                    if (!prefix) { setInput("archinstall "); setCompletionIdx(-1); return; }
+                    const matches = ALL_COMMANDS.filter(c => c.startsWith(prefix) && c !== prefix);
+                    if (matches.length === 0) return;
+                    const next = (completionIdx + 1) % matches.length;
+                    setCompletionIdx(next);
+                    setInput(matches[next] + " ");
+                  }
                 }}
                 className="flex-1 bg-transparent text-white/90 outline-none font-mono text-xs caret-white/70" />
             </div>
@@ -1055,6 +1110,146 @@ export default function ArchInstall({ config, speed, onComplete }: {
               initial={{ width: "0%" }} animate={{ width: "100%" }}
               transition={{ duration: speed === "fast" ? 0.4 : 1.0, ease: "easeInOut" }} />
           </motion.div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ delay: speed === "fast" ? 1.8 : 3.5 }}
+            className="mt-3 text-[#fbbf24] text-[11px]">Press any key to reboot...</motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Post-Install: GRUB → Boot → Login → Desktop ───
+  if (phase === "postinstall") {
+    const steps = [
+      { label: "Rebooting", icon: "🔁" },
+      { label: "GRUB menu", icon: "📋" },
+      { label: "Booting kernel", icon: "⚙️" },
+      { label: "Login", icon: "👤" },
+      { label: "Desktop", icon: "🖥️" },
+    ];
+    return (
+      <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}
+        onClick={() => { if (postStep < 4) setPostStep(4); }}>
+        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2 border-b border-white/10 flex items-center gap-2 shrink-0">
+            <span className="text-white/60 text-[10px] font-mono font-bold tracking-wider flex-1">
+              Arch Linux — First Boot
+            </span>
+            <span className="text-white/20 text-[9px] font-mono">
+              {postStep + 1} / 5
+            </span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto font-mono text-xs leading-relaxed">
+            {/* Step indicators */}
+            <div className="flex justify-center gap-1 px-4 pt-3 pb-2 border-b border-white/5">
+              {steps.map((s, i) => (
+                <div key={i} className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] transition-all ${
+                  i <= postStep ? "text-white/80" : "text-white/20"
+                } ${i === postStep ? "bg-[#60a5fa]/10 border border-[#60a5fa]/20" : ""}`}>
+                  <span>{i <= postStep ? s.icon : "○"}</span>
+                  <span className="hidden sm:inline">{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+              {postStep === 0 && (
+                <div>
+                  <div className="text-[#fbbf24] font-bold mb-2">Rebooting system...</div>
+                  <div className="text-white/60">Unmounting filesystems...</div>
+                  <div className="text-white/60 mt-1">The system will reboot in 5 seconds...</div>
+                  <div className="text-white/60 mt-1"> Rebooting now.</div>
+                  <div className="mt-4 text-white/20 text-[9px]">Click to skip to desktop</div>
+                </div>
+              )}
+              {postStep === 1 && (
+                <div className="space-y-3">
+                  <div className="bg-black/60 rounded-lg p-4 border border-white/10">
+                    <div className="text-[#60a5fa] font-bold text-sm mb-3">GNU GRUB version 2.12</div>
+                    <div className="space-y-2 text-white/70">
+                      <div className="bg-[#60a5fa]/20 text-white border border-[#60a5fa]/30 rounded px-3 py-2 font-bold">
+                        ▶ Arch Linux (linux-6.8.9-arch1-1)
+                      </div>
+                      <div className="text-white/50 px-3 py-1">  Advanced options for Arch Linux</div>
+                      <div className="border-t border-white/10 my-2" />
+                      <div className="text-white/50 px-3 py-1">  Windows Boot Manager (on /dev/nvme0n1p2)</div>
+                      <div className="text-white/20 text-[9px] mt-3">Use ↑↓ to highlight, Enter to boot. Automatic boot in 5s...</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {postStep === 2 && (
+                <div>
+                  <div className="text-[#888] space-y-1">
+                    <div>[    0.000000] Linux version 6.8.9-arch1-1 (root@archiso) (gcc 13.2.1)</div>
+                    <div>[    0.010000] Command line: BOOT_IMAGE=/boot/vmlinuz-linux root=UUID=arch</div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+                      <span className="text-[#4ade80]">[  OK  ]</span> Loaded initial ramdisk
+                    </motion.div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+                      <span className="text-[#4ade80]">[  OK  ]</span> Mounted root filesystem
+                    </motion.div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+                      <span className="text-[#4ade80]">[  OK  ]</span> Started NetworkManager
+                    </motion.div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
+                      <span className="text-[#4ade80]">[  OK  ]</span> Started Display Manager (SDDM)
+                    </motion.div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
+                      <span className="text-[#4ade80]">[  OK  ]</span> Reached target Graphical Interface
+                    </motion.div>
+                  </div>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.0 }}
+                    className="mt-3 text-[#60a5fa]">Arch Linux 6.8.9-arch1-1 (tty1)</motion.div>
+                </div>
+              )}
+              {postStep === 3 && (
+                <div className="bg-black/60 rounded-lg p-5 border border-white/10 max-w-sm mx-auto">
+                  <div className="text-center mb-4">
+                    <div className="text-[#60a5fa] font-bold">Arch Linux 6.8.9-arch1-1 (tty1)</div>
+                    <div className="text-white/30 text-[9px] mt-1">KDE Plasma 6.1</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#4ade80]">archlinux login:</span>
+                      <span className="text-white font-bold">user</span>
+                      <span className="text-white/30 animate-pulse">▊</span>
+                    </div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+                      className="flex items-center gap-2">
+                      <span className="text-[#fbbf24]">Password:</span>
+                      <span className="text-white/50">••••••••</span>
+                    </motion.div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
+                      className="text-[#4ade80] text-[10px]">  ✓ Authentication successful</motion.div>
+                  </div>
+                </div>
+              )}
+              {postStep === 4 && (
+                <div className="flex flex-col items-center justify-center py-4">
+                  <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden border border-white/10 mb-3">
+                    <img src="/images/arch/12-desktop-profile.png" alt="KDE Plasma Desktop"
+                      className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  </div>
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    className="text-center">
+                    <div className="text-[#4ade80] font-bold">✓ Welcome to Arch Linux!</div>
+                    <div className="text-white/50 text-[10px] mt-1">KDE Plasma 6.1 — Wayland</div>
+                  </motion.div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/20 font-mono flex justify-between shrink-0">
+            <span>Click to advance</span>
+            <span>{steps[postStep]?.label || ""}</span>
+          </div>
         </div>
       </div>
     );
