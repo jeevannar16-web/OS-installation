@@ -8,17 +8,8 @@ import { useSceneAdvance } from "../shared/SceneAdvance";
 type WizardPhase = "boot" | "wizard" | "installing" | "remove_media" | "done";
 
 type InstallerStep =
-  | "language"
-  | "keyboard"
-  | "network"
-  | "install_type"
-  | "partition"
-  | "install_option"
-  | "third_party"
-  | "app_selection"
-  | "timezone"
-  | "create_user"
-  | "review";
+  | "language" | "keyboard" | "network" | "install_type" | "partition"
+  | "install_option" | "third_party" | "app_selection" | "timezone" | "create_user" | "review";
 
 const STEP_ORDER_BASE: InstallerStep[] = [
   "language", "keyboard", "network", "install_type", "install_option",
@@ -156,25 +147,7 @@ const INSTALL_SLIDES = [
   { title: "Built-in security", body: "Automatic updates, firewall, and full-disk encryption keep you safe." },
 ];
 
-function ClickArea({ area, onClick, hint }: { area: { top: number; left: number; width: number; height: number }; onClick: () => void; hint?: string }) {
-  return (
-    <div
-      className="absolute z-10 cursor-pointer rounded border-2 border-transparent transition-all duration-200 hover:border-white/40 hover:bg-white/[0.08] group"
-      style={{ top: `${area.top}%`, left: `${area.left}%`, width: `${area.width}%`, height: `${area.height}%` }}
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
-    >
-      {hint && (
-        <div className="pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-black shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-          {hint}
-        </div>
-      )}
-    </div>
-  );
-}
-
-type PopupProps = { onClose: () => void; children: React.ReactNode };
-
-function Popup({ onClose, children }: PopupProps) {
+function FloatingDialog({ title, onClose, accent, children }: { title?: string; onClose: () => void; accent: string; children: React.ReactNode }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-sm"
@@ -182,6 +155,7 @@ function Popup({ onClose, children }: PopupProps) {
       <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
         onClick={(e) => e.stopPropagation()}
         className="rounded-xl border border-white/15 bg-[#1e1e1e] p-4 shadow-2xl w-80 max-h-[85%] overflow-y-auto">
+        {title && <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: accent }}>{title}</div>}
         {children}
       </motion.div>
     </motion.div>
@@ -208,7 +182,7 @@ export default function Install({ config, speed, onComplete, path }: {
   const [showSparkle, setShowSparkle] = useState(false);
   const [fileIdx, setFileIdx] = useState(0);
   const [restartPhase, setRestartPhase] = useState<"countdown" | "done">("countdown");
-  const [popup, setPopup] = useState<InstallerStep | "install_type" | null>(null);
+  const [popup, setPopup] = useState<InstallerStep | "boot_choice" | "partition" | null>(null);
 
   type PartitionEntry = { device: string; type: string; fs: string; sizeGB: number; mount: string; flags: string[] };
   const TOTAL_GB = 500;
@@ -304,7 +278,7 @@ export default function Install({ config, speed, onComplete, path }: {
 
   function handleNext() {
     if (phase === "done") { playSuccess(); onComplete(); return; }
-    if (phase === "boot") { playClick(); setPhase("wizard"); return; }
+    if (phase === "boot") { playClick(); setBootSplash(true); return; }
     if (phase === "remove_media") { playClick(); setPhase("done"); return; }
     if (!canAdvance()) return;
     playClick();
@@ -349,15 +323,32 @@ export default function Install({ config, speed, onComplete, path }: {
     }
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black cursor-pointer"
+          onClick={() => setPopup("boot_choice")}>
           <img src={getBootImg(config.id)} alt={`Try or Install ${osName}`}
             className="absolute inset-0 w-full h-full object-cover" style={{ background: surface }} />
-
-          {/* Clickable "Install" button on the real screenshot */}
-          <ClickArea area={{ top: 72, left: 60, width: 20, height: 7 }}
-            onClick={() => { playClick(); setBootSplash(true); }} hint={`Install ${osName}`} />
-          <ClickArea area={{ top: 80, left: 60, width: 20, height: 7 }}
-            onClick={() => { playClick(); setBootSplash(true); }} hint={`Try ${osName}`} />
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/[0.02] pointer-events-none" />
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-white/50 bg-black/40 px-3 py-1 rounded-full pointer-events-none">
+            Click anywhere to begin
+          </div>
+          <AnimatePresence>
+            {popup === "boot_choice" && (
+              <FloatingDialog title={`Try or Install ${osName}`} onClose={() => setPopup(null)} accent={accent}>
+                <div className="space-y-2">
+                  <button onClick={() => { playClick(); setBootSplash(true); setPopup(null); }}
+                    className="w-full rounded-lg px-4 py-2.5 text-sm font-bold text-white text-left transition-all hover:scale-[1.02]"
+                    style={{ background: accent }}>
+                    Install {osName}
+                  </button>
+                  <button onClick={() => { playClick(); setBootSplash(true); setPopup(null); }}
+                    className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all text-left">
+                    Try {osName}
+                  </button>
+                </div>
+                <p className="mt-2 text-[10px] text-white/40">You can try before installing. This won't change anything on your computer.</p>
+              </FloatingDialog>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     );
@@ -475,63 +466,29 @@ export default function Install({ config, speed, onComplete, path }: {
   }
 
   // ══════════════════════════════════════════════════════════════
-  // WIZARD — Full-bleed screenshot with floating popups on click
+  // WIZARD — Full-bleed screenshot, entire image is clickable
   // ══════════════════════════════════════════════════════════════
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-      <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+      <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black cursor-pointer"
+        onClick={() => {
+          if (step === "partition") { setShowPartDialog(true); return; }
+          if (!canAdvance()) { setPopup(step); return; }
+          handleNext();
+        }}>
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }} className="absolute inset-0">
-
             <img src={getStepImg(config.id, step)} alt={step}
               className="absolute inset-0 w-full h-full object-cover" style={{ background: surface }} />
-
-            {/* ─── Clickable "Continue" button overlay ─── */}
-            {(step === "language" || step === "keyboard" || step === "network" || step === "timezone") && (
-              <ClickArea area={{ top: 83, left: 72, width: 14, height: 6 }}
-                onClick={() => {
-                  if (!canAdvance()) { setPopup(step); return; }
-                  handleNext();
-                }} hint={canAdvance() ? "Continue" : `Select ${step}`} />
-            )}
-
-            {/* install_type — click to choose then Continue */}
-            {step === "install_type" && (
-              <ClickArea area={{ top: 83, left: 72, width: 14, height: 6 }}
-                onClick={() => { if (!installType) setPopup("install_type"); else handleNext(); }}
-                hint={installType ? "Continue" : "Choose install type"} />
-            )}
-
-            {/* install_option, third_party, app_selection — just click Continue */}
-            {(step === "install_option" || step === "third_party" || step === "app_selection") && (
-              <ClickArea area={{ top: 83, left: 72, width: 14, height: 6 }}
-                onClick={handleNext} hint="Continue" />
-            )}
-
-            {/* create_user — click to fill form then Continue */}
-            {step === "create_user" && (
-              <ClickArea area={{ top: 83, left: 72, width: 14, height: 6 }}
-                onClick={() => { if (!canAdvance()) setPopup("create_user"); else handleNext(); }}
-                hint={canAdvance() ? "Continue" : "Fill user info"} />
-            )}
-
-            {/* review — click "Install Now" on the screenshot */}
-            {step === "review" && (
-              <ClickArea area={{ top: 83, left: 65, width: 20, height: 6 }}
-                onClick={handleNext} hint="Install Now" />
-            )}
-
-            {/* partition — clickable area to enter partition editor */}
-            {step === "partition" && (
-              <ClickArea area={{ top: 30, left: 10, width: 45, height: 40 }}
-                onClick={() => setShowPartDialog(true)} hint="Configure partitions" />
-            )}
           </motion.div>
         </AnimatePresence>
 
-        {/* ─── Step indicator ─── */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5">
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-white/50 bg-black/40 px-3 py-1 rounded-full pointer-events-none">
+          {canAdvance() ? "Click anywhere to continue" : "Click to select"}
+        </div>
+
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 pointer-events-none">
           {STEP_ORDER.map((s, i) => (
             <div key={s} className={`h-1.5 rounded-full transition-all ${i <= currentIdx ? "w-3" : "w-1.5"}`}
               style={{ background: i <= currentIdx ? accent : "rgba(255,255,255,0.15)" }} />
@@ -539,11 +496,10 @@ export default function Install({ config, speed, onComplete, path }: {
         </div>
       </div>
 
-      {/* ─── Floating popups for selection steps ─── */}
+      {/* ─── Floating dialogs for selection steps ─── */}
       <AnimatePresence>
         {popup === "language" && (
-          <Popup onClose={() => setPopup(null)}>
-            <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: accent }}>Select your language</div>
+          <FloatingDialog title="Select your language" onClose={() => setPopup(null)} accent={accent}>
             <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
               {LANGUAGES.map((lang) => (
                 <button key={lang} onClick={() => { playClick(); setVal("language", lang); setPopup(null); handleNext(); }}
@@ -554,12 +510,11 @@ export default function Install({ config, speed, onComplete, path }: {
                   }`} style={values["language"] === lang ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>{lang}</button>
               ))}
             </div>
-          </Popup>
+          </FloatingDialog>
         )}
 
         {popup === "keyboard" && (
-          <Popup onClose={() => setPopup(null)}>
-            <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: accent }}>Keyboard layout</div>
+          <FloatingDialog title="Keyboard layout" onClose={() => setPopup(null)} accent={accent}>
             <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto">
               {KEYBOARD_LAYOUTS.map((layout) => (
                 <button key={layout} onClick={() => { playClick(); setVal("keyboard", layout); setPopup(null); handleNext(); }}
@@ -570,31 +525,117 @@ export default function Install({ config, speed, onComplete, path }: {
                   }`} style={values["keyboard"] === layout ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>{layout}</button>
               ))}
             </div>
-          </Popup>
+          </FloatingDialog>
+        )}
+
+        {popup === "network" && (
+          <FloatingDialog title="Connect to network" onClose={() => setPopup(null)} accent={accent}>
+            <div className="space-y-1.5">
+              {[{ id: "wifi", label: "HomeWiFi", icon: "📶" }, { id: "ethernet", label: "Wired Ethernet", icon: "🔌" }].map((n) => (
+                <button key={n.id} onClick={() => { playClick(); setVal("network", n.id); setPopup(null); handleNext(); }}
+                  className="w-full flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-[11px] text-white/70 hover:bg-white/15 hover:text-white transition-all">
+                  <span>{n.icon}</span><span className="font-medium">{n.label}</span>
+                </button>
+              ))}
+              <button onClick={() => { playClick(); setVal("network", "skip"); setPopup(null); handleNext(); }}
+                className="w-full rounded-md bg-white/5 px-3 py-2 text-[11px] text-white/40 hover:bg-white/10 transition-all">
+                Skip for now
+              </button>
+            </div>
+          </FloatingDialog>
+        )}
+
+        {popup === "install_type" && (
+          <FloatingDialog title="Type of installation" onClose={() => setPopup(null)} accent={accent}>
+            <div className="space-y-1.5">
+              {path === "vm" && (
+                <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-[10px] text-emerald-300">
+                  ✓ In a VM, "Erase disk" only affects the virtual disk.
+                </div>
+              )}
+              {[
+                { id: "erase", label: `Erase disk and install ${osName}` },
+                { id: "alongside", label: `Install ${osName} alongside existing OS` },
+                { id: "something", label: "Something else (manual partitioning)" },
+              ].filter(opt => path !== "vm" || opt.id === "erase").map((opt) => (
+                <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); setPopup(null); handleNext(); }}
+                  className={`w-full rounded-md px-3 py-2 text-[11px] text-left font-medium transition-all ${
+                    installType === opt.id ? "text-white shadow-lg" : "bg-white/10 text-white/70 hover:bg-white/15"
+                  }`} style={installType === opt.id ? { background: accent } : {}}>{opt.label}</button>
+              ))}
+            </div>
+          </FloatingDialog>
+        )}
+
+        {popup === "install_option" && (
+          <FloatingDialog title="Installation method" onClose={() => setPopup(null)} accent={accent}>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: "interactive", label: "Interactive", desc: "Walk through each step" },
+                { id: "automated", label: "Automated", desc: "Use a preseed file" },
+              ].map((opt) => (
+                <button key={opt.id} onClick={() => { playClick(); setPopup(null); handleNext(); }}
+                  className="rounded-lg border border-white/10 bg-white/5 p-3 text-left hover:bg-white/10 transition-all">
+                  <div className="text-[11px] font-semibold text-white/70">{opt.label}</div>
+                  <div className="text-[9px] text-white/30 mt-0.5">{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+          </FloatingDialog>
+        )}
+
+        {popup === "third_party" && (
+          <FloatingDialog title="Additional software" onClose={() => setPopup(null)} accent={accent}>
+            <label className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 cursor-pointer hover:bg-white/15 transition-all mb-2">
+              <input type="checkbox" defaultChecked style={{ accentColor: accent }} />
+              <span className="text-[11px] text-white/80">Install third-party software for graphics and Wi-Fi</span>
+            </label>
+            <button onClick={() => { playClick(); setPopup(null); handleNext(); }}
+              className="w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors"
+              style={{ background: accent }}>Continue</button>
+          </FloatingDialog>
+        )}
+
+        {popup === "app_selection" && (
+          <FloatingDialog title="Applications to install" onClose={() => setPopup(null)} accent={accent}>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              {[
+                { id: "normal", label: "Normal", desc: "Office, browser, games, media player" },
+                { id: "minimal", label: "Minimal", desc: "Browser and basic utilities" },
+              ].map((opt) => (
+                <button key={opt.id} onClick={() => { playClick(); setVal("apps", opt.id); }}
+                  className={`rounded-lg border p-3 text-left transition-all ${
+                    values["apps"] === opt.id ? "border-white/20 text-white" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                  }`} style={values["apps"] === opt.id ? { borderColor: accent, background: `${accent}15` } : {}}>
+                  <div className="text-[11px] font-semibold">{opt.label}</div>
+                  <div className="text-[9px] text-white/30 mt-0.5">{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => { playClick(); setPopup(null); handleNext(); }}
+              className="w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors"
+              style={{ background: accent }}>Continue</button>
+          </FloatingDialog>
         )}
 
         {popup === "timezone" && (
-          <Popup onClose={() => setPopup(null)}>
-            <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: accent }}>Select your timezone</div>
+          <FloatingDialog title="Select your timezone" onClose={() => setPopup(null)} accent={accent}>
             <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto">
               {["UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
                 "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Tokyo", "Australia/Sydney",
               ].map((tz) => (
                 <button key={tz} onClick={() => { playClick(); setVal("timezone", tz); setPopup(null); handleNext(); }}
                   className={`rounded-md px-3 py-1.5 text-[11px] text-left transition-all ${
-                    values["timezone"] === tz
-                      ? "text-white font-semibold"
-                      : "bg-white/10 text-white/70 hover:bg-white/15"
+                    values["timezone"] === tz ? "text-white font-semibold" : "bg-white/10 text-white/70 hover:bg-white/15"
                   }`} style={values["timezone"] === tz ? { background: accent } : {}}>{tz}</button>
               ))}
             </div>
-          </Popup>
+          </FloatingDialog>
         )}
 
         {popup === "create_user" && (
-          <Popup onClose={() => setPopup(null)}>
-            <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: accent }}>Who are you?</div>
-            <div className="grid grid-cols-2 gap-2">
+          <FloatingDialog title="Who are you?" onClose={() => setPopup(null)} accent={accent}>
+            <div className="grid grid-cols-2 gap-2 mb-2">
               {[
                 { key: "name", placeholder: "Your name" },
                 { key: "computer_name", placeholder: "Computer name" },
@@ -609,37 +650,33 @@ export default function Install({ config, speed, onComplete, path }: {
             </div>
             <button onClick={() => { if (canAdvance()) { setPopup(null); handleNext(); } }}
               disabled={!canAdvance()}
-              className="mt-3 w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
+              className="w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
               style={{ background: accent }}>Continue</button>
-          </Popup>
+          </FloatingDialog>
         )}
 
-        {popup === "install_type" && (
-          <Popup onClose={() => setPopup(null)}>
-            <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: accent }}>Type of installation</div>
-            <div className="space-y-1.5">
-              {path === "vm" ? (
-                <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-[10px] text-emerald-300">
-                  ✓ In a VM, "Erase disk" only affects the virtual disk — your host OS is safe.
-                </div>
-              ) : null}
+        {popup === "review" && (
+          <FloatingDialog title="Ready to install" onClose={() => setPopup(null)} accent={accent}>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 bg-white/5 rounded-lg p-3 border border-white/10 mb-2">
               {[
-                { id: "erase", label: `Erase disk and install ${getOSName(config.id)}` },
-                { id: "alongside", label: `Install ${getOSName(config.id)} alongside existing OS` },
-                { id: "something", label: "Something else (manual partitioning)" },
-              ].filter(opt => path !== "vm" || opt.id === "erase").map((opt) => (
-                <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
-                  className={`w-full rounded-md px-3 py-2 text-[11px] text-left font-medium transition-all ${
-                    installType === opt.id
-                      ? "text-white shadow-lg"
-                      : "bg-white/10 text-white/70 hover:bg-white/15"
-                  }`} style={installType === opt.id ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>{opt.label}</button>
+                ["Language", values["language"] ?? "English"],
+                ["Keyboard", values["keyboard"] ?? "English (US)"],
+                ["Network", values["network"] === "skip" ? "Skipped" : values["network"] ?? "HomeWiFi"],
+                ["Install type", installType === "erase" ? "Erase disk" : installType === "alongside" ? "Dual boot" : "Manual"],
+                ["Timezone", values["timezone"] ?? "UTC"],
+                ["Username", values["username"] ?? "user"],
+              ].map(([l, v]) => (
+                <div key={l} className="flex justify-between text-[10px]">
+                  <span className="text-white/40">{l}</span>
+                  <span className="text-white/70 font-medium">{v}</span>
+                </div>
               ))}
-              <button onClick={() => { setPopup(null); handleNext(); }}
-                className="mt-2 w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors"
-                style={{ background: accent }}>Continue</button>
             </div>
-          </Popup>
+            <p className="text-[10px] text-white/40 mb-2">If you continue, the changes listed above will be written to disk.</p>
+            <button onClick={() => { playClick(); setPopup(null); setPhase("installing"); }}
+              className="w-full rounded-lg py-2 text-xs font-bold text-white transition-all hover:scale-[1.02]"
+              style={{ background: accent }}>Install Now</button>
+          </FloatingDialog>
         )}
       </AnimatePresence>
 
