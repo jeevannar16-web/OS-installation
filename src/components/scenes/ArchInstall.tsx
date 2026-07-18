@@ -326,9 +326,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [tuiSubCfgIdx, setTuiSubCfgIdx] = useState(0);
   const [tuiMsg, setTuiMsg] = useState("");
   const [showHelp, setShowHelp] = useState(false);
-  const [guideView, setGuideView] = useState(true);
-  const [guideStep, setGuideStep] = useState(0);
-  const [guideFocus, setGuideFocus] = useState(0);
   const [shellStep, setShellStep] = useState(1);
   const [postStep, setPostStep] = useState(0);
   const [completionIdx, setCompletionIdx] = useState(-1);
@@ -409,10 +406,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
   useEffect(() => {
     if (phase === "tui") tuiRef.current?.focus();
   }, [phase]);
-
-  useEffect(() => {
-    setGuideFocus(0);
-  }, [guideStep]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -533,8 +526,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
       setTuiSubCfg(false);
       setTuiSubCfgIdx(0);
       setTuiMsg("");
-      setGuideStep(0);
-      setGuideView(false);
       setPhase("tui");
       return;
     }
@@ -906,237 +897,37 @@ export default function ArchInstall({ config, speed, onComplete }: {
     );
   }
 
-  // ─── TUI — guided wizard + classic toggle ───
+  // ─── TUI — classic menu ───
   if (phase === "tui") {
-    const configurable = tuiOptions.filter(o => o.kind !== "action");
-    const configuredCount = configurable.filter(o => o.summary !== "").length;
-    const totalCount = configurable.length;
-
-    interface GuidePanel { item: TuiConfig; subItem?: TuiConfig; title: string; description: string; }
-    const panels: GuidePanel[] = [];
-    for (const opt of tuiOptions) {
-      if (opt.subItems) {
-        for (const sub of opt.subItems) {
-          panels.push({ item: opt, subItem: sub, title: `› ${sub.label}`, description: sub.desc || "" });
-        }
-      } else {
-        panels.push({ item: opt, title: opt.label, description: opt.desc || "" });
-      }
-    }
-    const panel = panels[guideStep];
-    if (!panel) return null;
-    const cfgItem = panel.subItem || panel.item;
-    const cfgItems = (cfgItem.kind === "menu" && cfgItem.items) ? cfgItem.items : [];
-
-    function setVal(val: string, idx?: number) {
-      if (panel.subItem) {
-        const parentIdx = tuiOptions.findIndex(o => o.id === panel.item.id);
-        if (parentIdx === -1) return;
-        setTuiOptions(prev => prev.map((o, i) => {
-          if (i !== parentIdx) return o;
-          const subIdx = panel.item.subItems!.findIndex(s => s.id === panel.subItem!.id);
-          const newSubs = o.subItems!.map((s, j) => j === subIdx ? { ...s, summary: val, selectedIdx: idx ?? s.selectedIdx } : s);
-          return { ...o, subItems: newSubs };
-        }));
-      } else {
-        setTuiOptions(prev => prev.map((o, i) => i === guideStep ? { ...o, summary: val, selectedIdx: idx ?? o.selectedIdx } : o));
-      }
-      playClick();
-    }
-
-    const curSel = panel.subItem ? panel.subItem.selectedIdx : panel.item.selectedIdx;
-    const curSum = (panel.subItem || panel.item).summary;
-
-    function handleGuideKey(e: React.KeyboardEvent) {
-      e.stopPropagation();
-      if (cfgItem.kind === "menu" && cfgItems.length > 0) {
-        if (e.key === "ArrowUp") { e.preventDefault(); setGuideFocus(p => Math.max(0, p - 1)); playClick(); return; }
-        if (e.key === "ArrowDown") { e.preventDefault(); setGuideFocus(p => Math.min(cfgItems.length - 1, p + 1)); playClick(); return; }
-        if (e.key === "Enter") { e.preventDefault(); setVal(cfgItems[guideFocus].label, guideFocus); return; }
-        if (e.key === " ") { e.preventDefault(); setVal(cfgItems[guideFocus].label, guideFocus); return; }
-      } else if (cfgItem.kind === "text") {
-        if (e.key === "Enter") { e.preventDefault(); setVal((document.activeElement as HTMLInputElement)?.value || curSum); return; }
-      } else if (cfgItem.kind === "action") {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          if (cfgItem.id === "install") {
-            const missing = getMissingRequired(tuiOptions);
-            if (missing.length > 0) { setTuiMsg("  ✗ Required: " + missing.join(", ")); return; }
-            playClick(); setPhase("installing");
-          } else if (cfgItem.id === "save_config") { setTuiMsg("  ✓ Configuration saved"); playClick(); }
-          else if (cfgItem.id === "abort") { playClick(); setTuiMsg(""); setPhase("shell"); }
-          return;
-        }
-      }
-      if (e.key === "Escape") {
-        e.preventDefault();
-        if (guideStep > 0) { setGuideStep(p => p - 1); setTuiMsg(""); playClick(); }
-        else { setGuideView(false); playClick(); }
-      }
-    }
-
-    if (guideView) {
-      return (
-        <div data-no-auto-advance ref={tuiRef} className="w-full max-w-6xl mx-auto h-full"
-          onKeyDown={handleGuideKey} tabIndex={0}>
-          <div className="h-full rounded-lg border border-white/10 bg-black overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="px-4 py-1.5 flex items-center gap-2 shrink-0 border-b border-white/5">
-              <span className="text-white font-bold text-[10px] font-mono tracking-wide flex-1">
-                Arch Linux Installer
-              </span>
-              <button onClick={() => { setGuideView(false); playClick(); }}
-                className="text-[#aaaaaa] hover:text-white text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors">
-                Full Menu
-              </button>
-            </div>
-
-            {/* Body — single column */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-5 font-mono text-xs" ref={tuiRef}>
-              {/* Step indicator */}
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-white font-bold text-[11px]">
-                  {panel.item.kind === "action" ? "" : `Step ${guideStep + 1} / ${panels.length}`}
-                </span>
-                {panel.item.kind !== "action" && (
-                  <span className="text-[#aaaaaa] text-[9px]">
-                    ({configuredCount}/{totalCount}  *{configurable.filter(o => o.required && o.summary !== "").length}/{configurable.filter(o => o.required).length})
-                  </span>
-                )}
-              </div>
-
-              {/* Title & description */}
-              <div className="text-white font-bold text-sm mb-1">{panel.title}</div>
-              {panel.description && (
-                <div className="text-[#aaaaaa] text-[10px] mb-3 leading-relaxed">{panel.description}</div>
-              )}
-
-              {/* Configuration UI */}
-              {cfgItem.kind === "menu" && cfgItems.length > 0 && (
-                <div className="mb-2">
-                  <div className="mb-1" style={{ color: "#aa0000" }}>
-                    Up/Down navigate, Enter select
-                  </div>
-                  <div>
-                    {cfgItems.map((item, i) => {
-                      const isSel = (curSel ?? 0) === i;
-                      return (
-                      <div key={item.label}
-                        className={`flex items-center px-2 py-1.5 cursor-pointer select-none ${
-                          isSel ? "bg-white/[0.04]" : "hover:bg-white/[0.01]"
-                        }`}
-                        onClick={() => { setGuideFocus(i); setVal(item.label, i); }}
-                        onMouseEnter={() => setGuideFocus(i)}>
-                        <span className="w-5 shrink-0 text-center" style={{ color: isSel ? "#0000aa" : "transparent" }}>
-                          {isSel ? ">" : ""}
-                        </span>
-                        <span style={{ color: isSel ? "#ffffff" : "#aaaaaa" }}>
-                          {item.label}
-                        </span>
-                        <span className="text-[#666666] ml-2 text-[10px]">— {item.desc}</span>
-                      </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {cfgItem.kind === "text" && (
-                <div className="mb-2">
-                  <input type="text" defaultValue={curSum} autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") { e.preventDefault(); setVal((e.target as HTMLInputElement).value); }
-                      if (e.key === "Escape") { e.preventDefault(); }
-                    }}
-                    onChange={() => playKeyClick()}
-                    className="w-full bg-black border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
-                  <div className="text-[9px] text-[#aaaaaa]/40 mt-1">Enter to confirm</div>
-                </div>
-              )}
-
-              {cfgItem.kind === "action" && (
-                <div className="space-y-2 mt-4">
-                  {(() => {
-                    const missing = getMissingRequired(tuiOptions);
-                    const canInstall = missing.length === 0;
-                    return cfgItem.id === "install" ? (
-                      <button onClick={() => {
-                        if (!canInstall) { setTuiMsg("  ✗ Required: " + missing.join(", ")); return; }
-                        playClick(); setPhase("installing");
-                      }}
-                        className={`w-full py-3 rounded text-xs font-bold border transition-colors ${
-                          canInstall
-                            ? "bg-white/5 text-white border-white/20 hover:bg-white/10"
-                            : "bg-transparent text-[#666666] border-white/5"
-                        }`}>
-                        {canInstall ? "Install" : "✗ Missing required configuration"}
-                      </button>
-                    ) : null;
-                  })()}
-                  {cfgItem.id === "save_config" && (
-                    <button onClick={() => { setTuiMsg("  ✓ Configuration saved to /root/archinstall.json"); playClick(); }}
-                      className="w-full py-2 rounded text-xs font-bold border border-white/10 text-[#aaaaaa] hover:text-white hover:border-white/30 transition-colors">
-                      Save configuration
-                    </button>
-                  )}
-                  {cfgItem.id === "abort" && (
-                    <button onClick={() => { playClick(); setTuiMsg(""); setPhase("shell"); }}
-                      className="w-full py-2 rounded text-xs font-bold border border-white/10 text-[#aaaaaa] hover:text-white hover:border-white/30 transition-colors">
-                      Abort
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {tuiMsg && (
-                <div className="mt-3 text-[10px]" style={{ color: tuiMsg.includes("✗") ? "#aa0000" : "#aaaaaa" }}>{tuiMsg}</div>
-              )}
-            </div>
-
-            {/* Bottom navigation */}
-            <div className="border-t border-white/10 bg-black px-4 py-2 shrink-0">
-              <div className="flex items-center justify-between">
-                <button onClick={() => { if (guideStep > 0) { setGuideStep(p => p - 1); setTuiMsg(""); playClick(); } }}
-                  className={`px-3 py-1.5 rounded text-[10px] font-mono border transition-colors ${
-                    guideStep === 0
-                      ? "text-[#555555] border-white/5 cursor-default"
-                      : "text-[#aaaaaa] border-white/10 hover:text-white hover:border-white/30"
-                  }`}
-                  style={guideStep > 0 ? { color: "#aa0000" } : {}}>
-                  ← Back
-                </button>
-
-                {cfgItem.kind !== "action" && (
-                  <span style={{ color: "#aaaaaa" }}>
-                    {panels.filter(p => (p.subItem || p.item).summary !== "" && p.item.kind !== "action").length} / {panels.filter(p => p.item.kind !== "action").length} done
-                  </span>
-                )}
-
-                <button onClick={() => {
-                  if (guideStep < panels.length - 1) { setGuideStep(p => p + 1); setTuiMsg(""); playClick(); return; }
-                  const missing = getMissingRequired(tuiOptions);
-                  if (missing.length > 0) { setTuiMsg("  ✗ Required: " + missing.join(", ")); return; }
-                  playClick(); setPhase("installing");
-                }}
-                  className={`px-3 py-1.5 rounded text-[10px] font-mono border transition-colors ${
-                    guideStep < panels.length - 1
-                      ? "text-[#aaaaaa] border-white/10 hover:text-white hover:border-white/30"
-                      : getMissingRequired(tuiOptions).length === 0
-                        ? "bg-white/5 text-white border-white/20 font-bold"
-                        : "text-[#555555] border-white/5 cursor-default"
-                  }`}
-                  style={guideStep < panels.length - 1 ? { color: "#aa0000" } : {}}>
-                  {guideStep < panels.length - 1 ? "Next →" : "Install"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ── Classic full-menu TUI view ──
     const configuring = tuiOptions[tuiSelected];
+
+    function handleTuiClick(i: number) {
+      const opt = tuiOptions[i];
+      if (!opt) return;
+      setTuiSelected(i);
+      playClick();
+      if (opt.kind === "action") {
+        if (opt.id === "install") {
+          const missing = getMissingRequired(tuiOptions);
+          if (missing.length > 0) { setTuiMsg("  ✗ Required: " + missing.join(", ")); return; }
+          playClick(); setPhase("installing");
+        } else if (opt.id === "abort") {
+          setTuiMsg(""); setPhase("shell");
+        } else if (opt.id === "save_config") {
+          setTuiMsg("  ✓ Configuration saved to /root/archinstall.json");
+        }
+        return;
+      }
+      if (opt.subItems) {
+        setTuiSubMenu(opt.subItems); setTuiSubSel(0); setTuiSubCfg(false); setTuiMsg("");
+        return;
+      }
+      if (opt.kind === "menu" && opt.items) {
+        setTuiSubIdx(opt.selectedIdx || 0); setTuiConfiguring(true); setTuiMsg("");
+        return;
+      }
+      if (opt.kind === "text") { setTuiConfiguring(true); setTuiMsg(""); }
+    }
 
     function tuiRow(opt: TuiConfig, i: number) {
       const isInstall = opt.id === "install";
@@ -1145,7 +936,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       const sel = i === tuiSelected;
       const hasSub = (opt.subItems && opt.subItems.length > 0) || (opt.kind === "menu" && opt.items);
       return (
-        <div key={opt.id} onClick={() => setTuiSelected(i)}
+        <div key={opt.id} onClick={() => handleTuiClick(i)}
           className={`flex items-center px-3 py-[3px] cursor-pointer select-none ${
             sel ? "bg-white/[0.04]" : "hover:bg-white/[0.01]"
           }`}>
@@ -1172,7 +963,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       const reqDone = reqOpts.filter(o => o.summary !== "").length;
       const reqTotal = reqOpts.length;
       return (
-        <div className="bg-black border-t border-white/10 px-3 py-1.5 text-[10px] font-mono flex justify-between shrink-0">
+        <div className="bg-black px-3 py-1.5 text-[10px] font-mono flex justify-between shrink-0">
           <span style={{ color: "#aa0000" }}>
             {tuiSubCfg ? "Enter confirm  Esc cancel"
               : tuiSubMenu ? "Enter select  Esc back"
@@ -1192,21 +983,17 @@ export default function ArchInstall({ config, speed, onComplete }: {
     return (
       <div data-no-auto-advance ref={tuiRef} className="w-full max-w-6xl mx-auto h-full"
         onKeyDown={handleTuiKey} tabIndex={0}>
-        <div className="h-full rounded-lg border border-white/10 bg-black overflow-hidden flex flex-col">
-          {/* Header — terminal style */}
-          <div className="px-4 py-1.5 flex items-center gap-2 shrink-0 border-b border-white/5">
-            <span className="text-white font-bold text-[10px] font-mono tracking-wide flex-1">Arch Linux Installer</span>
-            <button onClick={() => { setGuideView(true); setShowHelp(false); playClick(); }}
-              className="text-[#aaaaaa] hover:text-white text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors">
-              Guided
-            </button>
+        <div className="h-full bg-black flex flex-col">
+          {/* Header */}
+          <div className="px-4 py-1 shrink-0">
+            <span className="text-white font-bold text-[10px] font-mono tracking-wide">Arch Linux Installer</span>
           </div>
 
           {/* Help overlay */}
           {showHelp && (
             <div className="absolute inset-0 z-10 bg-black/95 flex items-center justify-center p-4 sm:p-8"
               onClick={() => setShowHelp(false)}>
-              <div className="bg-black border border-white/10 rounded-lg p-5 max-w-md w-full font-mono text-xs space-y-3"
+              <div className="bg-black border border-white/10 p-5 max-w-md w-full font-mono text-xs space-y-3"
                 onClick={e => e.stopPropagation()}>
                 <div className="text-white font-bold text-sm mb-3">archinstall 4.0 — How to Use</div>
                 <div className="space-y-2 text-[#aaaaaa]">
@@ -1232,7 +1019,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
             {/* Level 3: configuring a sub-menu item's value */}
             {tuiSubMenu && tuiSubCfg ? (
               <div className="px-4 py-3">
-                <div className="text-white font-bold mb-3 text-[11px] border-b border-white/10 pb-2">
+                <div className="text-white font-bold mb-2 text-[11px]">
                   {tuiSubMenu[tuiSubSel]?.label || ""}
                 </div>
                 {tuiSubMenu[tuiSubSel]?.kind === "menu" && tuiSubMenu[tuiSubSel]?.items ? (
@@ -1264,7 +1051,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
             ) : tuiSubMenu ? (
               /* Level 2: sub-menu */
               <div>
-                <div className="px-4 pt-3 pb-2 text-[11px] text-white border-b border-white/10">
+                <div className="px-4 pt-2 pb-1 text-[11px] text-white">
                   {tuiOptions[tuiSelected]?.label || ""}
                 </div>
                 {tuiSubMenu.map((opt, i) => (
@@ -1288,7 +1075,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
             ) : tuiConfiguring && configuring ? (
               /* Level 1b: selecting a value for a menu item */
               <div className="px-4 py-3">
-                <div className="text-white font-bold mb-3 text-[11px] border-b border-white/10 pb-2">
+                <div className="text-white font-bold mb-2 text-[11px]">
                   {configuring.label}
                 </div>
                 {configuring.kind === "menu" && configuring.items ? (
@@ -1319,9 +1106,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
               </div>
             ) : (
               /* Level 1: main menu */
-              <div className="pt-1">
-                <div className="px-3 py-1.5 font-mono border-b border-white/10" style={{ color: "#aaaaaa" }}>
-                  Use Up/Down to navigate, Enter to select
+              <div>
+                <div className="px-3 py-1 font-mono" style={{ color: "#aa0000" }}>
+                  Up/Down navigate, Enter select
                 </div>
                 {tuiOptions.map((opt, i) => tuiRow(opt, i))}
                 {tuiMsg && (
