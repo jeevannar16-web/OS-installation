@@ -323,8 +323,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [shellStep, setShellStep] = useState(1);
   const [postStep, setPostStep] = useState(0);
   const [completionIdx, setCompletionIdx] = useState(-1);
-  const [suggestionIdx, setSuggestionIdx] = useState(-1);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const COMMANDS = [
     { cmd: "archinstall", desc: "Launch guided installer (TUI)" },
     { cmd: "iwctl", desc: "WiFi connection manager" },
@@ -778,27 +776,64 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   // ─── Shell ───
   if (phase === "shell") {
-    const prompt = subshell === "bash" ? "[root@archiso ~]# " : "";
+    const prompt = "[root@archiso ~]# ";
     const promptColor = "#00e676";
+    const activeTab = subshell === "bash" ? "terminal" : subshell;
 
-    // Next-action hint always visible in bottom bar
     const nextHint = (() => {
       if (!wifiConnected) return { cmd: "iwctl", desc: "Open WiFi manager", step: "❶ WiFi" };
       if (shellStep < 3) return { cmd: "ping archlinux.org", desc: "Verify internet", step: "❷ Verify" };
       return { cmd: "archinstall", desc: "Launch installer", step: "❸ Install" };
     })();
 
-    if (subshell === "iwctl") {
-      // ── Visual WiFi panel ──
-      return (
-        <div data-no-auto-advance className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}>
-          <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
-            <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2 border-b border-white/10 flex items-center shrink-0">
-              <span className="text-[#60a5fa] text-[10px] font-mono font-bold tracking-wider flex-1">iwctl — WiFi Setup</span>
-              <span className="text-white/20 text-[9px] font-mono">iwd 2.11</span>
+    const tabs = [
+      { id: "terminal", label: "Terminal", icon: "⌨️", badge: "" },
+      { id: "iwctl", label: "WiFi", icon: "📶", badge: wifiConnected ? "✓" : "" },
+      { id: "fdisk", label: "Disk", icon: "💾", badge: "" },
+    ] as const;
+
+    function switchTab(id: string) {
+      playClick();
+      if (id === "terminal") { setSubshell("bash"); return; }
+      if (id === "iwctl") { setSubshell("iwctl"); return; }
+      if (id === "fdisk") { setSubshell("fdisk"); return; }
+    }
+
+    return (
+      <div data-no-auto-advance className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}>
+        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
+          {/* ── Tab bar ── */}
+          <div className="flex items-stretch border-b border-white/10 bg-[#0a0a0e] shrink-0 overflow-x-auto">
+            {tabs.map(t => {
+              const isActive = activeTab === t.id;
+              const isDisabled = (t.id === "fdisk" && !fdiskDisk);
+              return (
+                <button key={t.id} onClick={() => { if (!isDisabled) switchTab(t.id); }}
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 text-[10px] font-mono border-b-2 transition-all shrink-0 ${
+                    isActive
+                      ? "border-[#60a5fa] text-white bg-[#60a5fa]/8"
+                      : isDisabled
+                        ? "border-transparent text-white/20 cursor-default"
+                        : "border-transparent text-white/40 hover:text-white/70 hover:bg-white/[0.03]"
+                  }`}>
+                  <span>{t.icon}</span>
+                  <span className="truncate">{t.label}</span>
+                  {t.badge && <span className="text-[#4ade80] text-[9px] ml-0.5">{t.badge}</span>}
+                </button>
+              );
+            })}
+            <div className="flex-1" />
+            <div className="flex items-center gap-2 px-3 text-[9px] font-mono">
+              <span className={!wifiConnected ? "text-[#f87171]" : shellStep < 3 ? "text-[#fbbf24]" : "text-[#4ade80]"}>
+                {!wifiConnected ? "✗ No internet" : shellStep < 3 ? "◉ Verify" : "✓ Ready"}
+              </span>
             </div>
-            <div className="flex-1 p-4 sm:p-6 font-mono text-xs flex flex-col">
-              <div className="text-white/40 text-[10px] mb-3 uppercase tracking-wider">Available Networks</div>
+          </div>
+
+          {/* ── WiFi tab content ── */}
+          {activeTab === "iwctl" && (
+            <div className="flex-1 p-4 sm:p-6 font-mono text-xs flex flex-col overflow-y-auto">
+              <div className="text-[#60a5fa] font-bold text-[10px] mb-3 uppercase tracking-wider">Available Networks</div>
               <div className="space-y-2 flex-1">
                 {[
                   { name: "HomeWiFi", sec: "WPA2", sig: "████ 54%", connected: wifiConnected },
@@ -822,10 +857,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                       </div>
                     </div>
                     <button onClick={() => {
-                      playClick();
-                      setWifiConnected(true);
-                      setShellStep(2);
-                      setSubshell("bash");
+                      playClick(); setWifiConnected(true); setShellStep(2);
                       addTerminal(["✓ Connected to " + net.name, "WiFi ready! Type 'ping archlinux.org' to verify."]);
                       showImageFor("/images/arch/13-network-config.png");
                     }}
@@ -840,32 +872,14 @@ export default function ArchInstall({ config, speed, onComplete }: {
                 ))}
               </div>
               <div className="mt-3 text-[9px] text-white/30">
-                {wifiConnected ? "✓ WiFi connected. Click 'Back to shell' to continue." : "Click Connect on your WiFi network."}
+                {wifiConnected ? "✓ WiFi connected. Switch to Terminal tab to verify with ping." : "Click Connect on your WiFi network."}
               </div>
-              <button onClick={() => { playClick(); setSubshell("bash"); addTerminal(["Back to shell"]); }}
-                className="mt-2 self-start px-3 py-1.5 rounded border border-white/10 text-white/40 hover:text-white/70 text-[10px] font-mono transition-colors">
-                ← Back to shell
-              </button>
             </div>
-            <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/30 font-mono flex justify-between">
-              <span>{wifiConnected ? "✓ Connected" : "✗ Disconnected — click a network"}</span>
-              <span>iwd 2.11</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
+          )}
 
-    if (subshell === "fdisk") {
-      // ── Visual partition panel ──
-      return (
-        <div data-no-auto-advance className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}>
-          <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
-            <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2 border-b border-white/10 flex items-center shrink-0">
-              <span className="text-[#fbbf24] text-[10px] font-mono font-bold tracking-wider flex-1">fdisk — /dev/{fdiskDisk}</span>
-              <span className="text-white/20 text-[9px] font-mono">util-linux 2.39.3</span>
-            </div>
-            <div className="flex-1 p-4 sm:p-6 font-mono text-xs">
+          {/* ── Disk tab content ── */}
+          {activeTab === "fdisk" && (
+            <div className="flex-1 p-4 sm:p-6 font-mono text-xs overflow-y-auto">
               <div className="overflow-x-auto">
                 <table className="w-full text-[11px]">
                   <thead>
@@ -878,10 +892,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   </thead>
                   <tbody>
                     {[
-                      { dev: `${fdiskDisk}p1`, size: "500M", type: "EFI System", mount: "/boot" },
-                      { dev: `${fdiskDisk}p2`, size: "444G", type: "Windows 11", mount: "—" },
-                      { dev: `${fdiskDisk}p3`, size: "26.2G", type: "Linux root", mount: "/" },
-                      { dev: `${fdiskDisk}p4`, size: "6.2G", type: "Linux swap", mount: "[SWAP]" },
+                      { dev: `${fdiskDisk || "nvme0n1"}p1`, size: "500M", type: "EFI System", mount: "/boot" },
+                      { dev: `${fdiskDisk || "nvme0n1"}p2`, size: "444G", type: "Windows 11", mount: "—" },
+                      { dev: `${fdiskDisk || "nvme0n1"}p3`, size: "26.2G", type: "Linux root", mount: "/" },
+                      { dev: `${fdiskDisk || "nvme0n1"}p4`, size: "6.2G", type: "Linux swap", mount: "[SWAP]" },
                     ].map((part) => (
                       <tr key={part.dev} className="border-b border-white/5 last:border-0">
                         <td className="py-2 pr-4 text-white/80 font-bold">{part.dev}</td>
@@ -899,183 +913,116 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   { label: "n New", action: "n", desc: "New partition" },
                   { label: "d Delete", action: "d", desc: "Delete" },
                   { label: "w Write", action: "w", desc: "Save changes" },
-                  { label: "q Quit", action: "q", desc: "Exit" },
+                  { label: "q Quit", action: "q", desc: "Back to Terminal" },
                 ].map((btn) => (
-                  <button key={btn.action}
-                    onClick={() => {
-                      playClick();
-                      if (btn.action === "q") { setSubshell("bash"); addTerminal(["Quit fdisk"]); return; }
-                      if (btn.action === "w") { addTerminal(["Writing partition table...", "✓ Done"]); return; }
-                      if (btn.action === "n") { addTerminal(["Creating new partition... (10 GB)", "✓ New partition created"]); return; }
-                      if (btn.action === "d") { addTerminal(["Deleting partition 4...", "✓ Partition deleted"]); return; }
-                      addTerminal([`Partition table for /dev/${fdiskDisk}`]);
-                    }}
+                  <button key={btn.action} onClick={() => {
+                    playClick();
+                    if (btn.action === "q") { setSubshell("bash"); return; }
+                    if (btn.action === "w") { addTerminal(["Writing partition table...", "✓ Done"]); return; }
+                    if (btn.action === "n") { addTerminal(["Creating new partition... (10 GB)", "✓ New partition created"]); return; }
+                    if (btn.action === "d") { addTerminal(["Deleting partition 4...", "✓ Partition deleted"]); return; }
+                    addTerminal([`Partition table for /dev/${fdiskDisk || "nvme0n1"}`]);
+                  }}
                     className="px-3 py-1.5 rounded text-[10px] font-bold border transition-colors bg-[#fbbf24]/10 text-[#fbbf24] border-[#fbbf24]/20 hover:bg-[#fbbf24]/20">
                     {btn.label}
                   </button>
                 ))}
               </div>
-              <div className="mt-3 text-[9px] text-white/30">
-                Click an action above. Use q Quit to exit.
-              </div>
             </div>
-            <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/30 font-mono">
-              fdisk — {fdiskDisk} • q Quit to exit
-            </div>
-          </div>
-        </div>
-      );
-    }
+          )}
 
-    // ── Bash: text terminal ──
-    return (
-      <div data-no-auto-advance className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}>
-        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col relative"
-          onClick={() => inputRef.current?.focus()}>
-          {/* Floating image overlay */}
-          {floatingImg && (
-            <div className="absolute inset-0 z-20 bg-black/60 flex items-center justify-center p-4 sm:p-8"
-              onClick={() => setFloatingImg(null)}>
-              <div className="relative max-w-2xl w-full rounded-lg overflow-hidden border border-white/20 shadow-2xl"
-                onClick={e => e.stopPropagation()}>
-                <img src={floatingImg} alt="screenshot"
-                  className="w-full h-auto object-contain max-h-[50vh]" />
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-3">
-                  <div className="text-[9px] text-white/50 font-mono">Click anywhere to close</div>
+          {/* ── Terminal tab content ── */}
+          {activeTab === "terminal" && (
+            <div className="flex-1 flex flex-col relative overflow-hidden"
+              onClick={() => inputRef.current?.focus()}>
+              {/* Floating image */}
+              {floatingImg && (
+                <div className="absolute inset-0 z-20 bg-black/60 flex items-center justify-center p-4 sm:p-8"
+                  onClick={() => setFloatingImg(null)}>
+                  <div className="relative max-w-2xl w-full rounded-lg overflow-hidden border border-white/20 shadow-2xl"
+                    onClick={e => e.stopPropagation()}>
+                    <img src={floatingImg} alt="screenshot" className="w-full h-auto object-contain max-h-[50vh]" />
+                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-3">
+                      <div className="text-[9px] text-white/50 font-mono">Click anywhere to close</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Terminal output */}
+              <div className="flex-1 overflow-y-auto p-4 font-mono text-xs leading-relaxed" ref={termRef}>
+                <div className="text-[#60a5fa] font-bold mb-1">Arch Linux 6.8.9-arch1-1 (tty1)</div>
+                <div className="text-[#4ade80] mb-1">archiso login: root (automatic)</div>
+                <div className="text-[#888] mb-2">
+                  Connection: {wifiConnected ? "✓ Connected" : "✗ No internet — open WiFi tab"}
+                </div>
+                <div className="mb-3 p-2 rounded border border-white/5 bg-white/[0.02]">
+                  <div className="flex items-center gap-3 text-[10px]">
+                    {[
+                      { num: 1, label: "WiFi", done: wifiConnected },
+                      { num: 2, label: "Verify", done: shellStep >= 3 },
+                      { num: 3, label: "Install", done: false },
+                    ].map((s, i) => (
+                      <div key={i} className={`flex items-center gap-1.5 ${
+                        (i === 0 && !wifiConnected) || (i === 1 && wifiConnected && shellStep < 3) || (i === 2 && shellStep >= 3)
+                          ? "text-[#60a5fa] font-bold" : s.done ? "text-[#4ade80]" : "text-white/30"
+                      }`}>
+                        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold border ${
+                          (i === 0 && !wifiConnected) || (i === 1 && wifiConnected && shellStep < 3) || (i === 2 && shellStep >= 3)
+                            ? "border-[#60a5fa] bg-[#60a5fa]/20" : s.done ? "border-[#4ade80] bg-[#4ade80]/20" : "border-white/10"
+                        }`}>{s.done ? "✓" : s.num}</span>
+                        <span className="hidden sm:inline">{s.label}</span>
+                      </div>
+                    ))}
+                    <span className="flex-1" />
+                    {!wifiConnected && <span className="text-[#f87171]">✗ No internet</span>}
+                    {wifiConnected && shellStep < 3 && <span className="text-[#fbbf24]">✓ WiFi — verify with ping</span>}
+                    {shellStep >= 3 && <span className="text-[#4ade80]">✓ Ready — type archinstall</span>}
+                  </div>
+                </div>
+                {terminal.map((line, i) => (
+                  <div key={i} className="whitespace-pre-wrap" style={{
+                    color: line.startsWith("[root@") ? "#00e676"
+                      : line.startsWith("  ✓") ? "#4ade80"
+                      : line.startsWith("  ✗") ? "#f87171"
+                      : line.startsWith("──") ? "#888"
+                      : "#c0c0c0"
+                  }}>{line}</div>
+                ))}
+              </div>
+
+              {/* Input line */}
+              <div className="relative px-4 pb-2">
+                <div className="flex items-center gap-1">
+                  <span className="shrink-0" style={{ color: promptColor }}>{prompt}</span>
+                  <input ref={inputRef} type="text" value={input} autoFocus autoComplete="off" spellCheck={false}
+                    onChange={(e) => { setInput(e.target.value); setCompletionIdx(-1); playKeyClick(); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); handleShellSubmit(); setCompletionIdx(-1); return; }
+                      if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); handleHistory("up"); return; }
+                      if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); handleHistory("down"); return; }
+                      if (e.key === "Tab") {
+                        e.preventDefault(); e.stopPropagation();
+                        const prefix = input.trim().toLowerCase();
+                        if (!prefix) return;
+                        const matches = ALL_COMMANDS.filter(c => c.startsWith(prefix) && c !== prefix);
+                        if (matches.length === 0) return;
+                        const next = (completionIdx + 1) % matches.length;
+                        setCompletionIdx(next);
+                        setInput(matches[next] + " ");
+                        return;
+                      }
+                      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setInput(""); }
+                    }}
+                    className="flex-1 bg-transparent text-white/90 outline-none font-mono text-xs caret-white/70"
+                    placeholder="Tab ⇥ to autocomplete" />
                 </div>
               </div>
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto p-4 font-mono text-xs leading-relaxed" ref={termRef}>
-            <div className="text-[#60a5fa] font-bold mb-1">Arch Linux 6.8.9-arch1-1 (tty1)</div>
-            <div className="text-[#4ade80] mb-1">archiso login: root (automatic)</div>
-            <div className="text-[#888] mb-2">
-              Connection: {wifiConnected ? "✓ Connected" : "✗ No internet — connect WiFi first"}
-            </div>
-            {subshell === "bash" && (
-              <div className="mb-3 p-2 rounded border border-white/5 bg-white/[0.02]">
-                <div className="flex items-center gap-3 text-[10px]">
-                  {[
-                    { num: 1, label: "WiFi", done: wifiConnected },
-                    { num: 2, label: "Verify", done: shellStep >= 3 },
-                    { num: 3, label: "Install", done: false },
-                  ].map((s, i) => (
-                    <div key={i} className={`flex items-center gap-1.5 ${
-                      (i === 0 && !wifiConnected) || (i === 1 && wifiConnected && shellStep < 3) || (i === 2 && shellStep >= 3)
-                        ? "text-[#60a5fa] font-bold" : s.done ? "text-[#4ade80]" : "text-white/30"
-                    }`}>
-                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold border ${
-                        (i === 0 && !wifiConnected) || (i === 1 && wifiConnected && shellStep < 3) || (i === 2 && shellStep >= 3)
-                          ? "border-[#60a5fa] bg-[#60a5fa]/20" : s.done ? "border-[#4ade80] bg-[#4ade80]/20" : "border-white/10"
-                      }`}>{s.done ? "✓" : s.num}</span>
-                      <span className="hidden sm:inline">{s.label}</span>
-                    </div>
-                  ))}
-                  <span className="flex-1" />
-                  {!wifiConnected && <span className="text-[#f87171]">✗ No internet</span>}
-                  {wifiConnected && shellStep < 3 && <span className="text-[#fbbf24]">✓ WiFi — verify with ping</span>}
-                  {shellStep >= 3 && <span className="text-[#4ade80]">✓ Ready — type archinstall</span>}
-                </div>
-              </div>
-            )}
-            {terminal.map((line, i) => (
-              <div key={i} className="whitespace-pre-wrap"
-                style={{
-                  color: line.startsWith("[root@") ? "#00e676"
-                    : line.startsWith("  ✓") ? "#4ade80"
-                    : line.startsWith("  ✗") ? "#f87171"
-                    : line.startsWith("──") ? "#888"
-                    : line.startsWith("┌") || line.startsWith("│") || line.startsWith("├") || line.startsWith("└") ? "#888"
-                    : "#c0c0c0"
-                }}>{line}</div>
-            ))}
-            <div className="relative flex items-center gap-1 mt-1">
-              <span className="shrink-0" style={{ color: promptColor }}>{prompt}</span>
-              <input ref={inputRef} type="text" value={input} autoFocus autoComplete="off" spellCheck={false}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setInput(val);
-                  setCompletionIdx(-1);
-                  setSuggestionIdx(-1);
-                  playKeyClick();
-                  if (val.trim()) {
-                    const prefix = val.trim().toLowerCase();
-                    const matches = COMMANDS.filter(c => c.cmd.startsWith(prefix));
-                    setShowSuggestions(matches.length > 0 && matches.length < ALL_COMMANDS.length);
-                  } else if (val.trim() === "" && document.activeElement === inputRef.current) {
-                    setShowSuggestions(true);
-                    setSuggestionIdx(0);
-                  } else {
-                    setShowSuggestions(false);
-                  }
-                }}
-                onFocus={() => { if (!input.trim()) { setShowSuggestions(true); setSuggestionIdx(0); } }}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                onKeyDown={(e) => {
-                  const getMatches = () => {
-                    const prefix = input.trim().toLowerCase();
-                    return prefix ? COMMANDS.filter(c => c.cmd.startsWith(prefix) && c.cmd !== prefix) : COMMANDS;
-                  };
-                  if (showSuggestions && e.key === "ArrowDown") { e.preventDefault(); const m = getMatches(); setSuggestionIdx(p => Math.min(m.length - 1, p + 1)); void m; return; }
-                  if (showSuggestions && e.key === "ArrowUp") { e.preventDefault(); setSuggestionIdx(p => Math.max(0, p - 1)); return; }
-                  if (showSuggestions && (e.key === "Enter" || e.key === "Tab")) {
-                    e.preventDefault(); e.stopPropagation();
-                    const m = getMatches();
-                    if (m.length > 0 && suggestionIdx >= 0 && suggestionIdx < m.length) {
-                      setInput(m[suggestionIdx].cmd + " ");
-                    }
-                    setShowSuggestions(false);
-                    setSuggestionIdx(-1);
-                    inputRef.current?.focus();
-                    return;
-                  }
-                  if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); handleShellSubmit(); setCompletionIdx(-1); setShowSuggestions(false); setSuggestionIdx(-1); }
-                  if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); if (!showSuggestions) handleHistory("up"); }
-                  if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); if (!showSuggestions) handleHistory("down"); }
-                  if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setShowSuggestions(false); setSuggestionIdx(-1); }
-                  if (e.key === "Tab" && !showSuggestions) {
-                    e.preventDefault(); e.stopPropagation();
-                    const prefix = input.trim().toLowerCase();
-                    if (!prefix) { setShowSuggestions(true); setSuggestionIdx(0); return; }
-                    const matches = ALL_COMMANDS.filter(c => c.startsWith(prefix) && c !== prefix);
-                    if (matches.length === 0) return;
-                    const next = (completionIdx + 1) % matches.length;
-                    setCompletionIdx(next);
-                    setInput(matches[next] + " ");
-                  }
-                }}
-                className="flex-1 bg-transparent text-white/90 outline-none font-mono text-xs caret-white/70"
-                placeholder="Type a command... (Tab ⇥ for autocomplete)" />
-
-              {/* Suggestions dropdown */}
-              {showSuggestions && (
-                <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-2xl overflow-hidden z-30"
-                  onMouseDown={e => e.preventDefault()}>
-                  {(() => {
-                    const prefix = input.trim().toLowerCase();
-                    const matches = prefix ? COMMANDS.filter(c => c.cmd.startsWith(prefix) && c.cmd !== prefix) : COMMANDS;
-                    return matches.slice(0, 10).map((c, i) => (
-                      <div key={c.cmd}
-                        className={`flex items-center justify-between px-3 py-1.5 text-[10px] cursor-pointer transition-colors ${
-                          i === suggestionIdx ? "bg-[#60a5fa]/20 text-white" : "text-white/60 hover:bg-white/5"
-                        }`}
-                        onClick={() => { setInput(c.cmd + " "); setShowSuggestions(false); inputRef.current?.focus(); }}
-                        onMouseEnter={() => setSuggestionIdx(i)}>
-                        <span className="font-bold text-[11px]" style={{ color: i === suggestionIdx ? "#60a5fa" : "#c0c0c0" }}>{c.cmd}</span>
-                        <span className="text-white/30 ml-2 truncate">{c.desc}</span>
-                      </div>
-                    ));
-                  })()}
-                  <div className="border-t border-white/5 px-3 py-1 text-[8px] text-white/20 flex justify-between">
-                    <span>↑↓ navigate • Enter select</span>
-                    <span>{COMMANDS.filter(c => !input.trim() || c.cmd.startsWith(input.trim().toLowerCase())).length} commands</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="border-t border-white/5 bg-[#0a0a0a] px-3 py-1.5 text-[9px] font-mono flex items-center gap-2">
+          {/* ── Bottom hint bar (always visible) ── */}
+          <div className="border-t border-white/5 bg-[#0a0a0a] px-3 py-1.5 text-[9px] font-mono flex items-center gap-2 shrink-0">
             <button onClick={(e) => { e.stopPropagation(); playClick(); handleShellSubmit(nextHint.cmd); }}
               className="flex items-center gap-1.5 bg-[#60a5fa]/15 hover:bg-[#60a5fa]/25 border border-[#60a5fa]/30 rounded px-2 py-1 text-[10px] text-[#60a5fa] font-bold transition-colors shrink-0">
               <span className="text-[8px]">⟳</span> {nextHint.cmd}
