@@ -735,17 +735,17 @@ export default function ArchInstall({ config, speed, onComplete }: {
   // ─── Boot ───
   if (phase === "boot") {
     return (
-      <div className="w-full max-w-6xl mx-auto h-full"
+      <div className="fixed inset-0 z-50 bg-black font-mono overflow-hidden"
+        style={{fontFamily: "'Courier New', monospace", WebkitFontSmoothing: "none", fontSmooth: "never", textRendering: "optimizeSpeed"}}
         onClick={() => setBootIdx(BOOT_LINES.length)}>
-        <div className="h-full rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden">
-          <div className="h-full overflow-y-auto p-4 font-mono text-xs leading-relaxed" ref={termRef}>
-            {BOOT_LINES.slice(0, bootIdx).map((line, i) => (
-              <div key={i} style={{ color: line.color || "#c0c0c0" }} className="whitespace-pre-wrap">
-                {line.text || "\u00A0"}
-              </div>
-            ))}
-            {bootIdx < BOOT_LINES.length && <span className="inline-block w-2 h-4 bg-white/70 animate-pulse" />}
-          </div>
+        <div className="h-full overflow-y-auto p-4 text-xs leading-relaxed" ref={termRef}
+          style={{color: "#c0c0c0"}}>
+          {BOOT_LINES.slice(0, bootIdx).map((line, i) => (
+            <div key={i} style={{ color: line.color || "#c0c0c0" }}>
+              {line.text || "\u00A0"}
+            </div>
+          ))}
+          {bootIdx < BOOT_LINES.length && <span className="inline-block w-2 h-4 bg-white/70 animate-pulse" />}
         </div>
       </div>
     );
@@ -763,8 +763,8 @@ export default function ArchInstall({ config, speed, onComplete }: {
     })();
 
     return (
-      <div data-no-auto-advance className="w-full max-w-6xl mx-auto h-full">
-        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
+      <div data-no-auto-advance className="fixed inset-0 z-40 bg-black font-mono flex flex-col overflow-hidden"
+        style={{fontFamily: "'Courier New', monospace", WebkitFontSmoothing: "none", fontSmooth: "never", textRendering: "optimizeSpeed"}}>
 
           {/* ── nmtui WiFi panel ── */}
           {subshell === "nmtui" && (
@@ -911,9 +911,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
                     }}
                     className="flex-1 bg-transparent text-[#e8e8e8] outline-none font-mono text-xs caret-[#00e676] selection:bg-white/10"
                     style={{ fontFamily: "'Courier New', 'JetBrains Mono', 'Fira Code', monospace" }} />
-                </div>
-              </div>
-            </div>
+          </div>
+        </div>
+      </div>
           )}
 
           {/* ── Bottom hint bar (always visible) ── */}
@@ -930,7 +930,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
             </span>
           </div>
         </div>
-      </div>
     );
   }
 
@@ -1125,9 +1124,8 @@ export default function ArchInstall({ config, speed, onComplete }: {
       "(10/42)  bluez                             ######## 100%",
     ];
     return (
-      <div data-no-auto-advance className="w-full max-w-6xl mx-auto h-full">
-        <div className="h-full rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden p-4 font-mono text-xs leading-relaxed"
-          style={{ fontFamily: "'Courier New', 'JetBrains Mono', 'Fira Code', monospace" }}>
+      <div data-no-auto-advance className="fixed inset-0 z-40 bg-black font-mono overflow-hidden p-4 text-xs leading-relaxed"
+        style={{fontFamily: "'Courier New', 'JetBrains Mono', 'Fira Code', monospace", WebkitFontSmoothing: "none", fontSmooth: "never", textRendering: "optimizeSpeed"}}>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="text-[#4ade80] mb-1">:: Synchronizing package databases...</motion.div>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
@@ -1175,7 +1173,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
             transition={{ delay: speed === "fast" ? 1.8 : 3.5 }}
             className="mt-3 text-[#fbbf24] text-[11px] font-bold">Press any key to reboot...</motion.div>
         </div>
-      </div>
     );
   }
 

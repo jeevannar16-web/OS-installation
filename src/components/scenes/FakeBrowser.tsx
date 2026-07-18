@@ -249,15 +249,15 @@ export default function FakeBrowser({
         </div>
 
         {/* Body */}
-        <div className="relative h-[460px] lg:h-[560px] xl:h-[640px] overflow-hidden bg-white text-[#202124]">
+        <div className="relative h-[460px] lg:h-[560px] xl:h-[640px] overflow-hidden bg-[#0d1117] text-[#c9d1d9]">
           {phase === "address" && (
             <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center text-3xl font-bold text-accent">
                 {config.branding.logo}
               </div>
-              <div className="text-lg font-semibold text-[#202124]">{config.branding.name} Download</div>
-              <p className="text-sm text-[#5f6368] max-w-sm">
-                Type <span className="font-medium text-[#202124]">"{dp.searchTerm}"</span> in the search bar above to find the official download page
+              <div className="text-lg font-semibold text-[#e0e0e0]">{config.branding.name} Download</div>
+              <p className="text-sm text-[#8b949e] max-w-sm">
+                Type <span className="font-medium text-[#e0e0e0]">"{dp.searchTerm}"</span> in the search bar above to find the official download page
               </p>
               <button
                 onClick={useSearchTerm}
@@ -281,7 +281,7 @@ export default function FakeBrowser({
                   Did you mean: <span className="font-semibold">{didYouMean}</span>?
                 </button>
               )}
-              <div className="mb-4 text-sm text-[#5f6368]">
+              <div className="mb-4 text-sm text-[#8b949e]">
                 About {results.length * 840_000 + 1200} results
               </div>
               <div className="space-y-5">
@@ -298,11 +298,11 @@ export default function FakeBrowser({
                     }}
                     className={`block w-full text-left ${r.official ? "rounded-lg ring-2 ring-accent/60 bg-accent/5 p-2" : ""}`}
                   >
-                    <div className="text-xs text-[#5f6368]">{r.url}</div>
-                    <div className={`text-lg ${r.official ? "text-accent" : "text-[#1a0dab]"} hover:underline`}>
+                    <div className="text-xs text-[#8b949e]">{r.url}</div>
+                    <div className={`text-lg ${r.official ? "text-accent" : "text-[#58a6ff]"} hover:underline`}>
                       {r.title}
                     </div>
-                    <div className="text-sm text-[#4d5156]">{r.snippet}</div>
+                    <div className="text-sm text-[#8b949e]">{r.snippet}</div>
                     {r.official && (
                       <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
                         <CheckCircle2 size={10} /> Official source
@@ -366,20 +366,20 @@ export default function FakeBrowser({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
-                className="absolute bottom-4 left-4 w-80 rounded-lg bg-white/95 p-3 shadow-xl ring-1 ring-black/10 text-left"
+                className="absolute bottom-4 left-4 w-80 rounded-lg bg-[#161b22] p-3 shadow-xl ring-1 ring-white/10 text-left"
               >
-                <div className="flex items-center gap-2 text-sm font-medium text-[#202124]">
-                  <FileText size={16} className="text-[#5f6368] shrink-0" />
+                <div className="flex items-center gap-2 text-sm font-medium text-[#c9d1d9]">
+                  <FileText size={16} className="text-[#8b949e] shrink-0" />
                   <span className="truncate">{config.iso.filename}</span>
-                  {progress >= 100 && <CheckCircle2 size={16} className="ml-auto text-emerald-600 shrink-0" />}
+                  {progress >= 100 && <CheckCircle2 size={16} className="ml-auto text-emerald-500 shrink-0" />}
                 </div>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded bg-gray-200">
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded bg-[#30363d]">
                   <div
                     className="h-full rounded bg-accent transition-[width] duration-100"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <div className="mt-1 flex justify-between text-xs text-[#5f6368]">
+                <div className="mt-1 flex justify-between text-xs text-[#8b949e]">
                   <span>{progress >= 100 ? "Download complete" : `${Math.floor(progress)}%`}</span>
                   <span>{config.iso.size}</span>
                 </div>

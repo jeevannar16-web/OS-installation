@@ -212,10 +212,15 @@ function SimulationPageInner() {
       setPresentationMode(true);
       document.documentElement.requestFullscreen?.().catch(() => {});
       setShowEscHint(true);
-      const t = setTimeout(() => setShowEscHint(false), 4000);
-      return () => clearTimeout(t);
     }
   }, [current]);
+
+  /* ── Hide ESC hint after 4s ── */
+  useEffect(() => {
+    if (!showEscHint) return;
+    const t = setTimeout(() => setShowEscHint(false), 4000);
+    return () => clearTimeout(t);
+  }, [showEscHint]);
 
   /* ── Keyboard shortcuts (single handler) ── */
   useEffect(() => {
@@ -234,8 +239,10 @@ function SimulationPageInner() {
 
       if (isInput) return;
 
-      // Navigation
-      if (e.key === "Backspace" || e.key === "ArrowLeft") { e.preventDefault(); goBack(); }
+      // Navigation — respect no-auto-advance regions
+      if (e.key === "Backspace" || e.key === "ArrowLeft") {
+        if (!(e.target as HTMLElement).closest("[data-no-auto-advance]")) { e.preventDefault(); goBack(); }
+      }
       if (e.key === "Enter") {
         if ((e.target as HTMLElement).closest("[data-no-auto-advance]")) return;
         e.preventDefault();
