@@ -356,7 +356,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   useEffect(() => {
     if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight;
-  }, [terminal, bootIdx]);
+  }, [terminal, bootIdx, phase]);
 
   useEffect(() => {
     if (phase !== "boot") return;
@@ -761,6 +761,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
     if (e.key === "?" || e.key.toLowerCase() === "h") {
       e.preventDefault(); setShowHelp(p => !p); playClick(); return;
     }
+    if (e.key === "Escape") {
+      e.preventDefault(); playClick(); setPhase("shell"); setTuiMsg(""); return;
+    }
   }
 
   // ─── Boot ───
@@ -1084,6 +1087,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       if (e.key === "Escape") {
         e.preventDefault();
         if (guideStep > 0) { setGuideStep(p => p - 1); setTuiMsg(""); playClick(); }
+        else { setGuideView(false); playClick(); }
       }
     }
 
@@ -1434,6 +1438,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
             ) : (
               /* Level 1: main menu */
               <div className="pt-2">
+                <div className="px-3 pb-2 text-[9px] text-white/20 font-mono border-b border-white/5 mb-1">
+                  ↑↓ select • Enter configure • Esc to shell • ? help
+                </div>
                 {tuiOptions.map((opt, i) => tuiRow(opt, i))}
                 {tuiMsg && (
                   <div className="px-4 pt-2 pb-1 text-[10px] font-mono" style={{ color: tuiMsg.includes("✗") ? "#f87171" : "#4ade80" }}>
