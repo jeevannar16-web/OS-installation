@@ -967,116 +967,105 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
 
     return (
-      <div data-no-auto-advance ref={tuiRef} className="fixed inset-0 z-50 bg-black font-mono text-xs leading-none overflow-hidden"
+      <div data-no-auto-advance ref={tuiRef} className="fixed inset-0 z-50 bg-black font-mono leading-none overflow-hidden select-none"
         onKeyDown={handleTuiKey} tabIndex={0}
         style={{
           fontFamily: "'Courier New', monospace",
           color: "#aaaaaa",
+          fontSize: 9,
           WebkitFontSmoothing: "none",
           MozOsxFontSmoothing: "unset",
           fontSmooth: "never",
           textRendering: "optimizeSpeed",
-          lineHeight: 1,
+          lineHeight: "9px",
         }}>
         {/* Help overlay */}
         {showHelp && (
           <div className="absolute inset-0 z-10 bg-black flex items-center justify-center"
             onClick={() => setShowHelp(false)}>
-            <div className="bg-black" onClick={e => e.stopPropagation()}>
-              <div style={{color: "#ffffff"}}>archinstall 4.0 — How to Use</div>
-              <div style={{color: "#aaaaaa"}}>
-                <div><span style={{color: "#888"}}>Up/Down</span> Navigate items</div>
-                <div><span style={{color: "#888"}}>Enter</span> Select/confirm</div>
-                <div><span style={{color: "#888"}}>Esc</span> Go back</div>
-                <div><span style={{color: "#888"}}>H / ?</span> Help</div>
-              </div>
+            <div className="bg-black" onClick={e => e.stopPropagation()}
+              style={{padding: "3px", fontSize: 9, lineHeight: "9px"}}>
+              <div style={{color: "#ffffff"}}>archinstall 4.0 Help</div>
+              <div><span style={{color: "#888"}}>Up/Down</span>Navigate</div>
+              <div><span style={{color: "#888"}}>Enter</span>Select</div>
+              <div><span style={{color: "#888"}}>Esc</span>Back</div>
+              <div><span style={{color: "#888"}}>H</span>Help</div>
               <button onClick={() => setShowHelp(false)}
-                style={{color: "#aaaaaa", background: "none", border: "none", cursor: "pointer"}}>
+                style={{color: "#aaaaaa", background: "none", border: "none", cursor: "pointer", fontSize: 9, lineHeight: "9px", padding: 0, marginTop: 2}}>
                 Close
               </button>
             </div>
           </div>
         )}
 
-        {/* Level 3: configuring a sub-menu item */}
+        {/* Level 3: sub-menu item configuration */}
         {tuiSubMenu && tuiSubCfg ? (
-          <div>
+          <div style={{padding: "2px"}}>
             <div style={{color: "#ffffff"}}>{tuiSubMenu[tuiSubSel]?.label || ""}</div>
             {tuiSubMenu[tuiSubSel]?.kind === "menu" && tuiSubMenu[tuiSubSel]?.items ? (
-              <div>
-                {tuiSubMenu[tuiSubSel]!.items!.map((item, i) => (
-                  <div key={item.label} onClick={() => {
-                    setTuiSubCfgIdx(i); playClick();
-                    const subOpt = tuiSubMenu![tuiSubSel];
-                    const val = subOpt.items![i].label;
-                    setTuiSubMenu(prev => prev!.map((o, j) => j === tuiSubSel ? { ...o, summary: val, selectedIdx: i } : o));
-                    setTuiSubCfg(false);
-                    setTuiMsg(`  ok ${subOpt.label}: ${val}`);
-                  }} style={{color: i === tuiSubCfgIdx ? "#ffffff" : "#aaaaaa", cursor: "pointer"}}>
-                    {i === tuiSubCfgIdx ? " > " : "   "}{item.label}
-                  </div>
-                ))}
-              </div>
+              tuiSubMenu[tuiSubSel]!.items!.map((item, i) => (
+                <div key={item.label} onClick={() => {
+                  setTuiSubCfgIdx(i); playClick();
+                  const subOpt = tuiSubMenu![tuiSubSel];
+                  const val = subOpt.items![i].label;
+                  setTuiSubMenu(prev => prev!.map((o, j) => j === tuiSubSel ? {...o, summary: val, selectedIdx: i} : o));
+                  setTuiSubCfg(false);
+                  setTuiMsg(`ok ${subOpt.label}: ${val}`);
+                }} style={{color: i === tuiSubCfgIdx ? "#ffffff" : "#aaaaaa"}}>
+                  {i === tuiSubCfgIdx ? ">" : " "}{item.label}
+                </div>
+              ))
             ) : (
               <div>
-                <div style={{color: "#aaaaaa"}}>Enter value:</div>
+                <div>Enter value:</div>
                 <input type="text" defaultValue={tuiSubMenu[tuiSubSel]?.textValue || ""} autoFocus
                   onKeyDown={handleTuiKey} onChange={() => playKeyClick()}
-                  style={{background: "#000", border: "1px solid #333", color: "#fff", fontFamily: "'Courier New', monospace"}} />
+                  style={{background:"#000", border:"1px solid #333", color:"#fff", fontFamily:"'Courier New', monospace", fontSize:9, lineHeight:"9px", padding:0}} />
               </div>
             )}
           </div>
         ) : tuiSubMenu ? (
-          /* Level 2: sub-menu */
-          <div>
-            <div style={{color: "#ffffff"}}>
-              {tuiOptions[tuiSelected]?.label || ""}
-            </div>
+          /* Level 2: sub-menu list */
+          <div style={{padding: "2px"}}>
+            <div style={{color: "#ffffff"}}>{tuiOptions[tuiSelected]?.label || ""}</div>
             {tuiSubMenu.map((opt, i) => (
               <div key={opt.id} onClick={() => setTuiSubSel(i)}
-                style={{color: i === tuiSubSel ? "#ffffff" : "#aaaaaa", cursor: "pointer"}}>
-                {i === tuiSubSel ? " > " : "   "}{opt.label}
-                <span style={{color: "#666"}}> {opt.summary}</span>
+                style={{color: i === tuiSubSel ? "#ffffff" : "#aaaaaa"}}>
+                {i === tuiSubSel ? ">" : " "}{opt.label}
+                <span style={{color: "#666"}}>{opt.summary}</span>
                 {(opt.kind === "menu" && opt.items) || opt.kind === "text"
-                  ? <span style={{color: "#555"}}> &gt;</span>
+                  ? <span style={{color: "#555"}}>{" >"}</span>
                   : null}
               </div>
             ))}
           </div>
         ) : tuiConfiguring ? (
           /* Level 1b: configuring a value */
-          <div>
-            <div style={{color: "#ffffff"}}>
-              {tuiOptions[tuiSelected]?.label || ""}
-            </div>
+          <div style={{padding: "2px"}}>
+            <div style={{color: "#ffffff"}}>{tuiOptions[tuiSelected]?.label || ""}</div>
             {tuiOptions[tuiSelected]?.kind === "menu" && tuiOptions[tuiSelected]?.items ? (
-              <div>
-                {tuiOptions[tuiSelected]!.items!.map((item, i) => (
-                  <div key={item.label} onClick={() => {
-                    setTuiSubIdx(i); playClick();
-                    setTuiOptions(prev => prev.map((o, j) => j === tuiSelected ? { ...o, summary: item.label, selectedIdx: i } : o));
-                    setTuiConfiguring(false);
-                    setTuiMsg(`  ok ${tuiOptions[tuiSelected]?.label}: ${item.label}`);
-                  }} style={{color: i === tuiSubIdx ? "#ffffff" : "#aaaaaa", cursor: "pointer"}}>
-                    {i === tuiSubIdx ? " > " : "   "}{item.label}
-                  </div>
-                ))}
-              </div>
+              tuiOptions[tuiSelected]!.items!.map((item, i) => (
+                <div key={item.label} onClick={() => {
+                  setTuiSubIdx(i); playClick();
+                  setTuiOptions(prev => prev.map((o, j) => j === tuiSelected ? {...o, summary: item.label, selectedIdx: i} : o));
+                  setTuiConfiguring(false);
+                  setTuiMsg(`ok ${tuiOptions[tuiSelected]?.label}: ${item.label}`);
+                }} style={{color: i === tuiSubIdx ? "#ffffff" : "#aaaaaa"}}>
+                  {i === tuiSubIdx ? ">" : " "}{item.label}
+                </div>
+              ))
             ) : (
               <div>
-                <div style={{color: "#aaaaaa"}}>Enter value:</div>
+                <div>Enter value:</div>
                 <input type="text" defaultValue={tuiOptions[tuiSelected]?.textValue || ""} autoFocus
                   onKeyDown={handleTuiKey} onChange={() => playKeyClick()}
-                  style={{background: "#000", border: "1px solid #333", color: "#fff", fontFamily: "'Courier New', monospace"}} />
+                  style={{background:"#000", border:"1px solid #333", color:"#fff", fontFamily:"'Courier New', monospace", fontSize:9, lineHeight:"9px", padding:0}} />
               </div>
             )}
           </div>
         ) : (
           /* Level 1: main menu */
-          <div>
-            <div style={{color: "#aa0000"}}>
-              Up/Down navigate, Enter select
-            </div>
+          <div style={{padding: "1px"}}>
             {tuiOptions.map((opt, i) => {
               const sel = i === tuiSelected;
               const hasSub = (opt.subItems && opt.subItems.length > 0) || (opt.kind === "menu" && opt.items);
@@ -1085,13 +1074,13 @@ export default function ArchInstall({ config, speed, onComplete }: {
               const isSave = opt.id === "save_config";
               return (
                 <div key={opt.id} onClick={() => handleTuiClick(i)}
-                  style={{color: sel ? "#ffffff" : "#aaaaaa", cursor: "pointer"}}>
-                  <span style={{color: sel ? "#0000aa" : "transparent"}}>&gt;</span>
+                  style={{color: sel ? "#ffffff" : "#aaaaaa", whiteSpace: "nowrap"}}>
+                  {sel ? ">" : " "}
                   {opt.label}
-                  {opt.required && <span style={{color: "#aa0000"}}> *</span>}
+                  {opt.required ? <span style={{color: "#aa0000"}}>{" *"}</span> : null}
                   <span style={{color: sel ? "#0000aa" : "#666"}}>
                     {opt.summary}
-                    {hasSub && !isInstall && !isAbort && !isSave && <span style={{color: "#555"}}> &gt;</span>}
+                    {hasSub && !isInstall && !isAbort && !isSave ? <span style={{color: "#555"}}>{" >"}</span> : null}
                   </span>
                 </div>
               );
@@ -1104,8 +1093,8 @@ export default function ArchInstall({ config, speed, onComplete }: {
           </div>
         )}
 
-        {/* Footer */}
-        <div style={{color: "#aa0000"}}>
+        {/* Footer hints */}
+        <div style={{color: "#aa0000", padding: "1px"}}>
           {tuiSubCfg ? "Enter confirm  Esc cancel"
             : tuiSubMenu ? "Enter select  Esc back"
             : tuiConfiguring ? "Enter select  Esc cancel"
