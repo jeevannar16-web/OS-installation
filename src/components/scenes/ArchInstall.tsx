@@ -1,25 +1,76 @@
 import { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick, playKeyClick } from "../shared/sounds";
 import { SparkleBurst } from "../shared/InteractiveEffects";
 import { useSceneAdvance } from "../shared/SceneAdvance";
 
-type Phase = "boot" | "shell" | "wizard" | "installing" | "done";
+type Phase = "boot" | "shell" | "preview" | "installing" | "done";
 
-type WizardStep = {
+type PreviewStep = {
   title: string;
   description: string;
   image: string;
-  action: string;
-  commands: string[];
 };
+
+const PREVIEW_STEPS: PreviewStep[] = [
+  {
+    title: "Locales",
+    description: "Set your keyboard layout (us) and locale language (en_US.UTF-8).",
+    image: "/images/arch/03-wizard.png",
+  },
+  {
+    title: "Mirror Selection",
+    description: "Choose a mirror region close to you for fast package downloads.",
+    image: "/images/arch/04-mirror-region.png",
+  },
+  {
+    title: "Disk Configuration",
+    description: "Partition your drive. 'Best effort' handles it automatically with ext4 and swap.",
+    image: "/images/arch/06-best-effort.png",
+  },
+  {
+    title: "Filesystem",
+    description: "Pick ext4 (most common) or btrfs. Swap is enabled for memory management.",
+    image: "/images/arch/07-filesystem.png",
+  },
+  {
+    title: "Bootloader",
+    description: "GRUB is installed to your disk. Detects other OSes for dual-boot.",
+    image: "/images/arch/10-select-kernels.png",
+  },
+  {
+    title: "Hostname & Users",
+    description: "Set your machine name, root password, and create a user with sudo.",
+    image: "/images/arch/12-user-accounts.png",
+  },
+  {
+    title: "Desktop Profile",
+    description: "Choose KDE Plasma, GNOME, or XFCE. SDDM or GDM greeter.",
+    image: "/images/arch/12-desktop-profile.png",
+  },
+  {
+    title: "Graphics & Audio",
+    description: "Open-source drivers for AMD/Intel/NVIDIA. PipeWire for audio.",
+    image: "/images/arch/05-optional-repos.png",
+  },
+  {
+    title: "Network & Timezone",
+    description: "NetworkManager manages WiFi/Ethernet. NTP syncs your clock.",
+    image: "/images/arch/13-network-config.png",
+  },
+  {
+    title: "Review & Install",
+    description: "Review all options. Once confirmed, packages are downloaded and configured.",
+    image: "/images/arch/14-confirm-install.png",
+  },
+];
 
 const BOOT_LINES: { text: string; color?: string; delay: number }[] = [
   { text: "Booting Arch Linux 6.8.9-arch1-1...", color: "#888", delay: 200 },
   { text: "[    0.000000] Linux version 6.8.9-arch1-1 (root@archiso) (gcc 13.2.1) #1 SMP PREEMPT_DYNAMIC Tue Jun 30 2026", delay: 150 },
   { text: "[    0.010000] Command line: BOOT_IMAGE=/boot/vmlinuz-linux root=UUID=archiso", delay: 100 },
-  { text: "[    0.020000] x86/fpu: Supporting XSAVE feature set 'x87' 'SSE' 'SSE2' 'AVX' 'AVX2'", delay: 80 },
+  { text: "[    0.020000] x86/fpu: Supporting XSAVE feature set", delay: 80 },
   { text: "[    0.150000] CPU: AMD Ryzen 7 5700X 8-Core Processor (16 SMT)", delay: 100 },
   { text: "[    0.300000] Memory: 8192MB available (6144MB physical)", delay: 80 },
   { text: "[    1.100000] systemd[1]: Starting systemd 255.2-1 running in system mode...", delay: 120 },
@@ -39,121 +90,6 @@ const BOOT_LINES: { text: string; color?: string; delay: number }[] = [
   { text: "Last login: Sat Jul 18 12:00:00 2026 on tty1", color: "#888", delay: 150 },
 ];
 
-const WIZARD_STEPS: WizardStep[] = [
-  {
-    title: "Run archinstall",
-    description: "Launch the guided installer from the live terminal",
-    image: "/images/arch/01-welcome-page.png",
-    action: "Type archinstall and press Enter",
-    commands: ["archinstall"],
-  },
-  {
-    title: "Archinstall — Main Menu",
-    description: "The guided installer TUI presents all configuration options. Work through them top to bottom.",
-    image: "/images/arch/09-archinstall-menu.png",
-    action: "Select Locales → Enter",
-    commands: ["locales", "select locales", "enter"],
-  },
-  {
-    title: "Locales — Language & Keyboard",
-    description: "Set your keyboard layout and locale. Defaults are fine.",
-    image: "/images/arch/03-wizard.png",
-    action: "Keep defaults → Back to main menu",
-    commands: ["back", "done", "confirm"],
-  },
-  {
-    title: "Mirrors — Package Sources",
-    description: "Select a mirror region close to you for fast package downloads.",
-    image: "/images/arch/04-mirror-region.png",
-    action: "Select your region → Back",
-    commands: ["back", "done", "select", "confirm"],
-  },
-  {
-    title: "Disk Configuration",
-    description: "Choose how to partition the disk. 'Best effort' is easiest.",
-    image: "/images/arch/06-best-effort.png",
-    action: "Select 'Best effort' → Choose drive → ext4",
-    commands: ["best effort", "select disk", "confirm"],
-  },
-  {
-    title: "Filesystem & Swap",
-    description: "Pick ext4 (most common) or btrfs. Enable swap for better memory management.",
-    image: "/images/arch/07-filesystem.png",
-    action: "Select ext4 → Enable swap → Back",
-    commands: ["ext4", "btrfs", "swap", "confirm", "back"],
-  },
-  {
-    title: "Disk Partitioning",
-    description: "Review the partition layout. Confirm to continue.",
-    image: "/images/arch/08-disk-partitioning.png",
-    action: "Review partitions → Confirm",
-    commands: ["confirm", "continue", "yes", "done"],
-  },
-  {
-    title: "Bootloader",
-    description: "GRUB is recommended for most setups, especially dual-boot.",
-    image: "/images/arch/10-select-kernels.png",
-    action: "Select GRUB → Back to main menu",
-    commands: ["grub", "select grub", "back", "confirm"],
-  },
-  {
-    title: "Hostname",
-    description: "Set the network name for your machine.",
-    image: "/images/arch/11-hostname.png",
-    action: "Type archlinux → Enter",
-    commands: ["archlinux", "enter", "confirm"],
-  },
-  {
-    title: "Root Password",
-    description: "Set the root (superuser) password.",
-    image: "/images/arch/11-user-password.png",
-    action: "Enter password → Confirm",
-    commands: ["password", "confirm", "enter"],
-  },
-  {
-    title: "User Account",
-    description: "Create a regular user account with sudo privileges.",
-    image: "/images/arch/12-user-accounts.png",
-    action: "Add user → Set username & password → Confirm",
-    commands: ["add user", "create user", "done"],
-  },
-  {
-    title: "Profile — Desktop Environment",
-    description: "Choose a desktop environment. KDE Plasma, GNOME, or XFCE.",
-    image: "/images/arch/12-desktop-profile.png",
-    action: "Select Profile → Type: Desktop → Pick one",
-    commands: ["desktop", "kde", "gnome", "xfce", "profile", "select"],
-  },
-  {
-    title: "Graphics Driver & Audio",
-    description: "Select open-source graphics drivers and PipeWire for audio.",
-    image: "/images/arch/05-optional-repos.png",
-    action: "Graphics: All open-source → Audio: PipeWire → Back",
-    commands: ["open source", "pipewire", "back", "confirm"],
-  },
-  {
-    title: "Network Configuration",
-    description: "Use NetworkManager for automatic WiFi and Ethernet.",
-    image: "/images/arch/13-network-config.png",
-    action: "Select NetworkManager → Back",
-    commands: ["networkmanager", "network manager", "back", "confirm"],
-  },
-  {
-    title: "Timezone & NTP",
-    description: "Set your timezone and enable automatic time sync.",
-    image: "/images/arch/10-disk-config.png",
-    action: "Set timezone → NTP: True → Back",
-    commands: ["timezone", "ntp", "back", "confirm", "true"],
-  },
-  {
-    title: "Review & Install",
-    description: "Review all options. Hit Install to begin.",
-    image: "/images/arch/14-confirm-install.png",
-    action: "Select 'Install' → Confirm",
-    commands: ["install", "confirm", "yes", "begin"],
-  },
-];
-
 function processCommand(input: string): string[] {
   const parts = input.trim().split(/\s+/);
   const cmd = parts[0]?.toLowerCase();
@@ -163,21 +99,23 @@ function processCommand(input: string): string[] {
     case "help":
       return [
         "Available commands:",
-        "  archinstall    Launch the guided installer",
-        "  ls             List directory contents",
-        "  pwd            Print working directory",
-        "  cd <dir>      Change directory",
-        "  cat <file>    Show file contents",
-        "  uname -a      System information",
-        "  ip a          Show network interfaces",
-        "  ping <host>   Test network connectivity",
-        "  iwctl         WiFi configuration tool",
-        "  free -h       Memory usage",
-        "  df -h         Disk usage",
-        "  neofetch      System info",
-        "  echo <text>   Print text",
-        "  clear         Clear the screen",
+        "  preview          Preview what archinstall will configure",
+        "  archinstall      Start the guided installer",
+        "  ping <host>     Test network connectivity",
+        "  iwctl           WiFi configuration tool",
+        "  timedatectl     System clock & NTP",
+        "  fdisk -l        List available disks",
+        "  ls              List directory contents",
+        "  cat <file>      Show file contents",
+        "  uname -a        System information",
+        "  ip a            Show network interfaces",
+        "  free -h         Memory usage",
+        "  df -h           Disk usage",
+        "  neofetch        System info",
+        "  clear           Clear the screen",
       ];
+    case "preview":
+      return [];
     case "archinstall":
       return [];
     case "ls": {
@@ -185,7 +123,6 @@ function processCommand(input: string): string[] {
       if (dir === "/") return ["bin   boot   dev   etc   home   lib   mnt   opt   proc   root   run   sbin   sys   tmp   usr   var"];
       if (dir.includes("home") || !dir) return ["Desktop   Documents   Downloads   Music   Pictures   Public   Templates   Videos"];
       if (dir === "/etc") return ["hostname   resolv.conf   fstab   pacman.conf   NetworkManager"];
-      if (dir === "/dev") return ["sda   sda1   sda2   loop0   tty1   null   zero   random"];
       return [`ls: cannot access '${dir}': No such file or directory`];
     }
     case "pwd":
@@ -197,11 +134,11 @@ function processCommand(input: string): string[] {
       if (/hostname/.test(file)) return ["archiso"];
       if (/resolv/.test(file)) return ["nameserver 8.8.8.8", "nameserver 1.1.1.1"];
       if (/fstab/.test(file)) return ["# /etc/fstab", "UUID=xxxx-xxxx  /  ext4  defaults  0  1"];
+      if (/os-release/.test(file)) return ["NAME=\"Arch Linux\"", "ID=arch", "PRETTY_NAME=\"Arch Linux\""];
       return [`cat: ${file}: No such file or directory`];
     }
     case "uname": {
       if (args.includes("-a")) return ["Linux archiso 6.8.9-arch1-1 #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux"];
-      if (args.includes("-r")) return ["6.8.9-arch1-1"];
       return ["Linux"];
     }
     case "ip": {
@@ -242,21 +179,31 @@ function processCommand(input: string): string[] {
         "    HomeWiFi    ████ 54%  WPA2",
         "    Neighbor    ██  28%  WPA3",
         "",
-        "  Type 'station wlan0 connect HomeWiFi' to connect.",
+        "  Type 'station wlan0 connect <SSID>' to connect.",
       ];
+    case "station": {
+      if (args.includes("wlan0") && args.includes("connect")) {
+        return ["Connecting to network...", "  ✓ Authentication completed", "  ✓ DHCP lease obtained", "  Connected to " + args.slice(2).join(" ")];
+      }
+      return [`station ${args.join(" ")}: command not understood`];
+    }
+    case "timedatectl": {
+      if (args.includes("set-ntp") || input.includes("set-ntp")) return ["  ✓ NTP synchronization enabled", "  System clock synchronized: yes"];
+      return ["               Local time: Sat 2026-07-18 12:00:00 UTC", "  Universal time: Sat 2026-07-18 12:00:00 UTC", "     NTP enabled: yes", "NTP synchronized: no"];
+    }
+    case "fdisk": {
+      if (args.includes("-l")) return [
+        "Disk /dev/sda: 25 GiB, 26843545600 bytes, 52428800 sectors",
+        "Device       Boot  Start      End  Sectors  Size  Id  Type",
+        "/dev/sda1         2048  1048575  1046528  512M   83  Linux",
+        "/dev/sda2      1048576 52426751 51378176 24.5G   83  Linux",
+      ];
+      return ["Usage: fdisk -l  (list disks)"];
+    }
     case "free":
-      return [
-        "               total        used        free      shared  buff/cache   available",
-        "Mem:           7.7Gi       1.2Gi       4.1Gi       89Mi       2.4Gi       6.0Gi",
-        "Swap:          2.0Gi          0B       2.0Gi",
-      ];
+      return ["               total        used        free      shared  buff/cache   available", "Mem:           7.7Gi       1.2Gi       4.1Gi       89Mi       2.4Gi       6.0Gi", "Swap:          2.0Gi          0B       2.0Gi"];
     case "df":
-      return [
-        "Filesystem      Size  Used Avail Use% Mounted on",
-        "dev             3.9G     0  3.9G   0% /dev",
-        "run             3.9G  1.6M  3.9G   1% /run",
-        "/dev/sda1        25G   12G   13G  48% /",
-      ];
+      return ["Filesystem      Size  Used Avail Use% Mounted on", "dev             3.9G     0  3.9G   0% /dev", "run             3.9G  1.6M  3.9G   1% /run", "/dev/sda1        25G   12G   13G  48% /"];
     case "neofetch":
       return [
         "            .-/+oossssoo+/-.               root@archiso",
@@ -300,17 +247,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState(-1);
-  const [stepIdx, setStepIdx] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [previewIdx, setPreviewIdx] = useState(0);
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const currentStep = WIZARD_STEPS[stepIdx];
-  const isWizardComplete = stepIdx >= WIZARD_STEPS.length;
-
-  // Scroll terminal to bottom
   useEffect(() => {
     if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight;
   }, [terminal, bootIdx]);
@@ -325,19 +265,11 @@ export default function ArchInstall({ config, speed, onComplete }: {
     } else {
       const t = setTimeout(() => {
         setPhase("shell");
-        setTerminal(["[root@archiso ~]# Type 'help' for available commands"]);
+        setTerminal(["Type 'help' for commands, 'preview' to see what archinstall does, 'archinstall' to start"]);
       }, speed === "fast" ? 200 : 500);
       return () => clearTimeout(t);
     }
   }, [phase, bootIdx, speed]);
-
-  // Wizard auto-advance
-  useEffect(() => {
-    if (isWizardComplete && phase === "wizard") {
-      const t = setTimeout(() => setPhase("installing"), speed === "fast" ? 300 : 800);
-      return () => clearTimeout(t);
-    }
-  }, [isWizardComplete, phase, speed]);
 
   useEffect(() => {
     if (phase === "installing") {
@@ -355,19 +287,11 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   useEffect(() => {
     if (phase === "shell") registerAdvance(() => onComplete());
-    if (phase === "wizard") registerAdvance(() => onComplete());
   }, [phase, registerAdvance, onComplete]);
 
-  // Keyboard shortcut: focus input on any key
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (phase === "shell" && inputRef.current && document.activeElement !== inputRef.current) {
-        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-          inputRef.current.focus();
-          setInput(e.key);
-        }
-      }
-      if (phase === "wizard" && inputRef.current && document.activeElement !== inputRef.current) {
         if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
           inputRef.current.focus();
           setInput(e.key);
@@ -391,40 +315,21 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
     if (cmd.toLowerCase() === "archinstall") {
       playClick();
-      addTerminal([`[root@archiso ~]# ${cmd}`]);
       setInput("");
-      setTimeout(() => {
-        setPhase("wizard");
-        setTerminal([]);
-        setCompletedSteps(0);
-      }, speed === "fast" ? 200 : 500);
+      setPhase("installing");
+      return;
+    }
+    if (cmd.toLowerCase() === "preview") {
+      playClick();
+      setInput("");
+      setPreviewIdx(0);
+      setPhase("preview");
       return;
     }
 
     const output = processCommand(cmd);
     addTerminal([`[root@archiso ~]# ${cmd}`, ...output]);
     setInput("");
-  }
-
-  function handleWizardSubmit() {
-    const cmd = input.trim().toLowerCase();
-    if (!cmd || !currentStep || isProcessing) return;
-    setIsProcessing(true);
-    playClick();
-    const isCorrect = currentStep.commands.some(c => cmd.includes(c));
-    if (isCorrect) {
-      setError(null);
-      setInput("");
-      setTimeout(() => {
-        setStepIdx(p => p + 1);
-        setCompletedSteps(p => p + 1);
-        setIsProcessing(false);
-      }, speed === "fast" ? 150 : 400);
-    } else {
-      setError(`Try: "${currentStep.commands[0]}"`);
-      setInput("");
-      setIsProcessing(false);
-    }
   }
 
   function handleHistory(dir: "up" | "down") {
@@ -439,7 +344,17 @@ export default function ArchInstall({ config, speed, onComplete }: {
     }
   }
 
-  // ─── Boot phase ───
+  function handlePreviewAdvance() {
+    playClick();
+    if (previewIdx < PREVIEW_STEPS.length - 1) {
+      setPreviewIdx(p => p + 1);
+    } else {
+      setPhase("shell");
+      addTerminal(["Preview complete. Type 'archinstall' to begin installation."]);
+    }
+  }
+
+  // ─── Boot ───
   if (phase === "boot") {
     return (
       <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}
@@ -463,7 +378,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
     );
   }
 
-  // ─── Shell phase ───
+  // ─── Shell ───
   if (phase === "shell") {
     return (
       <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
@@ -490,9 +405,53 @@ export default function ArchInstall({ config, speed, onComplete }: {
             </div>
           </div>
           <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/20 font-mono flex justify-between">
-            <span>Type 'help' for commands • 'archinstall' to start installer</span>
+            <span>ping archlinux.org • timedatectl • fdisk -l • preview • archinstall</span>
             <span className="text-[#00e676]/30">tty1</span>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Preview ───
+  if (phase === "preview") {
+    const step = PREVIEW_STEPS[previewIdx];
+    return (
+      <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
+        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
+          <div className="relative flex-1">
+            <img src={step.image} alt={step.title}
+              className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0d1117]/90 via-transparent to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+                  style={{ color: accent, background: `${accent}1a`, border: `1px solid ${accent}33` }}>
+                  STEP {previewIdx + 1}/{PREVIEW_STEPS.length}
+                </span>
+                <span className="text-sm font-bold text-white/90">{step.title}</span>
+              </div>
+              <p className="text-xs text-white/50">{step.description}</p>
+            </div>
+          </div>
+          <div className="border-t border-white/10 bg-[#0a0a0a] px-4 py-2.5 flex items-center justify-between">
+            <div className="flex gap-1">
+              {PREVIEW_STEPS.map((_, i) => (
+                <div key={i} className="h-1.5 w-1.5 rounded-full transition-colors"
+                  style={{ background: i === previewIdx ? accent : "rgba(255,255,255,0.15)" }} />
+              ))}
+            </div>
+            <button onClick={handlePreviewAdvance}
+              className="rounded-lg px-5 py-1.5 text-xs font-bold text-white transition-all hover:scale-[1.02]"
+              style={{ background: accent }}>
+              {previewIdx < PREVIEW_STEPS.length - 1 ? "Next →" : "Back to shell"}
+            </button>
+          </div>
+          {previewIdx === PREVIEW_STEPS.length - 1 && (
+            <div className="border-t border-white/5 bg-[#0a0a0a]/80 px-4 py-1.5 text-[9px] text-[#4ade80]/60 font-mono text-center">
+              Preview complete — type 'archinstall' in the shell to begin installation
+            </div>
+          )}
         </div>
       </div>
     );
@@ -502,34 +461,42 @@ export default function ArchInstall({ config, speed, onComplete }: {
   if (phase === "installing") {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-[#111]">
-          <img src="/images/arch/15-install-progress.png" alt={`Installing ${osName}`}
-            className="absolute inset-0 w-full h-full object-cover opacity-30" />
-          <div className="absolute inset-0 bg-[#12121a]/80 flex items-center justify-center">
-            <div className="text-center space-y-6 px-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                <div className="text-4xl">🏹</div>
-                <h2 className="text-xl font-bold" style={{ color: accent }}>Installing {osName}...</h2>
-                <p className="text-xs text-white/40 max-w-sm mx-auto">
-                  Packages are being downloaded and configured. This takes a few minutes.
-                </p>
-                <div className="max-w-xs mx-auto h-2 rounded-full bg-white/10 overflow-hidden">
-                  <motion.div className="h-full rounded-full" style={{ background: accent }}
-                    initial={{ width: "0%" }} animate={{ width: "100%" }}
-                    transition={{ duration: speed === "fast" ? 1.2 : 2.8, ease: "easeInOut" }} />
-                </div>
-                <div className="font-mono text-[10px] text-white/25 space-y-1 max-w-md mx-auto text-left">
-                  {[":: Synchronizing package databases...", ":: Downloading core packages...",
-                    ":: Installing base system...", ":: Configuring bootloader..."].map((line, i) => (
-                    <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      transition={{ delay: i * (speed === "fast" ? 0.2 : 0.6) }}>
-                      {line}
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-          </div>
+        <div className="flex-1 rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden p-4 font-mono text-xs leading-relaxed">
+          <div className="text-[#4ade80] mb-2">:: Synchronizing package databases...</div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+            <div className="text-[#4ade80]"> core is up to date</div>
+            <div className="text-[#4ade80]"> extra is up to date</div>
+          </motion.div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+            <div className="text-[#888] mt-2">:: Starting full system installation...</div>
+          </motion.div>
+          {[
+            "Installing base system (linux, base, base-devel)...",
+            "Installing linux-firmware...",
+            "Installing grub (bootloader)...",
+            "Installing NetworkManager...",
+            "Installing KDE Plasma desktop...",
+            "Installing SDDM display manager...",
+            "Configuring system...",
+            "Setting up users...",
+            "Generating initramfs...",
+          ].map((line, i) => (
+            <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 + i * (speed === "fast" ? 0.08 : 0.2) }}
+              className="text-[#c0c0c0]">  {line}</motion.div>
+          ))}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ delay: speed === "fast" ? 1.6 : 3.0 }}
+            className="mt-3 text-[#4ade80] font-bold">
+            ✓ Installation complete!
+          </motion.div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ delay: speed === "fast" ? 1.8 : 3.5 }}
+            className="mt-1 h-2 w-full bg-white/10 rounded-full overflow-hidden">
+            <motion.div className="h-full rounded-full" style={{ background: accent }}
+              initial={{ width: "0%" }} animate={{ width: "100%" }}
+              transition={{ duration: speed === "fast" ? 0.4 : 1.0, ease: "easeInOut" }} />
+          </motion.div>
         </div>
       </div>
     );
@@ -539,94 +506,22 @@ export default function ArchInstall({ config, speed, onComplete }: {
   if (phase === "done") {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-[#111]">
-          <img src="/images/arch/16-install-complete.png" alt={`${osName} install complete`}
-            className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-              className="text-center space-y-4 bg-black/60 backdrop-blur-sm rounded-2xl p-8" style={{ borderColor: `${accent}33`, borderWidth: 1 }}>
-              <SparkleBurst trigger={true} />
-              <div className="text-3xl">🏹</div>
-              <h2 className="text-lg font-bold" style={{ color: accent }}>{osName} installed!</h2>
-              <p className="text-xs text-white/50 max-w-xs mx-auto">
-                You completed the archinstall guided installer. Welcome to {osName}.
-              </p>
-            </motion.div>
+        <div className="flex-1 rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden p-6 font-mono text-xs leading-relaxed flex items-center justify-center">
+          <div className="text-center space-y-4 bg-black/40 rounded-xl p-8" style={{ borderColor: `${accent}33`, borderWidth: 1 }}>
+            <SparkleBurst trigger={true} />
+            <div className="text-3xl">🏹</div>
+            <h2 className="text-lg font-bold" style={{ color: accent }}>{osName} installed!</h2>
+            <div className="text-[#4ade80]">✓ All packages installed</div>
+            <div className="text-[#4ade80]">✓ Bootloader configured</div>
+            <div className="text-[#4ade80]">✓ User account created</div>
+            <p className="text-xs text-white/50 max-w-xs mx-auto mt-2">
+              reboot into your new {osName} system.
+            </p>
           </div>
         </div>
       </div>
     );
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // WIZARD — archinstall TUI with integrated terminal bar
-  // ══════════════════════════════════════════════════════════════
-  if (!currentStep) return null;
-
-  return (
-    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-      <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
-        <AnimatePresence mode="wait">
-          <motion.img key={stepIdx} src={currentStep.image} alt={currentStep.title}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="absolute inset-0 w-full h-full object-cover bg-[#111]" />
-        </AnimatePresence>
-
-        {/* Step progress bar */}
-        <div className="absolute top-3 left-4 right-4 flex items-center gap-3 pointer-events-none">
-          <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-            <motion.div className="h-full rounded-full" style={{ background: accent }}
-              animate={{ width: `${(completedSteps / WIZARD_STEPS.length) * 100}%` }}
-              transition={{ duration: 0.3 }} />
-          </div>
-          <span className="text-[10px] text-white/40 font-mono">{completedSteps + 1}/{WIZARD_STEPS.length}</span>
-        </div>
-
-        {/* Terminal bar at the bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-10">
-          {error && (
-            <div className="mx-2 mb-1 px-3 py-1 rounded bg-amber-500/15 border border-amber-500/20 text-[10px] text-amber-400/80 font-mono">
-              💡 {error}
-            </div>
-          )}
-          <div className="bg-[#0d1117]/95 backdrop-blur-sm border-t border-white/10 px-3 py-2"
-            onClick={() => inputRef.current?.focus()}>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 flex-1">
-                <span className="font-mono text-xs" style={{ color: accent }}>$</span>
-                <input ref={inputRef} type="text" value={input} autoFocus autoComplete="off" spellCheck={false}
-                  onChange={(e) => { setInput(e.target.value); playKeyClick(); }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") { e.preventDefault(); handleWizardSubmit(); }
-                  }}
-                  placeholder={currentStep.action}
-                  className="flex-1 bg-transparent text-white/90 outline-none font-mono text-xs placeholder:text-white/20" />
-              </div>
-              <span className="text-[9px] text-white/20 font-mono shrink-0">{currentStep.title}</span>
-              <button onClick={handleWizardSubmit} disabled={isProcessing}
-                className="rounded px-2 py-1 text-[11px] font-bold text-white shrink-0"
-                style={{ background: accent }}>↵</button>
-              <button onClick={() => {
-                if (!currentStep) return;
-                setIsProcessing(true);
-                setTimeout(() => {
-                  setStepIdx(p => p + 1);
-                  setCompletedSteps(p => p + 1);
-                  setIsProcessing(false);
-                  setError(null);
-                }, speed === "fast" ? 150 : 400);
-              }} disabled={isProcessing}
-                className="rounded border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-white/40 hover:text-white/80 transition-colors">
-                ⏩
-              </button>
-            </div>
-            <div className="text-[8px] text-white/15 font-mono mt-0.5">
-              Type a command and press Enter, or click ⏩ to auto-advance
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }
