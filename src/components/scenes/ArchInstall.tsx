@@ -1,69 +1,25 @@
 import { useEffect, useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick, playKeyClick } from "../shared/sounds";
 import { SparkleBurst } from "../shared/InteractiveEffects";
 import { useSceneAdvance } from "../shared/SceneAdvance";
 
-type Phase = "boot" | "shell" | "preview" | "installing" | "done";
+type Phase = "boot" | "shell" | "installing" | "done";
 
-type PreviewStep = {
-  title: string;
-  description: string;
-  image: string;
-};
+type PreviewSlide = { title: string; description: string; image: string };
 
-const PREVIEW_STEPS: PreviewStep[] = [
-  {
-    title: "Locales",
-    description: "Set your keyboard layout (us) and locale language (en_US.UTF-8).",
-    image: "/images/arch/03-wizard.png",
-  },
-  {
-    title: "Mirror Selection",
-    description: "Choose a mirror region close to you for fast package downloads.",
-    image: "/images/arch/04-mirror-region.png",
-  },
-  {
-    title: "Disk Configuration",
-    description: "Partition your drive. 'Best effort' handles it automatically with ext4 and swap.",
-    image: "/images/arch/06-best-effort.png",
-  },
-  {
-    title: "Filesystem",
-    description: "Pick ext4 (most common) or btrfs. Swap is enabled for memory management.",
-    image: "/images/arch/07-filesystem.png",
-  },
-  {
-    title: "Bootloader",
-    description: "GRUB is installed to your disk. Detects other OSes for dual-boot.",
-    image: "/images/arch/10-select-kernels.png",
-  },
-  {
-    title: "Hostname & Users",
-    description: "Set your machine name, root password, and create a user with sudo.",
-    image: "/images/arch/12-user-accounts.png",
-  },
-  {
-    title: "Desktop Profile",
-    description: "Choose KDE Plasma, GNOME, or XFCE. SDDM or GDM greeter.",
-    image: "/images/arch/12-desktop-profile.png",
-  },
-  {
-    title: "Graphics & Audio",
-    description: "Open-source drivers for AMD/Intel/NVIDIA. PipeWire for audio.",
-    image: "/images/arch/05-optional-repos.png",
-  },
-  {
-    title: "Network & Timezone",
-    description: "NetworkManager manages WiFi/Ethernet. NTP syncs your clock.",
-    image: "/images/arch/13-network-config.png",
-  },
-  {
-    title: "Review & Install",
-    description: "Review all options. Once confirmed, packages are downloaded and configured.",
-    image: "/images/arch/14-confirm-install.png",
-  },
+const PREVIEW_SLIDES: PreviewSlide[] = [
+  { title: "Locales", description: "Keyboard layout (us) and locale language (en_US.UTF-8).", image: "/images/arch/03-wizard.png" },
+  { title: "Mirror Selection", description: "Choose a close mirror region for fast downloads.", image: "/images/arch/04-mirror-region.png" },
+  { title: "Disk Configuration", description: "Partition drive with ext4 and swap.", image: "/images/arch/06-best-effort.png" },
+  { title: "Filesystem", description: "ext4 (most common) or btrfs with swap.", image: "/images/arch/07-filesystem.png" },
+  { title: "Bootloader", description: "GRUB installed to disk. Detects Windows for dual-boot.", image: "/images/arch/10-select-kernels.png" },
+  { title: "Hostname & Users", description: "Machine name, root password, and a user with sudo.", image: "/images/arch/12-user-accounts.png" },
+  { title: "Desktop Profile", description: "KDE Plasma, GNOME, or XFCE with SDDM/GDM.", image: "/images/arch/12-desktop-profile.png" },
+  { title: "Graphics & Audio", description: "Open-source drivers + PipeWire.", image: "/images/arch/05-optional-repos.png" },
+  { title: "Network & Timezone", description: "NetworkManager + NTP sync.", image: "/images/arch/13-network-config.png" },
+  { title: "Review & Install", description: "Confirm all options and begin.", image: "/images/arch/14-confirm-install.png" },
 ];
 
 const BOOT_LINES: { text: string; color?: string; delay: number }[] = [
@@ -90,6 +46,8 @@ const BOOT_LINES: { text: string; color?: string; delay: number }[] = [
   { text: "Last login: Sat Jul 18 12:00:00 2026 on tty1", color: "#888", delay: 150 },
 ];
 
+let baseInstalled = false;
+
 function processCommand(input: string): string[] {
   const parts = input.trim().split(/\s+/);
   const cmd = parts[0]?.toLowerCase();
@@ -98,21 +56,35 @@ function processCommand(input: string): string[] {
   switch (cmd) {
     case "help":
       return [
-        "Available commands:",
-        "  preview          Preview what archinstall will configure",
-        "  archinstall      Start the guided installer",
-        "  ping <host>     Test network connectivity",
-        "  iwctl           WiFi configuration tool",
-        "  timedatectl     System clock & NTP",
-        "  fdisk -l        List available disks",
-        "  ls              List directory contents",
-        "  cat <file>      Show file contents",
-        "  uname -a        System information",
-        "  ip a            Show network interfaces",
-        "  free -h         Memory usage",
-        "  df -h           Disk usage",
-        "  neofetch        System info",
-        "  clear           Clear the screen",
+        "── Arch Linux Installation Commands ──────────────────────",
+        "  archinstall      Automated guided installer (quick)",
+        "  preview          See what archinstall will configure",
+        "  ping <host>     Test internet connection",
+        "  iwctl           Connect to WiFi",
+        "  timedatectl     Check/sync system clock",
+        "  fdisk -l        List disks and partitions",
+        "  cfdisk /dev/sda Partition disk (interactive TUI)",
+        "  mkfs.ext4       Format partition as ext4",
+        "  mkswap          Format swap partition",
+        "  mount           Mount partitions to /mnt",
+        "  swapon          Enable swap",
+        "  pacstrap        Install base system to /mnt",
+        "  genfstab        Generate fstab",
+        "  arch-chroot     Chroot into new system",
+        "  ln -sf          Set timezone",
+        "  locale-gen      Generate locales",
+        "  passwd          Set root password",
+        "  useradd         Create a user",
+        "  grub-install    Install GRUB bootloader",
+        "  grub-mkconfig   Generate GRUB config",
+        "  exit            Leave chroot / shell",
+        "  ls, cat, uname, ip, free, df, neofetch, clear",
+        "",
+        "  Suggested order for dual-boot:",
+        "  ping → iwctl → timedatectl → fdisk -l → cfdisk →",
+        "  mkfs.ext4 → mkswap → mount → swapon → pacstrap →",
+        "  genfstab → arch-chroot → ln -sf → locale-gen →",
+        "  passwd → useradd → grub-install → grub-mkconfig",
       ];
     case "preview":
       return [];
@@ -121,6 +93,8 @@ function processCommand(input: string): string[] {
     case "ls": {
       const dir = args[0] || "";
       if (dir === "/") return ["bin   boot   dev   etc   home   lib   mnt   opt   proc   root   run   sbin   sys   tmp   usr   var"];
+      if (dir === "/mnt" && baseInstalled) return ["bin   boot   dev   etc   home   lib   mnt   opt   proc   root   run   sbin   sys   tmp   usr   var"];
+      if (dir === "/mnt") return [""];
       if (dir.includes("home") || !dir) return ["Desktop   Documents   Downloads   Music   Pictures   Public   Templates   Videos"];
       if (dir === "/etc") return ["hostname   resolv.conf   fstab   pacman.conf   NetworkManager"];
       return [`ls: cannot access '${dir}': No such file or directory`];
@@ -143,8 +117,7 @@ function processCommand(input: string): string[] {
     }
     case "ip": {
       if (args.includes("a") || args.includes("addr")) return [
-        "1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536",
-        "    inet 127.0.0.1/8 scope host lo",
+        "1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536    inet 127.0.0.1/8",
         "2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500",
         "    inet 192.168.1.100/24 brd 192.168.1.255 scope global enp0s3",
       ];
@@ -163,47 +136,160 @@ function processCommand(input: string): string[] {
         "64 bytes from 95.217.163.246: icmp_seq=2 ttl=52 time=11.8 ms",
         "64 bytes from 95.217.163.246: icmp_seq=3 ttl=52 time=13.1 ms",
         "",
-        `--- ${host} ping statistics ---`,
+        "--- ping statistics ---",
         "3 packets transmitted, 3 received, 0% packet loss",
-        "rtt min/avg/max/mdev = 11.8/12.4/13.1/0.53 ms",
+        "  ✓ Internet connected",
       ];
     }
     case "iwctl":
       return [
-        "iwctl is starting...",
-        "",
-        "Network Configuration (iwctl)",
-        "  Station: wlan0        Status: disconnected",
-        "",
+        "iwctl v2.11", "",
+        "  Station: wlan0    Status: disconnected", "",
         "  Available networks:",
         "    HomeWiFi    ████ 54%  WPA2",
-        "    Neighbor    ██  28%  WPA3",
-        "",
-        "  Type 'station wlan0 connect <SSID>' to connect.",
+        "    Neighbor    ██  28%  WPA3", "",
+        "  Commands:",
+        "    station wlan0 scan              Scan for networks",
+        "    station wlan0 get-networks      List available",
+        "    station wlan0 connect <SSID>    Connect",
+        "    exit                            Quit",
       ];
     case "station": {
       if (args.includes("wlan0") && args.includes("connect")) {
-        return ["Connecting to network...", "  ✓ Authentication completed", "  ✓ DHCP lease obtained", "  Connected to " + args.slice(2).join(" ")];
+        const ssid = args.slice(2).join(" ");
+        return ["Connecting...", "  ✓ Authentication completed", "  ✓ DHCP lease obtained", `  ✓ Connected to ${ssid}`];
       }
-      return [`station ${args.join(" ")}: command not understood`];
+      return [`Unknown command: station ${args.join(" ")}`];
     }
-    case "timedatectl": {
-      if (args.includes("set-ntp") || input.includes("set-ntp")) return ["  ✓ NTP synchronization enabled", "  System clock synchronized: yes"];
-      return ["               Local time: Sat 2026-07-18 12:00:00 UTC", "  Universal time: Sat 2026-07-18 12:00:00 UTC", "     NTP enabled: yes", "NTP synchronized: no"];
-    }
-    case "fdisk": {
+    case "timedatectl":
+      return ["               Local time: Sat 2026-07-18 12:00:00 UTC", "  Universal time: Sat 2026-07-18 12:00:00 UTC", "     NTP enabled: yes", "NTP synchronized: yes", "", "  ✓ Clock synchronized"];
+    case "fdisk":
       if (args.includes("-l")) return [
-        "Disk /dev/sda: 25 GiB, 26843545600 bytes, 52428800 sectors",
-        "Device       Boot  Start      End  Sectors  Size  Id  Type",
-        "/dev/sda1         2048  1048575  1046528  512M   83  Linux",
-        "/dev/sda2      1048576 52426751 51378176 24.5G   83  Linux",
+        "Disk /dev/nvme0n1: 512.11 GiB, 549755813888 bytes, 1073741824 sectors",
+        "Device                Start       End   Sectors  Size  Type",
+        "/dev/nvme0n1p1         2048   1026047   1024000  500M  EFI System     ← Windows EFI",
+        "/dev/nvme0n1p2      1026048 932069375 931043328  444G  Microsoft basic  ← Windows 11",
+        "/dev/nvme0n1p3    932069376 987004927  54935552 26.2G  Linux filesystem  ← Arch root (/)",
+        "/dev/nvme0n1p4    987004928 999999999  12995072  6.2G  Linux swap       ← Arch swap",
+        "",
+        "  This is a dual-boot layout. Windows 11 is on nvme0n1p2.",
+        "  Arch root is on nvme0n1p3 and swap on nvme0n1p4.",
       ];
-      return ["Usage: fdisk -l  (list disks)"];
+      return ["Usage: fdisk -l  (list disks with partitions)"];
+    case "cfdisk":
+      return [
+        "cfdisk 2.38.1  (TUI mode)     Disk: /dev/nvme0n1 (512 GiB, GPT)", "",
+        "  ┌──────────────────────────────────────────────────────────┐",
+        "  │  Device          Size     Type            Mount point    │",
+        "  │  nvme0n1p1       500M    EFI System      (shared)       │",
+        "  │  nvme0n1p2       444G    Microsoft basic  (Windows 11)  │",
+        "  │  nvme0n1p3      26.2G    Linux ext4       /              │",
+        "  │  nvme0n1p4       6.2G    Linux swap       [SWAP]        │",
+        "  │  Free space       35G    (unallocated)                  │",
+        "  └──────────────────────────────────────────────────────────┘", "",
+        "  [New] [Delete] [Write] [Quit]   (simulation — partitions exist)",
+        "",
+        "  ✓ Dual-boot layout ready: Windows + Arch + swap",
+      ];
+    case "mkfs.ext4":
+    case "mkfs":
+      if (args[0] && args[1] === "ext4") return [
+        `mke2fs 1.47.0 (5-Feb-2026)`,
+        `Creating filesystem with ${Math.floor(Math.random() * 5000000 + 5000000)} 4k blocks`,
+        `  Writing superblocks and filesystem accounting... done`,
+        `  ✓ ${args[0]} formatted as ext4`,
+      ];
+      if (args[0] && args.includes("ext4")) return [
+        `mke2fs 1.47.0 (5-Feb-2026)`,
+        `Creating filesystem with ${Math.floor(Math.random() * 5000000 + 5000000)} 4k blocks`,
+        `  Writing superblocks and filesystem accounting... done`,
+        `  ✓ ${args[0]} formatted as ext4`,
+      ];
+      if (args[0]) return [`mke2fs 1.47.0 (5-Feb-2026)`, `  ${args[0]}: Device or resource busy`];
+      return ["Usage: mkfs.ext4 /dev/nvme0n1p3"];
+    case "mkswap":
+      if (args[0]) return [`Setting up swapspace version 1, size = ${Math.floor(Math.random() * 6000000 + 1000000)} KiB`, `  ✓ ${args[0]} formatted as swap`];
+      return ["Usage: mkswap /dev/nvme0n1p4"];
+    case "mount":
+      if (args[0] && args[1] === "/mnt") {
+        return [`  ✓ ${args[0]} mounted on /mnt`];
+      }
+      if (args[0] && args[1]) return [`  ✓ ${args[0]} mounted on ${args[1]}`];
+      if (args[0]) return [`  ✓ ${args[0]} mounted on /mnt`];
+      return ["Usage: mount /dev/nvme0n1p3 /mnt"];
+    case "swapon":
+      if (args[0]) return [`  ✓ ${args[0]} swap enabled`];
+      return ["Usage: swapon /dev/nvme0n1p4"];
+    case "pacstrap": {
+      baseInstalled = true;
+      return [
+        "==> Installing base system to /mnt",
+        "  :: Synchronizing package databases...",
+        "    core: 168.2 KiB  1.2 MiB/s  done",
+        "    extra: 1578.4 KiB  12.1 MiB/s  done",
+        "  :: Installing base (510 packages)...",
+        "    (1/510) linux 6.8.9.arch1-1",
+        "    (2/510) linux-firmware 20260521.63c9f3e-1",
+        "    (3/510) base 2-1",
+        "    (4/510) base-devel 1-1",
+        "    ...",
+        "  :: Running post-transaction hooks...",
+        "  ✓ Base system installed to /mnt",
+        "  Time: ~5 minutes (simulated)",
+      ];
     }
+    case "genfstab":
+      return [
+        "  ✓ Generated fstab with UUIDs",
+        "  /mnt/etc/fstab contents:",
+        "# /dev/nvme0n1p3  /  ext4  rw,relatime  0  1",
+        "# /dev/nvme0n1p1  /boot  vfat  rw,relatime  0  2",
+        "# /dev/nvme0n1p4  swap  swap  defaults  0  0",
+      ];
+    case "arch-chroot":
+      return [
+        "  ✓ Entering chroot environment at /mnt",
+        "  [chroot] root@archiso /#",
+      ];
+    case "ln":
+      if (args.includes("-sf")) return ["  ✓ Timezone symlink created"];
+      return [];
+    case "hwclock":
+      return ["  ✓ Hardware clock set to UTC"];
+    case "locale-gen":
+      return [
+        "Generating locales...",
+        "  en_US.UTF-8... done",
+        "  ✓ Locales generated",
+      ];
+    case "passwd":
+      return [
+        "New password: [hidden]",
+        "Retype new password: [hidden]",
+        "  ✓ passwd: password updated successfully",
+      ];
+    case "useradd":
+      return ["  ✓ User created. Use: passwd <username> to set password"];
+    case "grub-install":
+      return [
+        "Installing GRUB to /dev/nvme0n1...",
+        "  Installing for x86_64-efi platform.",
+        "  ✓ Installation finished. No error reported.",
+      ];
+    case "grub-mkconfig":
+      return [
+        "Generating GRUB configuration...",
+        "  Found linux image: /boot/vmlinuz-linux",
+        "  Found initrd image: /boot/initramfs-linux.img",
+        "  Found Windows Boot Manager on /dev/nvme0n1p1",
+        "  ✓ GRUB config generated (Windows detected for dual-boot)",
+      ];
+    case "exit":
+      return ["  ✓ Exited. Run 'reboot' to restart into new system"];
     case "free":
       return ["               total        used        free      shared  buff/cache   available", "Mem:           7.7Gi       1.2Gi       4.1Gi       89Mi       2.4Gi       6.0Gi", "Swap:          2.0Gi          0B       2.0Gi"];
     case "df":
-      return ["Filesystem      Size  Used Avail Use% Mounted on", "dev             3.9G     0  3.9G   0% /dev", "run             3.9G  1.6M  3.9G   1% /run", "/dev/sda1        25G   12G   13G  48% /"];
+      return ["Filesystem      Size  Used Avail Use% Mounted on", "dev             3.9G     0  3.9G   0% /dev", "run             3.9G  1.6M  3.9G   1% /run", "/dev/nvme0n1p3   26G  9.5G   16G  38% /"];
     case "neofetch":
       return [
         "            .-/+oossssoo+/-.               root@archiso",
@@ -247,6 +333,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState(-1);
+  const [showPreview, setShowPreview] = useState(false);
   const [previewIdx, setPreviewIdx] = useState(0);
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -255,7 +342,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
     if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight;
   }, [terminal, bootIdx]);
 
-  // Boot animation
   useEffect(() => {
     if (phase !== "boot") return;
     if (bootIdx < BOOT_LINES.length) {
@@ -265,7 +351,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
     } else {
       const t = setTimeout(() => {
         setPhase("shell");
-        setTerminal(["Type 'help' for commands, 'preview' to see what archinstall does, 'archinstall' to start"]);
+        setTerminal(["Type 'help' for installation commands, 'preview' to see what archinstall does, 'archinstall' for automated install"]);
       }, speed === "fast" ? 200 : 500);
       return () => clearTimeout(t);
     }
@@ -323,7 +409,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
       playClick();
       setInput("");
       setPreviewIdx(0);
-      setPhase("preview");
+      setShowPreview(true);
       return;
     }
 
@@ -344,16 +430,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
     }
   }
 
-  function handlePreviewAdvance() {
-    playClick();
-    if (previewIdx < PREVIEW_STEPS.length - 1) {
-      setPreviewIdx(p => p + 1);
-    } else {
-      setPhase("shell");
-      addTerminal(["Preview complete. Type 'archinstall' to begin installation."]);
-    }
-  }
-
   // ─── Boot ───
   if (phase === "boot") {
     return (
@@ -370,9 +446,6 @@ export default function ArchInstall({ config, speed, onComplete }: {
               <span className="inline-block w-2 h-4 bg-white/70 animate-pulse" />
             )}
           </div>
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-white/20 font-mono">
-            Click anywhere to skip
-          </div>
         </div>
       </div>
     );
@@ -385,12 +458,12 @@ export default function ArchInstall({ config, speed, onComplete }: {
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col"
           onClick={() => inputRef.current?.focus()}>
           <div className="flex-1 overflow-y-auto p-4 font-mono text-xs leading-relaxed" ref={termRef}>
-            <div className="text-[#60a5fa] font-bold mb-2">Arch Linux 6.8.9-arch1-1 (tty1)</div>
+            <div className="text-[#60a5fa] font-bold mb-1">Arch Linux 6.8.9-arch1-1 (tty1)</div>
             <div className="text-[#4ade80] mb-1">archiso login: root (automatic)</div>
             <div className="text-[#888] mb-2">Last login: Sat Jul 18 12:00:00 2026 on tty1</div>
             {terminal.map((line, i) => (
               <div key={i} className="whitespace-pre-wrap"
-                style={{ color: line.startsWith("[root@") ? "#00e676" : "#c0c0c0" }}>{line}</div>
+                style={{ color: line.startsWith("[root@") ? "#00e676" : line.startsWith("  ✓") ? "#4ade80" : line.startsWith("──") ? "#888" : "#c0c0c0" }}>{line}</div>
             ))}
             <div className="flex items-center gap-1 mt-1">
               <span className="text-[#00e676] shrink-0">[root@archiso ~]#</span>
@@ -405,54 +478,60 @@ export default function ArchInstall({ config, speed, onComplete }: {
             </div>
           </div>
           <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/20 font-mono flex justify-between">
-            <span>ping archlinux.org • timedatectl • fdisk -l • preview • archinstall</span>
+            <span>help • ping • iwctl • timedatectl • fdisk • pacstrap • archinstall</span>
             <span className="text-[#00e676]/30">tty1</span>
           </div>
         </div>
-      </div>
-    );
-  }
 
-  // ─── Preview ───
-  if (phase === "preview") {
-    const step = PREVIEW_STEPS[previewIdx];
-    return (
-      <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
-        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
-          <div className="relative flex-1">
-            <img src={step.image} alt={step.title}
-              className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d1117]/90 via-transparent to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
-                  style={{ color: accent, background: `${accent}1a`, border: `1px solid ${accent}33` }}>
-                  STEP {previewIdx + 1}/{PREVIEW_STEPS.length}
-                </span>
-                <span className="text-sm font-bold text-white/90">{step.title}</span>
-              </div>
-              <p className="text-xs text-white/50">{step.description}</p>
-            </div>
-          </div>
-          <div className="border-t border-white/10 bg-[#0a0a0a] px-4 py-2.5 flex items-center justify-between">
-            <div className="flex gap-1">
-              {PREVIEW_STEPS.map((_, i) => (
-                <div key={i} className="h-1.5 w-1.5 rounded-full transition-colors"
-                  style={{ background: i === previewIdx ? accent : "rgba(255,255,255,0.15)" }} />
-              ))}
-            </div>
-            <button onClick={handlePreviewAdvance}
-              className="rounded-lg px-5 py-1.5 text-xs font-bold text-white transition-all hover:scale-[1.02]"
-              style={{ background: accent }}>
-              {previewIdx < PREVIEW_STEPS.length - 1 ? "Next →" : "Back to shell"}
-            </button>
-          </div>
-          {previewIdx === PREVIEW_STEPS.length - 1 && (
-            <div className="border-t border-white/5 bg-[#0a0a0a]/80 px-4 py-1.5 text-[9px] text-[#4ade80]/60 font-mono text-center">
-              Preview complete — type 'archinstall' in the shell to begin installation
-            </div>
+        {/* Preview slideshow overlay */}
+        <AnimatePresence>
+          {showPreview && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+              onClick={() => setShowPreview(false)}>
+              <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-3xl rounded-xl border border-white/10 bg-[#12121a] overflow-hidden shadow-2xl">
+                <div className="relative h-64 sm:h-80 bg-black">
+                  <img src={PREVIEW_SLIDES[previewIdx].image} alt={PREVIEW_SLIDES[previewIdx].title}
+                    className="absolute inset-0 w-full h-full object-contain" />
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+                      style={{ color: accent, background: `${accent}1a`, border: `1px solid ${accent}33` }}>
+                      {previewIdx + 1}/{PREVIEW_SLIDES.length}
+                    </span>
+                    <span className="text-sm font-bold text-white/90">{PREVIEW_SLIDES[previewIdx].title}</span>
+                  </div>
+                  <p className="text-xs text-white/50 mb-3">{PREVIEW_SLIDES[previewIdx].description}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-1">
+                      {PREVIEW_SLIDES.map((_, i) => (
+                        <div key={i} className="h-1.5 w-1.5 rounded-full transition-colors"
+                          style={{ background: i === previewIdx ? accent : "rgba(255,255,255,0.15)" }} />
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => { playClick(); setShowPreview(false); }}
+                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/60 hover:bg-white/5 transition-colors">
+                        Close
+                      </button>
+                      <button onClick={() => {
+                        playClick();
+                        if (previewIdx < PREVIEW_SLIDES.length - 1) setPreviewIdx(p => p + 1);
+                        else setShowPreview(false);
+                      }} className="rounded-lg px-4 py-1.5 text-xs font-bold text-white transition-all hover:scale-[1.02]"
+                        style={{ background: accent }}>
+                        {previewIdx < PREVIEW_SLIDES.length - 1 ? "Next →" : "Done"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
     );
   }
@@ -460,39 +539,41 @@ export default function ArchInstall({ config, speed, onComplete }: {
   // ─── Installing ───
   if (phase === "installing") {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden p-4 font-mono text-xs leading-relaxed">
+      <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
+        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden p-4 font-mono text-xs leading-relaxed">
           <div className="text-[#4ade80] mb-2">:: Synchronizing package databases...</div>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
             <div className="text-[#4ade80]"> core is up to date</div>
             <div className="text-[#4ade80]"> extra is up to date</div>
           </motion.div>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
             <div className="text-[#888] mt-2">:: Starting full system installation...</div>
           </motion.div>
           {[
             "Installing base system (linux, base, base-devel)...",
-            "Installing linux-firmware...",
+            "Installing linux-firmware (510 packages)...",
             "Installing grub (bootloader)...",
             "Installing NetworkManager...",
             "Installing KDE Plasma desktop...",
-            "Installing SDDM display manager...",
             "Configuring system...",
             "Setting up users...",
             "Generating initramfs...",
+            "Installing GRUB to EFI partition...",
+            "Detecting Windows Boot Manager... ✓",
           ].map((line, i) => (
             <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 + i * (speed === "fast" ? 0.08 : 0.2) }}
-              className="text-[#c0c0c0]">  {line}</motion.div>
+              transition={{ delay: 0.5 + i * (speed === "fast" ? 0.06 : 0.18) }}
+              className="text-[#c0c0c0]">  {line.startsWith("Detecting") ? "  " + line : `  (${(i + 1)}) ${line}`}</motion.div>
           ))}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            transition={{ delay: speed === "fast" ? 1.6 : 3.0 }}
-            className="mt-3 text-[#4ade80] font-bold">
-            ✓ Installation complete!
-          </motion.div>
+            transition={{ delay: speed === "fast" ? 1.4 : 3.0 }}
+            className="mt-3 text-[#4ade80] font-bold">✓ Installation complete!</motion.div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ delay: speed === "fast" ? 1.6 : 3.2 }}
+            className="mt-2 text-xs text-white/30">Dual-boot setup: Arch Linux + Windows 11</motion.div>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ delay: speed === "fast" ? 1.8 : 3.5 }}
-            className="mt-1 h-2 w-full bg-white/10 rounded-full overflow-hidden">
+            className="mt-2 h-2 w-full bg-white/10 rounded-full overflow-hidden">
             <motion.div className="h-full rounded-full" style={{ background: accent }}
               initial={{ width: "0%" }} animate={{ width: "100%" }}
               transition={{ duration: speed === "fast" ? 0.4 : 1.0, ease: "easeInOut" }} />
@@ -505,17 +586,17 @@ export default function ArchInstall({ config, speed, onComplete }: {
   // ─── Done ───
   if (phase === "done") {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden p-6 font-mono text-xs leading-relaxed flex items-center justify-center">
+      <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
+        <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden p-6 font-mono text-xs leading-relaxed flex items-center justify-center">
           <div className="text-center space-y-4 bg-black/40 rounded-xl p-8" style={{ borderColor: `${accent}33`, borderWidth: 1 }}>
             <SparkleBurst trigger={true} />
             <div className="text-3xl">🏹</div>
-            <h2 className="text-lg font-bold" style={{ color: accent }}>{osName} installed!</h2>
-            <div className="text-[#4ade80]">✓ All packages installed</div>
-            <div className="text-[#4ade80]">✓ Bootloader configured</div>
-            <div className="text-[#4ade80]">✓ User account created</div>
+            <h2 className="text-lg font-bold" style={{ color: accent }}>{osName} + Windows 11</h2>
+            <div className="text-[#4ade80]">✓ Arch Linux installed</div>
+            <div className="text-[#4ade80]">✓ GRUB bootloader configured (dual-boot)</div>
+            <div className="text-[#4ade80]">✓ Windows 11 detected in boot menu</div>
             <p className="text-xs text-white/50 max-w-xs mx-auto mt-2">
-              reboot into your new {osName} system.
+              Reboot to enter GRUB and choose between Arch and Windows.
             </p>
           </div>
         </div>
