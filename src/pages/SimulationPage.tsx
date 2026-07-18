@@ -239,9 +239,9 @@ function SimulationPageInner() {
 
       if (isInput) return;
 
-      // Navigation — respect no-auto-advance regions
+      // Navigation
       if (e.key === "Backspace" || e.key === "ArrowLeft") {
-        if (!(e.target as HTMLElement).closest("[data-no-auto-advance]")) { e.preventDefault(); goBack(); }
+        e.preventDefault(); goBack();
       }
       if (e.key === "Enter") {
         if ((e.target as HTMLElement).closest("[data-no-auto-advance]")) return;
@@ -295,7 +295,6 @@ function SimulationPageInner() {
   }
 
   function goBack() {
-    if (document.querySelector("main [data-no-auto-advance]")) return;
     if (historyRef.current.length < 2) { navigate("/"); return; }
     historyRef.current.pop();
     const prev = historyRef.current[historyRef.current.length - 1];
