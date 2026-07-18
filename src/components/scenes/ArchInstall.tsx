@@ -642,6 +642,43 @@ export default function ArchInstall({ config, speed, onComplete }: {
       return;
     }
 
+    // Level 1b: configuring a main menu item's value (e.g., Language, Hostname)
+    const cfgItem = tuiOptions[tuiSelected];
+    if (tuiConfiguring && cfgItem) {
+      if (cfgItem.kind === "menu" && cfgItem.items) {
+        if (e.key === "ArrowUp") { e.preventDefault(); setTuiSubIdx(p => Math.max(0, p - 1)); playClick(); return; }
+        if (e.key === "ArrowDown") { e.preventDefault(); setTuiSubIdx(p => Math.min(cfgItem.items!.length - 1, p + 1)); playClick(); return; }
+        if (e.key === "Enter") {
+          e.preventDefault(); playClick();
+          const val = cfgItem.items[tuiSubIdx].label;
+          setTuiOptions(prev => prev.map((o, i) => i === tuiSelected ? { ...o, summary: val, selectedIdx: tuiSubIdx } : o));
+          setTuiConfiguring(false);
+          setTuiMsg(`  ✓ ${cfgItem.label}: ${val}`);
+          return;
+        }
+        if (e.key === "Escape" || e.key === "Backspace") {
+          e.preventDefault(); playClick(); setTuiConfiguring(false); setTuiMsg(""); return;
+        }
+        return;
+      }
+      if (cfgItem.kind === "text") {
+        if (e.key === "Enter") {
+          e.preventDefault(); playClick();
+          const val = (e.target as HTMLInputElement).value.trim() || cfgItem.textValue;
+          setTuiOptions(prev => prev.map((o, i) => i === tuiSelected ? { ...o, textValue: val, summary: val } : o));
+          setTuiConfiguring(false);
+          setTuiMsg(`  ✓ ${cfgItem.label}: ${val}`);
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault(); playClick(); setTuiConfiguring(false); return;
+        }
+        playKeyClick();
+        return;
+      }
+      return;
+    }
+
     // Level 1: Main menu navigation
     if (e.key === "ArrowUp") { e.preventDefault(); setTuiSelected(p => Math.max(0, p - 1)); playClick(); return; }
     if (e.key === "ArrowDown") { e.preventDefault(); setTuiSelected(p => Math.min(tuiOptions.length - 1, p + 1)); playClick(); return; }
@@ -1025,7 +1062,14 @@ export default function ArchInstall({ config, speed, onComplete }: {
                 {tuiSubMenu[tuiSubSel]?.kind === "menu" && tuiSubMenu[tuiSubSel]?.items ? (
                   <div>
                     {tuiSubMenu[tuiSubSel]!.items!.map((item, i) => (
-                      <div key={item.label} onClick={() => { setTuiSubCfgIdx(i); }}
+                      <div key={item.label} onClick={() => {
+                        setTuiSubCfgIdx(i); playClick();
+                        const subOpt = tuiSubMenu![tuiSubSel];
+                        const val = subOpt.items![i].label;
+                        setTuiSubMenu(prev => prev!.map((o, j) => j === tuiSubSel ? { ...o, summary: val, selectedIdx: i } : o));
+                        setTuiSubCfg(false);
+                        setTuiMsg(`  ✓ ${subOpt.label}: ${val}`);
+                      }}
                         className={`flex items-center px-2 py-1.5 cursor-pointer select-none ${
                           i === tuiSubCfgIdx ? "bg-white/5" : "hover:bg-white/[0.02]"
                         }`}>
@@ -1081,7 +1125,12 @@ export default function ArchInstall({ config, speed, onComplete }: {
                 {configuring.kind === "menu" && configuring.items ? (
                   <div>
                     {configuring.items.map((item, i) => (
-                      <div key={item.label} onClick={() => { setTuiSubIdx(i); }}
+                      <div key={item.label} onClick={() => {
+                        setTuiSubIdx(i); playClick();
+                        setTuiOptions(prev => prev.map((o, j) => j === tuiSelected ? { ...o, summary: item.label, selectedIdx: i } : o));
+                        setTuiConfiguring(false);
+                        setTuiMsg(`  ✓ ${configuring.label}: ${item.label}`);
+                      }}
                         className={`flex items-center px-2 py-1.5 cursor-pointer select-none ${
                           i === tuiSubIdx ? "bg-white/5" : "hover:bg-white/[0.02]"
                         }`}>
