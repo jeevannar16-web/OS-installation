@@ -226,7 +226,7 @@ export default function Install({ config, speed, onComplete, path }: {
       setElapsed(Math.floor((now - start) / 1000));
       setFileIdx(Math.min(files.length - 1, Math.floor((pct / 100) * files.length)));
       if (pct < 100) raf = requestAnimationFrame(tick);
-      else { setShowSparkle(true); setTimeout(() => setShowSparkle(false), 1500); setPhase("remove_media"); }
+      else { setShowSparkle(true); setTimeout(() => setShowSparkle(false), 1500); setPhase(isWindows ? "done" : "remove_media"); }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -345,7 +345,43 @@ export default function Install({ config, speed, onComplete, path }: {
 
   // ─── Installing phase ───
   if (phase === "installing") {
-    const installImg = isWindows ? "/images/win11-setup/08-clean-install.webp" : getInstallProgressImg(config.id);
+    if (isWindows) {
+      return (
+        <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+          <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black flex items-center justify-center">
+            <div className="text-center space-y-6">
+              {/* Blue Windows logo */}
+              <div className="flex gap-1 justify-center">
+                <div className="w-5 h-5 bg-[#0078d4] rounded-sm" />
+                <div className="w-5 h-5 bg-[#0078d4] rounded-sm" />
+                <div className="w-5 h-5 bg-[#0078d4] rounded-sm" />
+                <div className="w-5 h-5 bg-[#0078d4] rounded-sm" />
+              </div>
+              {/* Spinning dots */}
+              <div className="flex justify-center gap-1.5">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <motion.div key={i} className="h-1.5 w-1.5 rounded-full bg-white/60"
+                    animate={{ opacity: [0.2, 1, 0.2] }}
+                    transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
+                ))}
+              </div>
+              <div className="text-sm text-white/70 font-light">
+                Copying your Windows files … {Math.floor(progress)}%
+              </div>
+              <div className="text-[10px] text-white/30 font-mono max-w-xs mx-auto leading-relaxed">
+                {fileIdx < config.installFiles.length ? config.installFiles[fileIdx] : "Finalizing installation..."}
+              </div>
+            </div>
+            {/* Bottom progress bar */}
+            <div className="absolute bottom-0 inset-x-0 h-0.5 bg-white/10">
+              <motion.div className="h-full bg-[#0078d4]"
+                animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+    const installImg = getInstallProgressImg(config.id);
     return (
       <div className="mx-auto w-full max-w-5xl">
         <SparkleBurst trigger={showSparkle} />
@@ -365,16 +401,14 @@ export default function Install({ config, speed, onComplete, path }: {
                 </div>
                 <div className="flex justify-between text-[10px] text-white/40 font-mono">
                   <span>{Math.floor(progress)}% complete</span>
-                  <span className="text-white/25">{isWindows ? "" : INSTALL_SLIDES[slideIdx].title}</span>
+                  <span>{INSTALL_SLIDES[slideIdx].title}</span>
                   <span>{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>
                 </div>
               </div>
-              {!isWindows && (
-                <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-center">
-                  <div className="text-xs font-semibold text-white/70 mb-0.5">{INSTALL_SLIDES[slideIdx].title}</div>
-                  <div className="text-[10px] text-white/35 leading-relaxed">{INSTALL_SLIDES[slideIdx].body}</div>
-                </div>
-              )}
+              <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-center">
+                <div className="text-xs font-semibold text-white/70 mb-0.5">{INSTALL_SLIDES[slideIdx].title}</div>
+                <div className="text-[10px] text-white/35 leading-relaxed">{INSTALL_SLIDES[slideIdx].body}</div>
+              </div>
               <div className="h-14 overflow-hidden rounded border border-white/10 bg-black/40 p-2 font-mono text-[9px] text-white/40">
                 {config.installFiles.slice(Math.max(0, fileIdx - 3), fileIdx + 1).map((file, i) => {
                   const actualIdx = Math.max(0, fileIdx - 3) + i;
