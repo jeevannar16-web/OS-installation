@@ -556,10 +556,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
     setInput("");
   }
 
-  function handleShellSubmit() {
-    const raw = input.trim();
+  function handleShellSubmit(cmd?: string) {
+    const raw = (cmd ?? input).trim();
     if (!raw) return;
-    playKeyClick();
+    if (!cmd) playKeyClick();
     setHistory(prev => [...prev, raw]);
     setHistIdx(-1);
 
@@ -1061,7 +1061,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
             </div>
           </div>
           <div className="border-t border-white/5 bg-[#0a0a0a] px-3 py-1.5 text-[9px] font-mono flex items-center gap-2">
-            <button onClick={(e) => { e.stopPropagation(); setInput(nextHint.cmd); playClick(); inputRef.current?.focus(); }}
+            <button onClick={(e) => { e.stopPropagation(); playClick(); handleShellSubmit(nextHint.cmd); }}
               className="flex items-center gap-1.5 bg-[#60a5fa]/15 hover:bg-[#60a5fa]/25 border border-[#60a5fa]/30 rounded px-2 py-1 text-[10px] text-[#60a5fa] font-bold transition-colors shrink-0">
               <span className="text-[8px]">⟳</span> {nextHint.cmd}
             </button>
