@@ -319,6 +319,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [showHelp, setShowHelp] = useState(false);
   const [guideView, setGuideView] = useState(true);
   const [guideStep, setGuideStep] = useState(0);
+  const [guideFocus, setGuideFocus] = useState(0);
   const [shellStep, setShellStep] = useState(1);
   const [postStep, setPostStep] = useState(0);
   const [completionIdx, setCompletionIdx] = useState(-1);
@@ -400,6 +401,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
   useEffect(() => {
     if (phase === "tui") tuiRef.current?.focus();
   }, [phase]);
+
+  useEffect(() => {
+    setGuideFocus(0);
+  }, [guideStep]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -1129,9 +1134,34 @@ export default function ArchInstall({ config, speed, onComplete }: {
     const curSel = panel.subItem ? panel.subItem.selectedIdx : panel.item.selectedIdx;
     const curSum = (panel.subItem || panel.item).summary;
 
+    function handleGuideKey(e: React.KeyboardEvent) {
+      e.stopPropagation();
+      if (cfgItem.kind === "menu" && cfgItems.length > 0) {
+        if (e.key === "ArrowUp") { e.preventDefault(); setGuideFocus(p => Math.max(0, p - 1)); playClick(); return; }
+        if (e.key === "ArrowDown") { e.preventDefault(); setGuideFocus(p => Math.min(cfgItems.length - 1, p + 1)); playClick(); return; }
+        if (e.key === "Enter") { e.preventDefault(); setVal(cfgItems[guideFocus].label, guideFocus); return; }
+        if (e.key === " ") { e.preventDefault(); setVal(cfgItems[guideFocus].label, guideFocus); return; }
+      } else if (cfgItem.kind === "text") {
+        if (e.key === "Enter") { e.preventDefault(); setVal((document.activeElement as HTMLInputElement)?.value || curSum); return; }
+      } else if (cfgItem.kind === "action") {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (cfgItem.id === "install" && allDone) { playClick(); setPhase("installing"); }
+          else if (cfgItem.id === "save_config") { setTuiMsg("  ✓ Configuration saved"); playClick(); }
+          else if (cfgItem.id === "abort") { playClick(); setTuiMsg(""); setPhase("shell"); }
+          return;
+        }
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (guideStep > 0) { setGuideStep(p => p - 1); setTuiMsg(""); playClick(); }
+      }
+    }
+
     if (guideView) {
       return (
-        <div data-no-auto-advance ref={tuiRef} className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}>
+        <div data-no-auto-advance ref={tuiRef} className="w-full max-w-6xl mx-auto" style={{ height: "calc(100vh - 120px)" }}
+          onKeyDown={handleGuideKey} tabIndex={0}>
           <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2 border-b border-white/10 flex items-center gap-2 shrink-0">
@@ -1167,26 +1197,34 @@ export default function ArchInstall({ config, speed, onComplete }: {
               {/* Configuration UI */}
               {cfgItem.kind === "menu" && cfgItems.length > 0 && (
                 <div className="space-y-1 mb-2">
-                  {cfgItems.map((item, i) => (
+                  {cfgItems.map((item, i) => {
+                    const isSel = (curSel ?? 0) === i;
+                    const isFocused = guideFocus === i;
+                    return (
                     <div key={item.label}
-                      className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer transition-colors ${
-                        (curSel ?? 0) === i
-                          ? "bg-[#60a5fa]/20 text-white border border-[#60a5fa]/30"
-                          : "text-white/60 hover:bg-white/5 border border-transparent"
+                      className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer transition-colors border ${
+                        isSel
+                          ? "bg-[#60a5fa]/20 text-white border-[#60a5fa]/30"
+                          : isFocused
+                            ? "bg-[#60a5fa]/8 text-white/80 border-[#60a5fa]/20"
+                            : "text-white/60 hover:bg-white/5 border-transparent"
                       }`}
-                      onClick={() => setVal(item.label, i)}>
+                      onClick={() => { setGuideFocus(i); setVal(item.label, i); }}
+                      onMouseEnter={() => setGuideFocus(i)}>
                       <div className="flex items-center gap-2">
                         <span className={`w-3 h-3 rounded-full border-2 flex items-center justify-center ${
-                          (curSel ?? 0) === i ? "border-[#60a5fa] bg-[#60a5fa]" : "border-white/20"
+                          isSel ? "border-[#60a5fa] bg-[#60a5fa]" : isFocused ? "border-[#60a5fa]/60" : "border-white/20"
                         }`}>
-                          {(curSel ?? 0) === i && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          {isSel && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </span>
-                        <span className={(curSel ?? 0) === i ? "font-bold" : ""}>{item.label}</span>
+                        <span className={isSel ? "font-bold" : ""}>{item.label}</span>
                         <span className="text-white/30 ml-1">— {item.desc}</span>
                       </div>
-                      {(curSel ?? 0) === i && <span className="text-[#4ade80] text-[10px] font-bold">✓</span>}
+                      {isSel && <span className="text-[#4ade80] text-[10px] font-bold">✓</span>}
+                      {isFocused && !isSel && <span className="text-[#60a5fa] text-[10px]">▶</span>}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
