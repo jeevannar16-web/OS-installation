@@ -763,19 +763,156 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   // ─── Shell ───
   if (phase === "shell") {
-    const prompt = subshell === "iwctl" ? "[iwctl]# " : subshell === "fdisk" ? "Command (m for help): " : "[root@archiso ~]# ";
-    const promptColor = subshell === "iwctl" ? "#60a5fa" : subshell === "fdisk" ? "#fbbf24" : "#00e676";
+    const prompt = subshell === "bash" ? "[root@archiso ~]# " : "";
+    const promptColor = "#00e676";
 
     // Next-action hint always visible in bottom bar
     const nextHint = (() => {
-      if (subshell === "iwctl" && !wifiConnected) return { cmd: "station wlan0 get-networks", desc: "See available networks", step: "iwctl" };
-      if (subshell === "iwctl" && wifiConnected) return { cmd: "exit", desc: "Back to shell → ping", step: "iwctl" };
-      if (subshell === "fdisk") return { cmd: "p", desc: "Print partition table", step: "fdisk" };
       if (!wifiConnected) return { cmd: "iwctl", desc: "Open WiFi manager", step: "❶ WiFi" };
       if (shellStep < 3) return { cmd: "ping archlinux.org", desc: "Verify internet", step: "❷ Verify" };
       return { cmd: "archinstall", desc: "Launch installer", step: "❸ Install" };
     })();
 
+    if (subshell === "iwctl") {
+      // ── Visual WiFi panel ──
+      return (
+        <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
+          <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2 border-b border-white/10 flex items-center shrink-0">
+              <span className="text-[#60a5fa] text-[10px] font-mono font-bold tracking-wider flex-1">iwctl — WiFi Setup</span>
+              <span className="text-white/20 text-[9px] font-mono">iwd 2.11</span>
+            </div>
+            <div className="flex-1 p-4 sm:p-6 font-mono text-xs flex flex-col">
+              <div className="text-white/40 text-[10px] mb-3 uppercase tracking-wider">Available Networks</div>
+              <div className="space-y-2 flex-1">
+                {[
+                  { name: "HomeWiFi", sec: "WPA2", sig: "████ 54%", connected: wifiConnected },
+                  { name: "Neighbor", sec: "WPA3", sig: "██  28%", connected: false },
+                  { name: "Starbucks_Guest", sec: "Open", sig: "███ 40%", connected: false },
+                  { name: "Library_Public", sec: "Open", sig: "█    12%", connected: false },
+                ].map((net) => (
+                  <div key={net.name}
+                    className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
+                      wifiConnected && net.connected ? "bg-[#4ade80]/10 border-[#4ade80]/30" : "bg-white/[0.03] border-white/5 hover:border-[#60a5fa]/30 hover:bg-[#60a5fa]/5"
+                    }`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={`text-base ${wifiConnected && net.connected ? "" : "text-white/40"}`}>
+                        {wifiConnected && net.connected ? "🔒" : "📶"}
+                      </span>
+                      <div className="min-w-0">
+                        <div className={`font-bold text-[11px] truncate ${wifiConnected && net.connected ? "text-[#4ade80]" : "text-white/80"}`}>
+                          {net.name} {wifiConnected && net.connected && "✓ Connected"}
+                        </div>
+                        <div className="text-white/30 text-[9px]">{net.sec} — {net.sig}</div>
+                      </div>
+                    </div>
+                    <button onClick={() => {
+                      playClick();
+                      setWifiConnected(true);
+                      setShellStep(2);
+                      setSubshell("bash");
+                      addTerminal(["✓ Connected to " + net.name, "WiFi ready! Type 'ping archlinux.org' to verify."]);
+                      showImageFor("/images/arch/13-network-config.png");
+                    }}
+                      className={`shrink-0 px-3 py-1.5 rounded text-[10px] font-bold transition-all border ${
+                        wifiConnected && net.connected
+                          ? "bg-[#4ade80]/20 text-[#4ade80] border-[#4ade80]/30 cursor-default"
+                          : "bg-[#60a5fa]/15 text-[#60a5fa] border-[#60a5fa]/30 hover:bg-[#60a5fa]/25"
+                      }`}>
+                      {wifiConnected && net.connected ? "Connected" : "Connect"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 text-[9px] text-white/30">
+                {wifiConnected ? "✓ WiFi connected. Click 'Back to shell' to continue." : "Click Connect on your WiFi network."}
+              </div>
+              <button onClick={() => { playClick(); setSubshell("bash"); addTerminal(["Back to shell"]); }}
+                className="mt-2 self-start px-3 py-1.5 rounded border border-white/10 text-white/40 hover:text-white/70 text-[10px] font-mono transition-colors">
+                ← Back to shell
+              </button>
+            </div>
+            <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/30 font-mono flex justify-between">
+              <span>{wifiConnected ? "✓ Connected" : "✗ Disconnected — click a network"}</span>
+              <span>iwd 2.11</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (subshell === "fdisk") {
+      // ── Visual partition panel ──
+      return (
+        <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
+          <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2 border-b border-white/10 flex items-center shrink-0">
+              <span className="text-[#fbbf24] text-[10px] font-mono font-bold tracking-wider flex-1">fdisk — /dev/{fdiskDisk}</span>
+              <span className="text-white/20 text-[9px] font-mono">util-linux 2.39.3</span>
+            </div>
+            <div className="flex-1 p-4 sm:p-6 font-mono text-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px]">
+                  <thead>
+                    <tr className="text-white/40 text-[9px] uppercase tracking-wider border-b border-white/10">
+                      <th className="text-left py-2 pr-4">Device</th>
+                      <th className="text-right pr-4">Size</th>
+                      <th className="text-left pr-4">Type</th>
+                      <th className="text-left">Mount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { dev: `${fdiskDisk}p1`, size: "500M", type: "EFI System", mount: "/boot" },
+                      { dev: `${fdiskDisk}p2`, size: "444G", type: "Windows 11", mount: "—" },
+                      { dev: `${fdiskDisk}p3`, size: "26.2G", type: "Linux root", mount: "/" },
+                      { dev: `${fdiskDisk}p4`, size: "6.2G", type: "Linux swap", mount: "[SWAP]" },
+                    ].map((part) => (
+                      <tr key={part.dev} className="border-b border-white/5 last:border-0">
+                        <td className="py-2 pr-4 text-white/80 font-bold">{part.dev}</td>
+                        <td className="py-2 pr-4 text-right text-white/60">{part.size}</td>
+                        <td className="py-2 pr-4 text-white/70">{part.type}</td>
+                        <td className="py-2 text-white/50">{part.mount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[
+                  { label: "p Print", action: "p", desc: "Print table" },
+                  { label: "n New", action: "n", desc: "New partition" },
+                  { label: "d Delete", action: "d", desc: "Delete" },
+                  { label: "w Write", action: "w", desc: "Save changes" },
+                  { label: "q Quit", action: "q", desc: "Exit" },
+                ].map((btn) => (
+                  <button key={btn.action}
+                    onClick={() => {
+                      playClick();
+                      if (btn.action === "q") { setSubshell("bash"); addTerminal(["Quit fdisk"]); return; }
+                      if (btn.action === "w") { addTerminal(["Writing partition table...", "✓ Done"]); return; }
+                      if (btn.action === "n") { addTerminal(["Creating new partition... (10 GB)", "✓ New partition created"]); return; }
+                      if (btn.action === "d") { addTerminal(["Deleting partition 4...", "✓ Partition deleted"]); return; }
+                      addTerminal([`Partition table for /dev/${fdiskDisk}`]);
+                    }}
+                    className="px-3 py-1.5 rounded text-[10px] font-bold border transition-colors bg-[#fbbf24]/10 text-[#fbbf24] border-[#fbbf24]/20 hover:bg-[#fbbf24]/20">
+                    {btn.label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-3 text-[9px] text-white/30">
+                Click an action above. Use q Quit to exit.
+              </div>
+            </div>
+            <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/30 font-mono">
+              fdisk — {fdiskDisk} • q Quit to exit
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Bash: text terminal ──
     return (
       <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col relative"
@@ -799,9 +936,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
             <div className="text-[#60a5fa] font-bold mb-1">Arch Linux 6.8.9-arch1-1 (tty1)</div>
             <div className="text-[#4ade80] mb-1">archiso login: root (automatic)</div>
             <div className="text-[#888] mb-2">
-              {subshell === "iwctl" ? "iwctl — iNet Wireless Daemon"
-                : subshell === "fdisk" ? `fdisk — editing /dev/${fdiskDisk}`
-                : `Connection: ${wifiConnected ? "✓ Connected" : "✗ No internet — connect WiFi first"}`}
+              Connection: {wifiConnected ? "✓ Connected" : "✗ No internet — connect WiFi first"}
             </div>
             {subshell === "bash" && (
               <div className="mb-3 p-2 rounded border border-white/5 bg-white/[0.02]">
@@ -832,9 +967,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
             {terminal.map((line, i) => (
               <div key={i} className="whitespace-pre-wrap"
                 style={{
-                  color: line.startsWith("[iwctl]#") ? "#60a5fa"
-                    : line.startsWith("Command (m for help):") ? "#fbbf24"
-                    : line.startsWith("[root@") ? "#00e676"
+                  color: line.startsWith("[root@") ? "#00e676"
                     : line.startsWith("  ✓") ? "#4ade80"
                     : line.startsWith("  ✗") ? "#f87171"
                     : line.startsWith("──") ? "#888"
@@ -851,18 +984,18 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   setCompletionIdx(-1);
                   setSuggestionIdx(-1);
                   playKeyClick();
-                  if (subshell === "bash" && val.trim()) {
+                  if (val.trim()) {
                     const prefix = val.trim().toLowerCase();
                     const matches = COMMANDS.filter(c => c.cmd.startsWith(prefix));
                     setShowSuggestions(matches.length > 0 && matches.length < ALL_COMMANDS.length);
-                  } else if (subshell === "bash" && val.trim() === "" && document.activeElement === inputRef.current) {
+                  } else if (val.trim() === "" && document.activeElement === inputRef.current) {
                     setShowSuggestions(true);
                     setSuggestionIdx(0);
                   } else {
                     setShowSuggestions(false);
                   }
                 }}
-                onFocus={() => { if (subshell === "bash" && !input.trim()) { setShowSuggestions(true); setSuggestionIdx(0); } }}
+                onFocus={() => { if (!input.trim()) { setShowSuggestions(true); setSuggestionIdx(0); } }}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 onKeyDown={(e) => {
                   const getMatches = () => {
@@ -886,7 +1019,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   if (e.key === "ArrowUp") { e.preventDefault(); if (!showSuggestions) handleHistory("up"); }
                   if (e.key === "ArrowDown") { e.preventDefault(); if (!showSuggestions) handleHistory("down"); }
                   if (e.key === "Escape") { e.preventDefault(); setShowSuggestions(false); setSuggestionIdx(-1); }
-                  if (e.key === "Tab" && !showSuggestions && subshell === "bash") {
+                  if (e.key === "Tab" && !showSuggestions) {
                     e.preventDefault();
                     const prefix = input.trim().toLowerCase();
                     if (!prefix) { setShowSuggestions(true); setSuggestionIdx(0); return; }
@@ -898,10 +1031,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   }
                 }}
                 className="flex-1 bg-transparent text-white/90 outline-none font-mono text-xs caret-white/70"
-                placeholder={subshell === "bash" ? "Type a command... (Tab ⇥ for autocomplete)" : ""} />
+                placeholder="Type a command... (Tab ⇥ for autocomplete)" />
 
               {/* Suggestions dropdown */}
-              {showSuggestions && subshell === "bash" && (
+              {showSuggestions && (
                 <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-2xl overflow-hidden z-30"
                   onMouseDown={e => e.preventDefault()}>
                   {(() => {
