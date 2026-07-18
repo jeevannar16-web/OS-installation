@@ -21,7 +21,7 @@ export default function VmClose({
       <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black">
         {/* Real Ubuntu running in VirtualBox screenshot */}
         <img src="/images/virtualbox/12-ubuntu-running.jpg" alt={`${config.branding.name} running in VirtualBox`}
-          className="absolute inset-0 w-full h-full object-contain bg-[#2a2a2b]" />
+          className="absolute inset-0 w-full h-full object-cover bg-[#2a2a2b]" />
 
         {/* Success overlay */}
         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">

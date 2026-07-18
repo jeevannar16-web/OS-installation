@@ -40,7 +40,7 @@ export default function MountISO({
 
             {/* Real VirtualBox Select ISO screenshot */}
             <img src="/images/virtualbox/05-select-iso.jpg" alt="Select ISO in VirtualBox"
-              className="absolute inset-0 w-full h-full object-contain bg-[#2a2a2b]" />
+              className="absolute inset-0 w-full h-full object-cover bg-[#2a2a2b]" />
 
             {/* Interactive overlay */}
             <div className="absolute inset-x-0 bottom-0">

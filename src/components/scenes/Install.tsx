@@ -26,6 +26,24 @@ const STEP_ORDER_BASE: InstallerStep[] = [
   "third_party", "app_selection", "timezone", "create_user", "review",
 ];
 
+// Mint installer has fewer steps (no install_option, no app_selection)
+const STEP_ORDER_MINT: InstallerStep[] = [
+  "language", "keyboard", "network", "third_party", "install_type",
+  "timezone", "create_user", "review",
+];
+
+// Zorin installer — even simpler (no install_option, no third_party, no app_selection)
+const STEP_ORDER_ZORIN: InstallerStep[] = [
+  "language", "keyboard", "network", "install_type",
+  "timezone", "create_user", "review",
+];
+
+function getStepOrder(osId: string): InstallerStep[] {
+  if (osId === "mint") return STEP_ORDER_MINT;
+  if (osId === "zorin") return STEP_ORDER_ZORIN;
+  return STEP_ORDER_BASE;
+}
+
 const SIDEBAR_LABELS: Record<InstallerStep, string> = {
   language: "Language",
   keyboard: "Keyboard",
@@ -240,10 +258,10 @@ export default function Install({ config, speed, onComplete, path }: {
   const canConfirmPart = partitions.some((p) => p.fs === "ext4" && p.mount === "/");
 
   // Dynamic step order: insert partition step after install_type when "something else" is selected
+  const baseOrder = getStepOrder(config.id);
   const STEP_ORDER: InstallerStep[] = installType === "something"
-    ? ["language", "keyboard", "network", "install_type", "partition", "install_option",
-       "third_party", "app_selection", "timezone", "create_user", "review"]
-    : STEP_ORDER_BASE;
+    ? [...baseOrder.slice(0, baseOrder.indexOf("install_type") + 1), "partition", ...baseOrder.slice(baseOrder.indexOf("install_type") + 1)]
+    : baseOrder;
 
   const installDuration = speed === "fast" ? 2000 : 12000;
   const currentIdx = STEP_ORDER.indexOf(step);
@@ -374,7 +392,7 @@ export default function Install({ config, speed, onComplete, path }: {
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black">
           <img src={getBootImg(config.id)} alt={`Try or Install ${osName}`}
-            className="absolute inset-0 w-full h-full object-contain" style={{ background: surface }} />
+            className="absolute inset-0 w-full h-full object-cover" style={{ background: surface }} />
 
           <div className="absolute inset-x-0 bottom-0">
             <div className="bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/60 to-transparent pt-24 pb-4 px-6">
@@ -413,7 +431,7 @@ export default function Install({ config, speed, onComplete, path }: {
       <div className="mx-auto w-full max-w-5xl">
         <SparkleBurst trigger={showSparkle} />
         <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
-          <img src={installImg} alt={`Installing ${osName}`} className="w-full h-auto" />
+          <img src={installImg} alt={`Installing ${osName}`} className="w-full h-full object-cover" />
 
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/80 to-transparent pt-24 pb-5 px-6">
             <div className="max-w-lg mx-auto space-y-3">
@@ -472,7 +490,7 @@ export default function Install({ config, speed, onComplete, path }: {
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0" style={{ background: surface }}>
           <img src={getRestartImg(config.id)} alt="Restart needed"
-            className="absolute inset-0 w-full h-full object-contain" />
+            className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/40 to-transparent pt-24 pb-6 px-6 flex items-end">
             <div className="max-w-md mx-auto space-y-3 text-center w-full">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -503,7 +521,7 @@ export default function Install({ config, speed, onComplete, path }: {
     return (
       <div className="mx-auto w-full max-w-5xl">
         <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
-          <img src={getRestartImg(config.id)} alt="Restart" className="w-full h-auto" />
+          <img src={getRestartImg(config.id)} alt="Restart" className="w-full h-auto object-cover" />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
             <div className="text-center space-y-4 bg-black/60 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
               <SparkleBurst trigger={showSparkle} />
@@ -541,7 +559,7 @@ export default function Install({ config, speed, onComplete, path }: {
               transition={{ duration: 0.15 }} className="absolute inset-0">
 
               <img src={getStepImg(config.id, step)} alt={SIDEBAR_LABELS[step]}
-                className="absolute inset-0 w-full h-full object-contain" style={{ background: surface }} />
+                className="absolute inset-0 w-full h-full object-cover" style={{ background: surface }} />
 
               <div className="absolute inset-x-0 bottom-0">
                 <div className="bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/60 to-transparent pt-16 pb-4 px-6">

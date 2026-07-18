@@ -90,7 +90,8 @@ const GUIDE_STEPS: Record<string, { step: string; title: string; desc: string; i
 function HowItWorksDropdown({ open, osId }: { open: boolean; osId: string }) {
   if (!open) return null;
   const steps = GUIDE_STEPS[osId] || GUIDE_STEPS.ubuntu;
-  const osName = OS_LIST.find((o) => o.id === osId)?.branding.name || "Ubuntu";
+  const os = OS_LIST.find((o) => o.id === osId);
+  const accent = os?.branding.accent || "#E95420";
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
@@ -100,7 +101,7 @@ function HowItWorksDropdown({ open, osId }: { open: boolean; osId: string }) {
     >
       <div className="px-4 py-3 border-b border-white/10">
         <div className="text-xs font-semibold text-white/60 uppercase tracking-wider">How it works</div>
-        <div className="text-[10px] text-white/30 mt-0.5">4 simple steps to install {osName}</div>
+        <div className="text-[10px] text-white/30 mt-0.5">4 simple steps to install {os?.branding.name || "Ubuntu"}</div>
       </div>
       <div className="p-3 space-y-2">
         {steps.map((s, i) => (
@@ -116,7 +117,7 @@ function HowItWorksDropdown({ open, osId }: { open: boolean; osId: string }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[9px] font-mono text-[#E95420] font-bold">{s.step}</span>
+                <span className="text-[9px] font-mono font-bold" style={{ color: accent }}>{s.step}</span>
                 <span className="text-xs font-semibold text-white/80">{s.title}</span>
               </div>
               <p className="text-[11px] text-white/35 mt-0.5 leading-relaxed">{s.desc}</p>
@@ -752,7 +753,8 @@ export default function LandingPage() {
                 ))}
               </div>
               <button onClick={() => setShowHelp(false)}
-                className="mt-5 w-full rounded-lg bg-[#E95420] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
+                className="mt-5 w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                style={{ background: activeOS?.branding.accent || "#E95420" }}>
                 Got it
               </button>
             </motion.div>

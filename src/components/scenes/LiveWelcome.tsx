@@ -35,7 +35,7 @@ export default function LiveWelcome({
       <img
         src={bgImg}
         alt={`${osName} Try or Install screen`}
-        className="w-full h-auto object-contain"
+        className="w-full h-80 object-cover"
         draggable={false}
       />
 

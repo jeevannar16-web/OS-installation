@@ -69,7 +69,7 @@ const WIZARD_STEPS: WizardStep[] = [
   {
     title: "Bootloader",
     description: "GRUB is recommended for most setups, especially dual-boot. systemd-boot is lighter.",
-    image: "/images/arch/05-optional-repos.png",
+    image: "/images/arch/09-archinstall-menu.png",
     action: "Select GRUB → Back to main menu",
     commands: ["grub", "select grub", "back", "confirm"],
   },
@@ -104,28 +104,28 @@ const WIZARD_STEPS: WizardStep[] = [
   {
     title: "Graphics Driver & Audio",
     description: "Select open-source graphics drivers and PipeWire for audio (modern default).",
-    image: "/images/arch/13-network-config.png",
+    image: "/images/arch/05-optional-repos.png",
     action: "Graphics: All open-source → Audio: PipeWire → Back",
     commands: ["open source", "pipewire", "back", "confirm"],
   },
   {
     title: "Network Configuration",
     description: "Use NetworkManager — it handles WiFi and Ethernet automatically.",
-    image: "/images/arch/14-confirm-install.png",
+    image: "/images/arch/13-network-config.png",
     action: "Select NetworkManager → Back",
     commands: ["networkmanager", "network manager", "back", "confirm"],
   },
   {
     title: "Timezone & NTP",
     description: "Set your timezone and enable automatic time sync (NTP).",
-    image: "/images/arch/10-select-kernels.png",
+    image: "/images/arch/14-confirm-install.png",
     action: "Set timezone → NTP: True → Back",
     commands: ["timezone", "ntp", "back", "confirm", "true"],
   },
   {
     title: "Review & Install",
     description: "Review all options. Everything looks good? Hit Install to begin.",
-    image: "/images/arch/09-archinstall-menu.png",
+    image: "/images/arch/14-confirm-install.png",
     action: "Select 'Install' at the bottom → Confirm",
     commands: ["install", "confirm", "yes", "begin"],
   },
@@ -232,7 +232,7 @@ export default function ArchInstall({
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black">
           <img src="/images/arch/07-boot-menu.png" alt="Arch Linux boot menu"
-            className="absolute inset-0 w-full h-full object-contain bg-[#111]" />
+            className="absolute inset-0 w-full h-full object-cover bg-[#111]" />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/60 to-transparent pt-24 pb-4 px-6 flex items-end">
             <div className="max-w-md mx-auto space-y-3 text-center w-full">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
@@ -262,7 +262,7 @@ export default function ArchInstall({
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black">
           <img src="/images/arch/08-live-login.png" alt="Arch Linux live login"
-            className="absolute inset-0 w-full h-full object-contain bg-[#111]" />
+            className="absolute inset-0 w-full h-full object-cover bg-[#111]" />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/60 to-transparent pt-24 pb-4 px-6 flex items-end">
             <div className="max-w-md mx-auto space-y-3 text-center w-full">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
@@ -292,7 +292,7 @@ export default function ArchInstall({
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-[#111]">
           <img src="/images/arch/15-install-progress.png" alt="Installing Arch Linux"
-            className="absolute inset-0 w-full h-full object-contain opacity-30" />
+            className="absolute inset-0 w-full h-full object-cover opacity-30" />
           <div className="absolute inset-0 bg-[#12121a]/80 flex items-center justify-center">
             <div className="text-center space-y-6 px-6">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
@@ -333,7 +333,7 @@ export default function ArchInstall({
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-[#111]">
           <img src="/images/arch/16-install-complete.png" alt="Arch Linux install complete"
-            className="absolute inset-0 w-full h-full object-contain" />
+            className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
               className="text-center space-y-4 bg-black/60 backdrop-blur-sm rounded-2xl p-8 border border-[#1793D1]/20">
@@ -368,7 +368,7 @@ export default function ArchInstall({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="absolute inset-0 w-full h-full object-contain bg-[#111]"
+            className="absolute inset-0 w-full h-full object-cover bg-[#111]"
           />
         </AnimatePresence>
 

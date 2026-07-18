@@ -133,7 +133,7 @@ export default function Partition({
 
         {/* Full background screenshot */}
         <img src={PARTITION_IMG.manual} alt="Manual partitioning"
-          className="absolute inset-0 w-full h-full object-contain" />
+          className="absolute inset-0 w-full h-full object-cover" />
 
         {/* Interactive overlay — partition table + controls */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/50 to-transparent">

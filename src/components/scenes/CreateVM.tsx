@@ -65,7 +65,7 @@ export default function CreateVM({
 
             {/* Real VirtualBox screenshot as full background */}
             <img src={current.img} alt={current.label}
-              className="absolute inset-0 w-full h-full object-contain bg-[#2a2a2b]" />
+              className="absolute inset-0 w-full h-full object-cover bg-[#2a2a2b]" />
 
             {/* Interactive overlay */}
             <div className="absolute inset-x-0 bottom-0">
@@ -77,10 +77,10 @@ export default function CreateVM({
                     <div className="space-y-2">
                       <div className="text-[10px] text-accent font-semibold uppercase tracking-wider">Create a new virtual machine</div>
                       <p className="text-xs text-white/60">Click the <strong className="text-white/80">New</strong> button in the toolbar to start the wizard.</p>
-                      <div className="flex items-center gap-2 text-xs text-white/40">
-                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                        VirtualBox 7.0 is installed and ready
-                      </div>
+                      <button onClick={next}
+                        className="rounded-lg bg-accent px-5 py-2.5 text-xs font-bold text-white hover:bg-accent/80 transition-all hover:scale-[1.02] shadow-lg shadow-accent/30">
+                        + New
+                      </button>
                     </div>
                   )}
 

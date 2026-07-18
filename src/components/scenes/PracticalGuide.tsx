@@ -423,7 +423,7 @@ export default function PracticalGuide({
             {currentStep.image && (
               <div className="rounded-xl overflow-hidden border border-white/10 bg-black/40">
                 <img src={currentStep.image} alt={currentStep.title}
-                  className="w-full h-auto object-contain max-h-48" />
+                  className="w-full h-48 object-cover rounded-lg" />
               </div>
             )}
 
