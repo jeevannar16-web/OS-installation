@@ -374,7 +374,6 @@ function SimulationPageInner() {
   }
 
   function renderScene() {
-    if (jumpRef.current) return null;
     switch (current) {
       case "idle": return null;
       case "select_host_os": return <SelectHostOS onSelect={(hostOS) => send({ type: "SET_HOST_OS", hostOS })} />;
