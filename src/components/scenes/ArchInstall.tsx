@@ -285,6 +285,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [tuiSubCfg, setTuiSubCfg] = useState(false);
   const [tuiSubCfgIdx, setTuiSubCfgIdx] = useState(0);
   const [tuiMsg, setTuiMsg] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
 
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -470,6 +471,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
       }
       if (opt.kind === "text") { setTuiConfiguring(true); setTuiMsg(""); return; }
     }
+    if (e.key === "?" || e.key.toLowerCase() === "h") {
+      e.preventDefault(); setShowHelp(p => !p); playClick(); return;
+    }
   }
 
   // ─── Boot ───
@@ -526,7 +530,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
     );
   }
 
-  // ─── TUI ───
+  // ─── TUI — full terminal, no popup ───
   if (phase === "tui") {
     const configuring = tuiOptions[tuiSelected];
     const configurable = tuiOptions.filter(o => o.kind !== "action");
@@ -536,189 +540,211 @@ export default function ArchInstall({ config, speed, onComplete }: {
       <div className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}
         onKeyDown={handleTuiKey} tabIndex={0}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
-          <div className="flex-1 p-3 sm:p-5 font-mono text-xs flex items-center justify-center">
-            <div className="w-full max-w-lg border border-white/20 rounded-lg bg-[#0a0a0a] shadow-2xl overflow-hidden">
-              {/* Title bar */}
-              <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2.5 border-b border-white/10 flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+          {/* Header bar — same full width as terminal */}
+          <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] px-4 py-2 border-b border-white/10 flex items-center gap-2 shrink-0">
+            <span className="text-white/60 text-[10px] font-mono font-bold tracking-wider flex-1">
+              archinstall 4.0 — Textual UI
+            </span>
+            <button onClick={(e) => { e.stopPropagation(); setShowHelp(p => !p); playClick(); }}
+              className="text-white/30 hover:text-white/70 text-[11px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors"
+              title="Help (H/? key)">?</button>
+          </div>
+
+          {/* Help overlay */}
+          {showHelp && (
+            <div className="absolute inset-0 z-10 bg-[#0d1117]/95 flex items-center justify-center p-4 sm:p-8"
+              onClick={() => setShowHelp(false)}>
+              <div className="bg-[#1a1a2e] border border-white/10 rounded-lg p-5 max-w-md w-full font-mono text-xs space-y-3"
+                onClick={e => e.stopPropagation()}>
+                <div className="text-[#60a5fa] font-bold text-sm mb-3">archinstall 4.0 — How to Use</div>
+                <div className="space-y-2 text-white/70">
+                  <div className="flex justify-between"><span className="text-white/40">↑ ↓</span><span>Navigate menu items</span></div>
+                  <div className="flex justify-between"><span className="text-white/40">Enter</span><span>Select / configure / confirm</span></div>
+                  <div className="flex justify-between"><span className="text-white/40">Esc</span><span>Go back one level</span></div>
+                  <div className="flex justify-between"><span className="text-white/40">H / ?</span><span>Toggle this help screen</span></div>
+                  <div className="border-t border-white/10 pt-2 mt-3" />
+                  <div className="text-white/50">Work through each option from top to bottom.</div>
+                  <div className="text-white/50">Navigate to "Install" and press Enter when ready.</div>
+                  <div className="text-white/50">"Abort" returns to the shell.</div>
                 </div>
-                <span className="text-white/30 text-[9px] uppercase tracking-widest flex-1 text-center">archinstall 4.0 — Textual UI</span>
-              </div>
-
-              {/* Body */}
-              <div className="p-3 sm:p-4 min-h-[280px] max-h-[400px] overflow-y-auto">
-                {tuiSubMenu && tuiSubCfg ? (
-                  /* ── Level 3: configuring a sub-menu item's value ── */
-                  <div>
-                    <div className="text-[#60a5fa] font-bold mb-3 text-xs uppercase tracking-wider border-b border-white/10 pb-1">
-                      {tuiSubMenu[tuiSubSel]?.label || ""}
-                    </div>
-                    {tuiSubMenu[tuiSubSel]?.kind === "menu" && tuiSubMenu[tuiSubSel]?.items ? (
-                      <div className="space-y-0.5 mb-2">
-                        {tuiSubMenu[tuiSubSel]!.items!.map((item, i) => (
-                          <div key={item.label}
-                            className={`flex items-center justify-between px-3 py-1.5 rounded text-[11px] cursor-pointer transition-colors ${
-                              i === tuiSubCfgIdx ? "bg-[#60a5fa]/20 text-white border border-[#60a5fa]/30" : "text-white/60 hover:bg-white/5"
-                            }`}
-                            onClick={() => { setTuiSubCfgIdx(i); }}>
-                            <div>
-                              <span className={i === tuiSubCfgIdx ? "text-white font-bold" : ""}>{item.label}</span>
-                              <span className="text-white/30 ml-2">— {item.desc}</span>
-                            </div>
-                            {i === tuiSubCfgIdx && <span className="text-[#60a5fa] text-[10px]">◀</span>}
-                          </div>
-                        ))}
-                        <div className="text-[9px] text-white/20 mt-3 pt-2 border-t border-white/5">
-                          ↑↓ navigate • Enter select • Esc back
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mb-2">
-                        <div className="text-white/40 text-[10px] mb-2">Enter value for {tuiSubMenu[tuiSubSel]?.label}:</div>
-                        <input type="text" defaultValue={tuiSubMenu[tuiSubSel]?.textValue || ""} autoFocus
-                          onKeyDown={handleTuiKey}
-                          onChange={() => playKeyClick()}
-                          className="w-full bg-[#1a1a2e] border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
-                        <div className="text-[9px] text-white/20 mt-2">Enter to confirm • Esc to cancel</div>
-                      </div>
-                    )}
-                  </div>
-                ) : tuiSubMenu ? (
-                  /* ── Level 2: sub-menu items (Disk, Auth, Apps) ── */
-                  <div>
-                    <div className="text-white/50 font-bold text-[11px] text-center mb-2 uppercase tracking-wider">
-                      {tuiOptions[tuiSelected]?.label || ""}
-                    </div>
-                    <div className="border-t border-white/10 mb-1" />
-                    {tuiSubMenu.map((opt, i) => (
-                      <div key={opt.id}
-                        className={`flex justify-between items-center px-3 py-1.5 rounded cursor-pointer transition-all ${
-                          i === tuiSubSel
-                            ? "bg-[#60a5fa]/15 text-white border border-[#60a5fa]/20"
-                            : "text-white/60 hover:bg-white/[0.03]"
-                        }`}
-                        onClick={() => setTuiSubSel(i)}>
-                        <div className="flex items-center gap-2">
-                          {i === tuiSubSel && <span className="text-[#60a5fa] text-[10px]">▶</span>}
-                          <span className={i === tuiSubSel ? "font-bold" : ""}>{opt.label}</span>
-                        </div>
-                        <span className={i === tuiSubSel ? "text-white/60 text-[10px]" : "text-white/30 text-[10px]"}>
-                          {opt.summary}
-                        </span>
-                      </div>
-                    ))}
-                    <div className="border-t border-white/10 mt-2 pt-2" />
-                    <div className="text-[9px] text-white/20">
-                      ↑↓ navigate • Enter configure • Esc back
-                    </div>
-                  </div>
-                ) : tuiConfiguring && configuring ? (
-                  /* ── Level 2b: simple sub-menu (value picking) ── */
-                  <div>
-                    <div className="text-[#60a5fa] font-bold mb-3 text-xs uppercase tracking-wider border-b border-white/10 pb-1">
-                      {configuring.label}
-                    </div>
-                    {configuring.kind === "menu" && configuring.items ? (
-                      <div className="space-y-0.5 mb-2">
-                        {configuring.items.map((item, i) => (
-                          <div key={item.label}
-                            className={`flex items-center justify-between px-3 py-1.5 rounded text-[11px] cursor-pointer transition-colors ${
-                              i === tuiSubIdx ? "bg-[#60a5fa]/20 text-white border border-[#60a5fa]/30" : "text-white/60 hover:bg-white/5"
-                            }`}
-                            onClick={() => { setTuiSubIdx(i); }}>
-                            <div>
-                              <span className={i === tuiSubIdx ? "text-white font-bold" : ""}>{item.label}</span>
-                              <span className="text-white/30 ml-2">— {item.desc}</span>
-                            </div>
-                            {i === tuiSubIdx && <span className="text-[#60a5fa] text-[10px]">◀</span>}
-                          </div>
-                        ))}
-                        <div className="text-[9px] text-white/20 mt-3 pt-2 border-t border-white/5">
-                          ↑↓ navigate • Enter select • Esc back
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mb-2">
-                        <div className="text-white/40 text-[10px] mb-2">Enter value for {configuring.label}:</div>
-                        <input type="text" defaultValue={configuring.textValue} autoFocus
-                          onKeyDown={handleTuiKey}
-                          onChange={() => playKeyClick()}
-                          className="w-full bg-[#1a1a2e] border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono"
-                          placeholder={`Enter ${configuring.label.toLowerCase()}`} />
-                        <div className="text-[9px] text-white/20 mt-2">Enter to confirm • Esc to cancel</div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  /* ── Level 1: Main menu ── */
-                  <div>
-                    <div className="text-white/50 font-bold text-[11px] text-center mb-2 uppercase tracking-wider">Arch Linux Guided Installer</div>
-                    <div className="border-t border-white/10 mb-1" />
-                    {tuiOptions.map((opt, i) => {
-                      const isInstall = opt.id === "install";
-                      const isAbort = opt.id === "abort";
-                      const isSave = opt.id === "save_config";
-                      return (
-                        <div key={opt.id}
-                          className={`flex justify-between items-center px-3 py-1.5 rounded cursor-pointer transition-all ${
-                            i === tuiSelected
-                              ? isAbort ? "bg-[#f87171]/15 text-white border border-[#f87171]/20"
-                                : isInstall && allDone ? "bg-[#4ade80]/15 text-white border border-[#4ade80]/20"
-                                : "bg-[#60a5fa]/15 text-white border border-[#60a5fa]/20"
-                              : "text-white/60 hover:bg-white/[0.03]"
-                          }`}
-                          onClick={() => setTuiSelected(i)}>
-                          <div className="flex items-center gap-2">
-                            {i === tuiSelected && isAbort && <span className="text-[#f87171] text-[10px]">▶</span>}
-                            {i === tuiSelected && isInstall && allDone && <span className="text-[#4ade80] text-[10px]">▶</span>}
-                            {i === tuiSelected && !isInstall && !isAbort && <span className="text-[#60a5fa] text-[10px]">▶</span>}
-                            <span className={i === tuiSelected ? "font-bold" : ""} style={{
-                              color: isAbort ? "#f87171" : isSave ? "#fbbf24" : isInstall && allDone ? "#4ade80" : undefined
-                            }}>{opt.label}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {opt.summary && (
-                              <span className={i === tuiSelected ? "text-white/60 text-[10px]" : "text-white/30 text-[10px]"}>
-                                {opt.summary}
-                              </span>
-                            )}
-                            {i === tuiSelected && !isInstall && !isAbort && !isSave && <span className="text-[#4ade80] text-[10px]">←</span>}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div className="border-t border-white/10 mt-2 pt-2" />
-                    <div className="flex justify-between text-[9px]">
-                      <span className="text-white/20">
-                        ↑↓ navigate • Enter configure • Install to begin
-                      </span>
-                      <span className={allDone ? "text-[#4ade80]" : "text-white/20"}>
-                        {configurable.filter(o => o.summary !== "").length}/{configurable.length}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {tuiMsg && (
-                  <div className="mt-2 text-[10px] font-mono" style={{ color: tuiMsg.includes("✗") ? "#f87171" : "#4ade80" }}>{tuiMsg}</div>
-                )}
+                <button onClick={() => setShowHelp(false)}
+                  className="mt-3 w-full py-1.5 rounded border border-white/10 text-white/60 hover:text-white/80 text-[11px] transition-colors">
+                  Close (Enter / Esc)
+                </button>
               </div>
             </div>
+          )}
+
+          {/* Body — scrollable menu area, fills remaining space */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 font-mono text-xs">
+            {tuiSubMenu && tuiSubCfg ? (
+              /* ── Level 3: configuring a sub-menu item's value ── */
+              <div>
+                <div className="text-[#60a5fa] font-bold mb-3 uppercase tracking-wider border-b border-white/10 pb-1">
+                  {tuiSubMenu[tuiSubSel]?.label || ""}
+                </div>
+                {tuiSubMenu[tuiSubSel]?.kind === "menu" && tuiSubMenu[tuiSubSel]?.items ? (
+                  <div className="space-y-0.5 mb-2">
+                    {tuiSubMenu[tuiSubSel]!.items!.map((item, i) => (
+                      <div key={item.label}
+                        className={`flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors ${
+                          i === tuiSubCfgIdx ? "bg-[#60a5fa]/20 text-white border border-[#60a5fa]/30" : "text-white/60 hover:bg-white/5"
+                        }`}
+                        onClick={() => { setTuiSubCfgIdx(i); }}>
+                        <div>
+                          <span className={i === tuiSubCfgIdx ? "text-white font-bold" : ""}>{item.label}</span>
+                          <span className="text-white/30 ml-2">— {item.desc}</span>
+                        </div>
+                        {i === tuiSubCfgIdx && <span className="text-[#60a5fa] text-[10px]">◀</span>}
+                      </div>
+                    ))}
+                    <div className="text-[9px] text-white/20 mt-3 pt-2 border-t border-white/5">
+                      ↑↓ navigate • Enter select • Esc back
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-2">
+                    <div className="text-white/40 text-[10px] mb-2">Enter value for {tuiSubMenu[tuiSubSel]?.label}:</div>
+                    <input type="text" defaultValue={tuiSubMenu[tuiSubSel]?.textValue || ""} autoFocus
+                      onKeyDown={handleTuiKey}
+                      onChange={() => playKeyClick()}
+                      className="w-full bg-[#1a1a2e] border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono" />
+                    <div className="text-[9px] text-white/20 mt-2">Enter to confirm • Esc to cancel</div>
+                  </div>
+                )}
+              </div>
+            ) : tuiSubMenu ? (
+              /* ── Level 2: sub-menu items (Disk, Auth, Apps) ── */
+              <div>
+                <div className="text-white/50 font-bold text-[11px] text-center mb-2 uppercase tracking-wider">
+                  {tuiOptions[tuiSelected]?.label || ""}
+                </div>
+                <div className="border-t border-white/10 mb-1" />
+                {tuiSubMenu.map((opt, i) => (
+                  <div key={opt.id}
+                    className={`flex justify-between items-center px-3 py-1.5 rounded cursor-pointer transition-all ${
+                      i === tuiSubSel
+                        ? "bg-[#60a5fa]/15 text-white border border-[#60a5fa]/20"
+                        : "text-white/60 hover:bg-white/[0.03]"
+                    }`}
+                    onClick={() => setTuiSubSel(i)}>
+                    <div className="flex items-center gap-2">
+                      {i === tuiSubSel && <span className="text-[#60a5fa] text-[10px]">▶</span>}
+                      <span className={i === tuiSubSel ? "font-bold" : ""}>{opt.label}</span>
+                    </div>
+                    <span className={i === tuiSubSel ? "text-white/60 text-[10px]" : "text-white/30 text-[10px]"}>
+                      {opt.summary}
+                    </span>
+                  </div>
+                ))}
+                <div className="border-t border-white/10 mt-2 pt-2" />
+                <div className="text-[9px] text-white/20">
+                  ↑↓ navigate • Enter configure • Esc back
+                </div>
+              </div>
+            ) : tuiConfiguring && configuring ? (
+              /* ── Level 2b: simple sub-menu (value picking) ── */
+              <div>
+                <div className="text-[#60a5fa] font-bold mb-3 uppercase tracking-wider border-b border-white/10 pb-1">
+                  {configuring.label}
+                </div>
+                {configuring.kind === "menu" && configuring.items ? (
+                  <div className="space-y-0.5 mb-2">
+                    {configuring.items.map((item, i) => (
+                      <div key={item.label}
+                        className={`flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors ${
+                          i === tuiSubIdx ? "bg-[#60a5fa]/20 text-white border border-[#60a5fa]/30" : "text-white/60 hover:bg-white/5"
+                        }`}
+                        onClick={() => { setTuiSubIdx(i); }}>
+                        <div>
+                          <span className={i === tuiSubIdx ? "text-white font-bold" : ""}>{item.label}</span>
+                          <span className="text-white/30 ml-2">— {item.desc}</span>
+                        </div>
+                        {i === tuiSubIdx && <span className="text-[#60a5fa] text-[10px]">◀</span>}
+                      </div>
+                    ))}
+                    <div className="text-[9px] text-white/20 mt-3 pt-2 border-t border-white/5">
+                      ↑↓ navigate • Enter select • Esc back
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-2">
+                    <div className="text-white/40 text-[10px] mb-2">Enter value for {configuring.label}:</div>
+                    <input type="text" defaultValue={configuring.textValue} autoFocus
+                      onKeyDown={handleTuiKey}
+                      onChange={() => playKeyClick()}
+                      className="w-full bg-[#1a1a2e] border border-white/10 rounded px-3 py-2 text-xs text-white/90 outline-none font-mono"
+                      placeholder={`Enter ${configuring.label.toLowerCase()}`} />
+                    <div className="text-[9px] text-white/20 mt-2">Enter to confirm • Esc to cancel</div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Level 1: Main menu — fills container width ── */
+              <div>
+                <div className="text-white/50 font-bold text-[11px] text-center mb-2 uppercase tracking-wider">Arch Linux Guided Installer</div>
+                <div className="border-t border-white/10 mb-1" />
+                {tuiOptions.map((opt, i) => {
+                  const isInstall = opt.id === "install";
+                  const isAbort = opt.id === "abort";
+                  const isSave = opt.id === "save_config";
+                  const selected = i === tuiSelected;
+                  return (
+                    <div key={opt.id}
+                      className={`flex justify-between items-center px-3 py-1.5 rounded cursor-pointer transition-all ${
+                        selected
+                          ? isAbort ? "bg-[#f87171]/15 border border-[#f87171]/20"
+                            : isInstall && allDone ? "bg-[#4ade80]/15 border border-[#4ade80]/20"
+                            : "bg-[#60a5fa]/15 border border-[#60a5fa]/20"
+                          : "text-white/60 hover:bg-white/[0.03]"
+                      }`}
+                      onClick={() => setTuiSelected(i)}>
+                      <div className="flex items-center gap-2 min-w-0">
+                        {selected && isAbort && <span className="text-[#f87171] text-[10px] shrink-0">▶</span>}
+                        {selected && isInstall && allDone && <span className="text-[#4ade80] text-[10px] shrink-0">▶</span>}
+                        {selected && !isInstall && !isAbort && <span className="text-[#60a5fa] text-[10px] shrink-0">▶</span>}
+                        <span className={`truncate ${selected ? "font-bold text-white" : ""}`} style={{
+                          color: selected && isAbort ? "#f87171" : selected && isSave ? "#fbbf24" : selected && isInstall && allDone ? "#4ade80" : selected ? "white" : undefined
+                        }}>{opt.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        {opt.summary && (
+                          <span className={selected ? "text-white/60 text-[10px]" : "text-white/30 text-[10px]"}>
+                            {opt.summary}
+                          </span>
+                        )}
+                        {selected && !isInstall && !isAbort && !isSave && <span className="text-[#4ade80] text-[10px]">←</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="border-t border-white/10 mt-2 pt-2" />
+                <div className="flex justify-between text-[9px]">
+                  <span className="text-white/20">
+                    ↑↓ navigate • Enter configure • H help
+                  </span>
+                  <span className={allDone ? "text-[#4ade80]" : "text-white/20"}>
+                    {configurable.filter(o => o.summary !== "").length}/{configurable.length}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {tuiMsg && (
+              <div className="mt-3 text-[10px] font-mono" style={{ color: tuiMsg.includes("✗") ? "#f87171" : "#4ade80" }}>{tuiMsg}</div>
+            )}
           </div>
 
           {/* Bottom status bar */}
-          <div className="border-t border-white/10 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/20 font-mono flex justify-between">
+          <div className="border-t border-white/10 bg-[#0a0a0a] px-4 py-1.5 text-[9px] text-white/30 font-mono flex justify-between shrink-0">
             <span>
-              {tuiSubMenu ? "Esc to go back" : tuiConfiguring ? "Esc to cancel" : "Select Install then Enter to begin"}
+              {tuiSubMenu ? "Esc back" : tuiConfiguring ? "Esc cancel" : "↓ Install → Enter"}
             </span>
             <span>
-              {tuiSubCfg ? `Setting: ${tuiSubMenu?.[tuiSubSel]?.label || ""}`
-                : tuiSubMenu ? `Sub-menu: ${tuiOptions[tuiSelected]?.label || ""}`
-                : tuiConfiguring ? `Configuring: ${configuring?.label || ""}`
-                : `WiFi: ${wifiConnected ? "Connected" : "No internet"}`}
+              {tuiSubCfg ? `${tuiSubMenu?.[tuiSubSel]?.label || ""}`
+                : tuiSubMenu ? `${tuiOptions[tuiSelected]?.label || ""} sub-menu`
+                : tuiConfiguring ? `${configuring?.label || ""}`
+                : `WiFi ${wifiConnected ? "✓" : "✗"}`}
             </span>
           </div>
         </div>
