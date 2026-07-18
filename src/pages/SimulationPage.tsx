@@ -285,7 +285,7 @@ function SimulationPageInner() {
     if (s === target) { jumpRef.current = null; return; }
     if (s === "idle") { send({ type: "START", osId: config.id, path: path as never }); return; }
     const evt = TRANSITIONS[s];
-    if (evt) { const t = setTimeout(() => send({ type: evt as never }), 100); return () => clearTimeout(t); }
+    if (evt) { const t = setTimeout(() => send({ type: evt as never }), 20); return () => clearTimeout(t); }
   }, [state.value, config, path, send]);
 
   function jumpToScene(target: string) {
@@ -374,6 +374,7 @@ function SimulationPageInner() {
   }
 
   function renderScene() {
+    if (jumpRef.current) return null;
     switch (current) {
       case "idle": return null;
       case "select_host_os": return <SelectHostOS onSelect={(hostOS) => send({ type: "SET_HOST_OS", hostOS })} />;
