@@ -348,6 +348,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const tuiRef = useRef<HTMLDivElement>(null);
 
   const setWifi = useCallback((v: boolean) => setWifiConnected(v), []);
 
@@ -393,6 +394,10 @@ export default function ArchInstall({ config, speed, onComplete }: {
   useEffect(() => {
     if (phase === "shell") registerAdvance(() => onComplete());
   }, [phase, registerAdvance, onComplete]);
+
+  useEffect(() => {
+    if (phase === "tui") tuiRef.current?.focus();
+  }, [phase]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -644,6 +649,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
 
   // ─── TUI keyboard handling ───
   function handleTuiKey(e: React.KeyboardEvent) {
+    e.stopPropagation();
     // Level 3: configuring a sub-menu item's value
     if (tuiSubCfg && tuiSubMenu) {
       const subOpt = tuiSubMenu[tuiSubSel];
@@ -1005,7 +1011,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
                   if (showSuggestions && e.key === "ArrowDown") { e.preventDefault(); const m = getMatches(); setSuggestionIdx(p => Math.min(m.length - 1, p + 1)); void m; return; }
                   if (showSuggestions && e.key === "ArrowUp") { e.preventDefault(); setSuggestionIdx(p => Math.max(0, p - 1)); return; }
                   if (showSuggestions && (e.key === "Enter" || e.key === "Tab")) {
-                    e.preventDefault();
+                    e.preventDefault(); e.stopPropagation();
                     const m = getMatches();
                     if (m.length > 0 && suggestionIdx >= 0 && suggestionIdx < m.length) {
                       setInput(m[suggestionIdx].cmd + " ");
@@ -1015,12 +1021,12 @@ export default function ArchInstall({ config, speed, onComplete }: {
                     inputRef.current?.focus();
                     return;
                   }
-                  if (e.key === "Enter") { e.preventDefault(); handleShellSubmit(); setCompletionIdx(-1); setShowSuggestions(false); setSuggestionIdx(-1); }
-                  if (e.key === "ArrowUp") { e.preventDefault(); if (!showSuggestions) handleHistory("up"); }
-                  if (e.key === "ArrowDown") { e.preventDefault(); if (!showSuggestions) handleHistory("down"); }
-                  if (e.key === "Escape") { e.preventDefault(); setShowSuggestions(false); setSuggestionIdx(-1); }
+                  if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); handleShellSubmit(); setCompletionIdx(-1); setShowSuggestions(false); setSuggestionIdx(-1); }
+                  if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); if (!showSuggestions) handleHistory("up"); }
+                  if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); if (!showSuggestions) handleHistory("down"); }
+                  if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setShowSuggestions(false); setSuggestionIdx(-1); }
                   if (e.key === "Tab" && !showSuggestions) {
-                    e.preventDefault();
+                    e.preventDefault(); e.stopPropagation();
                     const prefix = input.trim().toLowerCase();
                     if (!prefix) { setShowSuggestions(true); setSuggestionIdx(0); return; }
                     const matches = ALL_COMMANDS.filter(c => c.startsWith(prefix) && c !== prefix);
@@ -1084,7 +1090,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
     const allDone = configurable.every(o => o.summary !== "");
 
     return (
-      <div data-no-auto-advance className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}
+      <div data-no-auto-advance ref={tuiRef} className="mx-auto w-full max-w-5xl" style={{ height: "min(600px, 70vh)" }}
         onKeyDown={handleTuiKey} tabIndex={0}>
         <div className="h-full rounded-2xl border border-white/10 bg-[#0d1117] overflow-hidden flex flex-col">
           {/* Header bar — same full width as terminal */}
