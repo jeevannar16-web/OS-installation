@@ -207,8 +207,8 @@ export default function BiosSetup({
               <div className="text-[#003399] font-bold mb-3 border-b border-[#999999] pb-1">
                 Exit Options
               </div>
-              <ExitOption label="Save Changes and Reset" shortcut="F10" onClick={handleSave} primary />
-              <ExitOption label="Discard Changes and Exit" onClick={onComplete} />
+              <ExitOption label="Save Changes or Reset" shortcut="F10" onClick={handleSave} primary />
+              <ExitOption label="Discard Changes and Reset" onClick={onComplete} />
               <ExitOption label="Save Changes" />
               <ExitOption label="Discard Changes" />
             </div>

@@ -117,23 +117,37 @@ export default function VmBoot({
 
   return (
     <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
-      {/* VM Window */}
-      <div className="overflow-hidden rounded-xl border border-white/10 shadow-2xl">
+      {/* Oracle VM VirtualBox window */}
+      <div className="overflow-hidden rounded-xl border border-gray-600/40 shadow-2xl">
         {/* Title bar */}
-        <div className="flex items-center gap-2 bg-[#323234] px-3 py-2 select-none">
+        <div className="flex items-center gap-2 bg-gradient-to-b from-[#e8e8e8] to-[#d4d4d4] px-3 py-1.5 select-none">
           <div className="flex gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-            <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-            <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57] border border-[#e0443e]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e] border border-[#d9a01e]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#28c840] border border-[#1aab29]" />
           </div>
-          <div className="flex items-center gap-2 mx-auto text-xs text-white/50">
-            <span>VirtualBox</span>
+          <div className="flex items-center gap-2 mx-auto text-[9px] sm:text-[10px] text-gray-600 font-medium">
+            <span>Oracle VM VirtualBox</span>
             <span>—</span>
             <span>{config.branding.shortName} VM [Running]</span>
           </div>
+          <div className="flex gap-1">
+            <div className="h-2 w-2.5 rounded-sm bg-gray-300 border border-gray-400/50" />
+            <div className="h-2 w-2.5 rounded-sm bg-gray-300 border border-gray-400/50" />
+            <div className="h-2 w-2.5 rounded-sm bg-gray-300 border border-gray-400/50" />
+          </div>
         </div>
 
-        {/* Screen */}
+        {/* Menu bar */}
+        <div className="flex items-center gap-2 bg-[#f5f5f5] px-2 py-[1px] border-b border-gray-300/60 text-[7px] sm:text-[8px] text-gray-600">
+          {["File", "Machine", "View", "Devices", "Help"].map((m) => (
+            <span key={m} className="hover:bg-gray-200 px-1 rounded cursor-default">{m}</span>
+          ))}
+          <div className="flex-1" />
+          <span className="text-[6px] sm:text-[7px] text-gray-400">{config.branding.shortName} VM</span>
+        </div>
+
+        {/* VM Screen */}
         <div
           className="relative flex h-[420px] lg:h-[520px] xl:h-[600px] items-center justify-center overflow-hidden"
           style={{
@@ -288,6 +302,25 @@ export default function VmBoot({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Status bar */}
+          <div className="absolute bottom-0 inset-x-0 h-3 bg-[#2a2a2a] border-t border-gray-600/40 flex items-center px-2 select-none">
+            <div className="flex items-center gap-1">
+              <div className={`h-1.5 w-1.5 rounded-full ${
+                phase === "off" ? "bg-gray-500" :
+                phase === "vt_error" ? "bg-red-400" :
+                "bg-emerald-400 animate-pulse"
+              }`} />
+              <span className="text-[5px] sm:text-[6px] text-gray-400 font-mono">
+                {phase === "off" ? "Powered Off" :
+                 phase === "vt_error" ? "Error" :
+                 phase === "menu" ? "Running" :
+                 "Booting..."}
+              </span>
+            </div>
+            <div className="flex-1" />
+            <span className="text-[5px] sm:text-[6px] text-gray-500 font-mono">1 CPU | {config.vmConfig.defaultMemoryMB} MB | {config.vmConfig.defaultDiskGB} GB</span>
+          </div>
         </div>
       </div>
 

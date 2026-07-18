@@ -23,6 +23,7 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
   const [showIsoPicker, setShowIsoPicker] = useState(false);
   const [popup, setPopup] = useState<Step | "finish" | null>(null);
   const [showInput, setShowInput] = useState(false);
+  const [stepAnim, setStepAnim] = useState<"idle" | "hover">("idle");
 
   const current = STEPS[stepIdx];
   const isLast = stepIdx === STEPS.length - 1;
@@ -30,34 +31,130 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
 
   function next() {
     if (isLast) { playSuccess(); onComplete(); }
-    else { playClick(); setStepIdx(p => p + 1); }
+    else { playClick(); setStepIdx(p => p + 1); setStepAnim("idle"); }
   }
+
+  const stepIndicators: { key: Step; label: string }[] = [
+    { key: "overview", label: "VM Name & OS" },
+    { key: "name", label: "ISO Selection" },
+    { key: "memory", label: "Resources" },
+    { key: "disk", label: "Storage" },
+    { key: "summary", label: "Finish" },
+  ];
 
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-      <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-[#2a2a2b] cursor-pointer"
-        onClick={() => {
-          if (current.key === "summary") { setPopup("finish"); return; }
-          if (current.key === "name") { setShowInput(true); return; }
-          if (current.key === "overview") { setPopup("overview"); return; }
-          if (current.key === "memory") { setPopup("memory"); return; }
-          if (current.key === "disk") { setPopup("disk"); return; }
-        }}>
-        <AnimatePresence mode="wait">
-          <motion.div key={current.key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }} className="absolute inset-0">
-            <img src={current.img} alt={current.label}
-              className="absolute inset-0 w-full h-full object-cover" />
-          </motion.div>
-        </AnimatePresence>
+      {/* Oracle VM VirtualBox Manager window */}
+      <div className="flex-1 relative overflow-hidden rounded-2xl border border-gray-600/30 bg-[#3c3c3c] shadow-2xl flex flex-col">
+        {/* Title bar */}
+        <div className="flex items-center gap-2 bg-gradient-to-b from-[#e8e8e8] to-[#d4d4d4] px-3 py-1.5 select-none rounded-t-2xl">
+          <div className="flex gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57] border border-[#e0443e]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e] border border-[#d9a01e]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#28c840] border border-[#1aab29]" />
+          </div>
+          <div className="flex items-center gap-2 mx-auto text-[9px] text-gray-600 font-medium">
+            <span>Oracle VM VirtualBox Manager</span>
+          </div>
+          <div className="flex gap-1">
+            <div className="h-2 w-2.5 rounded-sm bg-gray-300 border border-gray-400/50" />
+            <div className="h-2 w-2.5 rounded-sm bg-gray-300 border border-gray-400/50" />
+            <div className="h-2 w-2.5 rounded-sm bg-gray-300 border border-gray-400/50" />
+          </div>
+        </div>
 
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-white/50 bg-black/40 px-3 py-1 rounded-full pointer-events-none">
-          {current.key === "overview" ? "Click to create new VM" :
-           current.key === "summary" ? "Click to finish" :
-           "Click to configure"}
+        {/* Toolbar */}
+        <div className="flex items-center gap-1.5 bg-[#f0f0f0] px-2 py-1.5 border-b border-gray-300/60">
+          {[
+            { label: "New", icon: "⭐", accent: true, action: () => { playClick(); if (current.key === "overview") setPopup("overview"); } },
+            { label: "Settings", icon: "⚙️", accent: false },
+            { label: "Discard", icon: "🗑️", accent: false },
+            { label: "Start", icon: "▶️", accent: false },
+          ].map((btn) => (
+            <button key={btn.label} onClick={btn.action}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-[8px] transition-colors font-medium ${
+                btn.accent
+                  ? "bg-[#4a8cff] text-white hover:bg-[#3a7bef] shadow-sm"
+                  : "text-gray-600 hover:bg-gray-200"
+              }`}>
+              <span>{btn.icon}</span>
+              <span>{btn.label}</span>
+            </button>
+          ))}
+          <div className="flex-1" />
+          <span className="text-[7px] text-gray-400">VirtualBox 7.0.18</span>
+        </div>
+
+        {/* Main content area with VM list */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left sidebar - VM list */}
+          <div className="w-40 bg-[#f5f5f5] border-r border-gray-300/40 p-2 hidden sm:block">
+            <div className="text-[7px] text-gray-500 uppercase tracking-wider font-semibold mb-1.5">Virtual Machines</div>
+            <div className="rounded bg-gradient-to-r from-[#4a8cff]/10 to-transparent border border-[#4a8cff]/30 px-2 py-1.5 text-[8px] font-medium text-gray-700 flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span>{config.branding.shortName} VM</span>
+            </div>
+            <div className="mt-1 text-[7px] text-gray-400 px-2 py-1">Powered Off</div>
+          </div>
+
+          {/* Right content area with screenshot */}
+          <div className="flex-1 relative bg-[#2a2a2b] overflow-hidden cursor-pointer"
+            onClick={() => {
+              if (current.key === "summary") { setPopup("finish"); return; }
+              if (current.key === "name") { setShowInput(true); return; }
+              if (current.key === "overview") { setPopup("overview"); return; }
+              if (current.key === "memory") { setPopup("memory"); return; }
+              if (current.key === "disk") { setPopup("disk"); return; }
+            }}
+            onMouseEnter={() => setStepAnim("hover")}
+            onMouseLeave={() => setStepAnim("idle")}>
+            <AnimatePresence mode="wait">
+              <motion.div key={current.key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }} className="absolute inset-0">
+                <img src={current.img} alt={current.label}
+                  className="absolute inset-0 w-full h-full object-cover" />
+
+                {/* Step indicator overlay */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                  {stepIndicators.map((s, i) => (
+                    <div key={s.key} className="flex items-center gap-1">
+                      <div className={`h-1.5 w-1.5 rounded-full ${
+                        i === stepIdx ? "bg-white" : i < stepIdx ? "bg-emerald-400" : "bg-white/20"
+                      }`} />
+                      {i < stepIndicators.length - 1 && (
+                        <div className={`h-px w-2 ${
+                          i < stepIdx ? "bg-emerald-400/50" : "bg-white/10"
+                        }`} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Navigation hint */}
+                <motion.div
+                  animate={{ opacity: stepAnim === "hover" ? 1 : 0 }}
+                  className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[9px] text-white/70 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full pointer-events-none whitespace-nowrap">
+                  {current.key === "overview" ? "Click to create new VM" :
+                   current.key === "summary" ? "Click to finish" :
+                   "Click to configure this step"}
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Status bar */}
+        <div className="bg-[#2a2a2a] border-t border-gray-600/40 px-2 py-0.5 flex items-center gap-2 rounded-b-2xl">
+          <div className="flex items-center gap-1">
+            <div className="h-1.5 w-1.5 rounded-full bg-gray-500" />
+            <span className="text-[7px] text-gray-400">{current.label}</span>
+          </div>
+          <div className="flex-1" />
+          <span className="text-[7px] text-gray-500">Step {stepIdx + 1} of {STEPS.length}</span>
         </div>
       </div>
 
+      {/* Popups */}
       <AnimatePresence>
         {popup === "overview" && (
           <FloatingBox onClose={() => setPopup(null)}>

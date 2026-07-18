@@ -459,7 +459,7 @@ export default function Reboot({
                       selectedRow === 0 ? "bg-[#848484] text-[#000084] font-bold" : "hover:bg-white/5"
                     }`}
                   >
-                    Save Changes and Exit (F10)
+                    Save Changes or Reset (F10)
                   </button>
                   <button
                     onClick={() => {
@@ -473,7 +473,7 @@ export default function Reboot({
                       selectedRow === 1 ? "bg-[#848484] text-[#000084] font-bold" : "hover:bg-white/5"
                     }`}
                   >
-                    Discard Changes and Exit (Esc)
+                    Discard Changes and Reset (Esc)
                   </button>
                 </div>
               )}
@@ -493,8 +493,8 @@ export default function Reboot({
                 <div>←→: Select Screen</div>
                 <div>↑↓: Select Item</div>
                 <div>Enter: Toggle/Select</div>
-                <div>F10: Save and Exit</div>
-                <div>ESC: Discard & Exit</div>
+                <div>F10: Save or Reset</div>
+                <div>ESC: Discard & Reset</div>
               </div>
             </div>
           </div>
