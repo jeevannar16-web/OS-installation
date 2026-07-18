@@ -996,9 +996,9 @@ export default function ArchInstall({ config, speed, onComplete }: {
           </div>
         )}
 
-        <div className="flex flex-col h-full">
-          {/* Content area */}
-          <div className="flex-1 overflow-y-auto" style={{padding: "3px"}}>
+        <div className="flex flex-col h-full" style={{justifyContent: "flex-start"}}>
+          {/* Content area - packed at top, not stretched */}
+          <div style={{padding: "3px", overflow: "auto"}}>
             {/* Level 3: sub-menu item config */}
             {tuiSubMenu && tuiSubCfg ? (
               <div>
@@ -1096,7 +1096,7 @@ export default function ArchInstall({ config, speed, onComplete }: {
           </div>
 
           {/* Fixed bottom bar */}
-          <div style={{color: "#aa0000", padding: "2px 3px", borderTop: "1px solid #222"}}>
+          <div className="shrink-0" style={{color: "#aa0000", padding: "1px 3px"}}>
             <span>Up/Down navigate</span>
             <span className="mx-2" style={{color: "#555"}}>|</span>
             <span>Enter select</span>
