@@ -322,6 +322,22 @@ export default function ArchInstall({ config, speed, onComplete }: {
   const [completionIdx, setCompletionIdx] = useState(-1);
   const [suggestionIdx, setSuggestionIdx] = useState(-1);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showActionGuide, setShowActionGuide] = useState(false);
+
+  function GuideAction({ label, desc, onClick, lighter }: { label: string; desc: string; onClick: () => void; lighter?: boolean }) {
+    return (
+      <div className={`flex items-center justify-between px-2.5 py-1.5 rounded cursor-pointer transition-colors ${
+        lighter ? "text-white/40 hover:text-white/60" : "text-white/80 hover:bg-[#60a5fa]/10 hover:text-white"
+      }`}
+        onClick={(e) => { e.stopPropagation(); playClick(); onClick(); }}>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[#60a5fa] text-[8px]">▸</span>
+          <span className="font-bold text-[10px] truncate">{label}</span>
+        </div>
+        <span className="text-white/30 text-[8px] ml-2 truncate">{desc}</span>
+      </div>
+    );
+  }
   const COMMANDS = [
     { cmd: "archinstall", desc: "Launch guided installer (TUI)" },
     { cmd: "iwctl", desc: "WiFi connection manager" },
@@ -924,12 +940,73 @@ export default function ArchInstall({ config, speed, onComplete }: {
                 : wifiConnected ? "✓ WiFi • archinstall to begin"
                 : "✗ WiFi • iwctl → station wlan0 connect <SSID>"}
             </span>
-            <span className="text-white/20">
-              {subshell === "iwctl" ? "iwd 2.11"
-                : subshell === "fdisk" ? `util-linux 2.39.3`
-                : "tty1"}
+            <span className="flex items-center gap-2">
+              {/* Action guide button */}
+              <button onClick={(e) => { e.stopPropagation(); setShowActionGuide(p => !p); playClick(); }}
+                className="text-white/30 hover:text-white/70 text-[10px] font-mono px-1.5 py-0.5 rounded border border-white/10 hover:border-white/30 transition-colors"
+                title="What to do next?">?</button>
+              <span className="text-white/20">
+                {subshell === "iwctl" ? "iwd 2.11"
+                  : subshell === "fdisk" ? `util-linux 2.39.3`
+                  : "tty1"}
+              </span>
             </span>
           </div>
+
+          {/* Action guide popup */}
+          {showActionGuide && (
+            <div className="absolute bottom-12 right-4 z-30 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-2xl overflow-hidden min-w-[240px] max-w-[300px]"
+              onClick={e => e.stopPropagation()}>
+              <div className="px-3 py-2 border-b border-white/5 text-[9px] text-white/40 font-mono uppercase tracking-wider flex items-center gap-2">
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  !wifiConnected ? "bg-[#f87171]" : shellStep < 3 ? "bg-[#fbbf24]" : "bg-[#4ade80]"
+                }`} />
+                {subshell === "bash" ? (!wifiConnected ? "Step 1: Connect WiFi" : shellStep < 3 ? "Step 2: Verify" : "Step 3: Install")
+                  : subshell === "iwctl" ? "iwctl — WiFi Manager"
+                  : "fdisk — Partition Tool"}
+              </div>
+              <div className="p-3 space-y-1.5">
+                {subshell === "bash" && !wifiConnected && (
+                  <>
+                    <GuideAction label="iwctl" desc="Open WiFi connection manager" onClick={() => { setInput("iwctl"); setShowActionGuide(false); inputRef.current?.focus(); }} />
+                    <GuideAction label="help" desc="Show all available commands" onClick={() => { setInput("help"); setShowActionGuide(false); inputRef.current?.focus(); }} lighter />
+                  </>
+                )}
+                {subshell === "bash" && wifiConnected && shellStep < 3 && (
+                  <>
+                    <GuideAction label="ping archlinux.org" desc="Verify internet connectivity" onClick={() => { setInput("ping archlinux.org"); setShowActionGuide(false); inputRef.current?.focus(); }} />
+                    <GuideAction label="lsblk" desc="View disk partitions (optional)" onClick={() => { setInput("lsblk"); setShowActionGuide(false); inputRef.current?.focus(); }} lighter />
+                  </>
+                )}
+                {subshell === "bash" && shellStep >= 3 && (
+                  <GuideAction label="archinstall" desc="Launch the guided installer" onClick={() => { setInput("archinstall"); setShowActionGuide(false); inputRef.current?.focus(); }} />
+                )}
+                {subshell === "iwctl" && !wifiConnected && (
+                  <>
+                    <GuideAction label="station wlan0 get-networks" desc="List available WiFi networks" onClick={() => { setInput("station wlan0 get-networks"); inputRef.current?.focus(); }} />
+                    <GuideAction label="station wlan0 scan" desc="Scan for networks" onClick={() => { setInput("station wlan0 scan"); inputRef.current?.focus(); }} lighter />
+                    <GuideAction label="exit" desc="Return to shell" onClick={() => { setInput("exit"); inputRef.current?.focus(); }} lighter />
+                  </>
+                )}
+                {subshell === "iwctl" && wifiConnected && (
+                  <>
+                    <GuideAction label="ping archlinux.org" desc="Verify connection" onClick={() => { setInput("exit"); setShowActionGuide(false); }} />
+                    <GuideAction label="exit" desc="Return to shell → archinstall" onClick={() => { setInput("exit"); inputRef.current?.focus(); }} lighter />
+                  </>
+                )}
+                {subshell === "fdisk" && (
+                  <>
+                    <GuideAction label="p" desc="Print partition table" onClick={() => { setInput("p"); inputRef.current?.focus(); }} />
+                    <GuideAction label="n" desc="Create new partition" onClick={() => { setInput("n"); inputRef.current?.focus(); }} lighter />
+                    <GuideAction label="q" desc="Quit fdisk" onClick={() => { setInput("q"); inputRef.current?.focus(); }} lighter />
+                  </>
+                )}
+              </div>
+              <div className="border-t border-white/5 px-3 py-1 text-[8px] text-white/20 text-center">
+                Click a command to fill it in • Press Enter
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
