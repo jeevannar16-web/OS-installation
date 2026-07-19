@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
 
@@ -14,35 +13,27 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
   config: OSConfig; onTry: () => void; onInstall: () => void;
 }) {
   const bgImg = OS_LIVE_IMG[config.id] || OS_LIVE_IMG.ubuntu;
-  const osName = config.branding.name;
   const accent = config.branding.accent;
 
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-      <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 bg-black">
-        <img src={bgImg} alt={`${osName} Try or Install`}
+      <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+        <img src={bgImg} alt={config.branding.name}
           className="absolute inset-0 w-full h-full object-cover" draggable={false} />
 
-        {/* Buttons float directly on the live image */}
-        <div className="absolute bottom-2 left-2 right-2 z-10 max-w-sm mx-auto text-center"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>
-              {osName}
-            </div>
-            <p className="text-xs text-white/50 mb-4">Try {osName} without installing, or start the installation.</p>
-            <div className="space-y-2">
-              <button onClick={() => { playClick(); onInstall(); }}
-                className="w-full rounded-lg py-2.5 text-sm font-bold text-white transition-all hover:scale-[1.02]"
-                style={{ background: accent }}>
-                Install {osName}
-              </button>
-              <button onClick={() => { playClick(); onTry(); }}
-                className="w-full rounded-lg border border-white/20 bg-white/5 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all">
-                Try {osName}
-              </button>
-            </div>
-          </motion.div>
+        {/* Buttons on the desktop — no labels, no text, just the actions */}
+        <div className="absolute bottom-4 left-4 right-4 z-10 max-w-xs mx-auto">
+          <div className="space-y-2">
+            <button onClick={() => { playClick(); onInstall(); }}
+              className="w-full rounded-lg py-2.5 text-sm font-bold text-white shadow-lg"
+              style={{ background: accent }}>
+              Install {config.branding.shortName}
+            </button>
+            <button onClick={() => { playClick(); onTry(); }}
+              className="w-full rounded-lg border border-white/20 bg-white/5 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all">
+              Try {config.branding.shortName}
+            </button>
+          </div>
         </div>
       </div>
     </div>

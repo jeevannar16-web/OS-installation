@@ -284,22 +284,16 @@ export default function Install({ config, speed, onComplete, path }: {
             className="absolute inset-0 w-full h-full object-cover" style={{ background: surface }} />
           <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/[0.02] pointer-events-none" />
 
-          {/* Buttons float directly on the boot image */}
-          <div className="absolute bottom-2 left-2 right-2 z-10 max-w-sm mx-auto text-center"
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-            <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Try or Install {osName}</div>
-            <div className="space-y-2 mb-2">
-              <button onClick={() => { playClick(); setBootSplash(true); }}
-                className="w-full rounded-lg px-4 py-2.5 text-sm font-bold text-white transition-all hover:scale-[1.02]"
-                style={{ background: accent }}>
-                Install {osName}
-              </button>
-              <button onClick={() => { playClick(); setBootSplash(true); }}
-                className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all text-left">
-                Try {osName}
-              </button>
-            </div>
-            <p className="text-[10px] text-white/40">You can try before installing. This won't change anything.</p>
+          <div className="absolute bottom-3 left-3 right-3 z-10 max-w-xs mx-auto space-y-2">
+            <button onClick={() => { playClick(); setBootSplash(true); }}
+              className="w-full rounded-lg py-2.5 text-sm font-bold text-white shadow-lg"
+              style={{ background: accent }}>
+              Install {osName}
+            </button>
+            <button onClick={() => { playClick(); setBootSplash(true); }}
+              className="w-full rounded-lg border border-white/20 bg-white/5 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all">
+              Try {osName}
+            </button>
           </div>
         </div>
       </div>
@@ -460,171 +454,159 @@ export default function Install({ config, speed, onComplete, path }: {
         case "language":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Select your language</div>
-              <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto mb-3">
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Select your language</div>
+              <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto mb-2">
                 {LANGUAGES.map((lang) => (
                   <button key={lang} onClick={() => { playClick(); setVal("language", lang); }}
-                    className={`rounded-md px-3 py-1.5 text-[11px] transition-all ${
-                      values["language"] === lang
-                        ? "text-white font-semibold shadow-lg"
-                        : "bg-white/10 text-white/70 hover:bg-white/15 hover:text-white"
-                    }`} style={values["language"] === lang ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>{lang}</button>
+                    className={`rounded px-2 py-1 text-[11px] transition-all ${
+                      values["language"] === lang ? "text-white font-semibold" : "text-white/50 hover:text-white/80"
+                    }`} style={values["language"] === lang ? { background: accent } : {}}>{lang}</button>
                 ))}
               </div>
               <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-                style={{ background: accent }}>Next →</button>
+                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
+                style={{ background: accent }}>Next</button>
             </>
           );
         case "keyboard":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Keyboard layout</div>
-              <div className="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto mb-3">
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Keyboard layout</div>
+              <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto mb-2">
                 {KEYBOARD_LAYOUTS.map((layout) => (
                   <button key={layout} onClick={() => { playClick(); setVal("keyboard", layout); }}
-                    className={`rounded-md px-3 py-1.5 text-[11px] text-left transition-all ${
-                      values["keyboard"] === layout
-                        ? "text-white font-semibold"
-                        : "bg-white/10 text-white/70 hover:bg-white/15"
-                    }`} style={values["keyboard"] === layout ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>{layout}</button>
+                    className={`rounded px-2 py-1 text-[11px] transition-all ${
+                      values["keyboard"] === layout ? "text-white font-semibold" : "text-white/50 hover:text-white/80"
+                    }`} style={values["keyboard"] === layout ? { background: accent } : {}}>{layout}</button>
                 ))}
               </div>
               <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-                style={{ background: accent }}>Next →</button>
+                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
+                style={{ background: accent }}>Next</button>
             </>
           );
         case "network":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Connect to network</div>
-              <div className="space-y-1.5 mb-3">
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Connect to network</div>
+              <div className="space-y-1 mb-2">
                 {[{ id: "wifi", label: "HomeWiFi", icon: "📶" }, { id: "ethernet", label: "Wired Ethernet", icon: "🔌" }].map((n) => (
                   <button key={n.id} onClick={() => { playClick(); setVal("network", n.id); }}
-                    className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-[11px] transition-all ${
-                      values["network"] === n.id ? "text-white font-semibold shadow-sm" : "bg-white/10 text-white/70 hover:bg-white/15 hover:text-white"
-                    }`} style={values["network"] === n.id ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>
-                    <span>{n.icon}</span><span className="font-medium">{n.label}</span>
+                    className={`block text-[11px] transition-all ${
+                      values["network"] === n.id ? "text-white font-semibold" : "text-white/50 hover:text-white/80"
+                    }`}>
+                    <span>{n.icon}</span> <span>{n.label}</span>
                   </button>
                 ))}
                 <button onClick={() => { playClick(); setVal("network", "skip"); }}
-                  className={`w-full rounded-md px-3 py-2 text-[11px] transition-all ${
-                    values["network"] === "skip" ? "text-white font-semibold shadow-sm" : "bg-white/5 text-white/40 hover:bg-white/10"
-                  }`} style={values["network"] === "skip" ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>Skip for now</button>
+                  className={`block text-[11px] transition-all ${
+                    values["network"] === "skip" ? "text-white font-semibold" : "text-white/40 hover:text-white/60"
+                  }`}>Skip for now</button>
               </div>
               <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-                style={{ background: accent }}>Next →</button>
+                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
+                style={{ background: accent }}>Next</button>
             </>
           );
         case "install_type":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Type of installation</div>
-              <div className="space-y-1.5 mb-3">
-                {path === "vm" && (
-                  <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-[10px] text-emerald-300">
-                    ✓ In a VM, "Erase disk" only affects the virtual disk.
-                  </div>
-                )}
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Type of installation</div>
+              <div className="space-y-1 mb-2">
                 {[
                   { id: "erase", label: `Erase disk and install ${osName}` },
                   { id: "alongside", label: `Install ${osName} alongside existing OS` },
                   { id: "something", label: "Something else (manual partitioning)" },
                 ].filter(opt => path !== "vm" || opt.id === "erase").map((opt) => (
                   <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
-                    className={`w-full rounded-md px-3 py-2 text-[11px] text-left font-medium transition-all ${
-                      installType === opt.id ? "text-white shadow-sm" : "bg-white/10 text-white/70 hover:bg-white/15"
-                    }`} style={installType === opt.id ? { background: accent } : {}}>{opt.label}</button>
+                    className={`block text-[11px] text-left transition-all ${
+                      installType === opt.id ? "text-white font-semibold" : "text-white/50 hover:text-white/80"
+                    }`}>{opt.label}</button>
                 ))}
               </div>
               <button onClick={() => { if (installType === "something") { setStep(STEP_ORDER[currentIdx + 1]); } else { playClick(); handleNext(); } }}
-                className="w-full rounded-lg py-1.5 text-xs font-semibold text-white"
-                style={{ background: accent }}>Next →</button>
+                className="rounded px-3 py-1 text-[10px] font-semibold text-white"
+                style={{ background: accent }}>Next</button>
             </>
           );
         case "install_option":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Installation method</div>
-              <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Installation method</div>
+              <div className="flex gap-2 mb-2">
                 {[
                   { id: "interactive", label: "Interactive", desc: "Walk through each step" },
                   { id: "automated", label: "Automated", desc: "Use a preseed file" },
                 ].map((opt) => (
                   <button key={opt.id} onClick={() => { playClick(); setVal("install_option", opt.id); }}
-                    className="rounded-lg border border-white/10 bg-white/5 p-3 text-left hover:bg-white/10 transition-all">
-                    <div className="text-[11px] font-semibold text-white/70">{opt.label}</div>
-                    <div className="text-[9px] text-white/30 mt-0.5">{opt.desc}</div>
+                    className={`text-left transition-all ${values["install_option"] === opt.id ? "text-white" : "text-white/50 hover:text-white/80"}`}>
+                    <div className="text-[11px] font-semibold">{opt.label}</div>
+                    <div className="text-[9px] text-white/30">{opt.desc}</div>
                   </button>
                 ))}
               </div>
               <button onClick={() => { playClick(); handleNext(); }}
-                className="w-full rounded-lg py-1.5 text-xs font-semibold text-white"
-                style={{ background: accent }}>Next →</button>
+                className="rounded px-3 py-1 text-[10px] font-semibold text-white"
+                style={{ background: accent }}>Next</button>
             </>
           );
         case "third_party":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Additional software</div>
-              <label className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 cursor-pointer hover:bg-white/15 transition-all mb-3">
+              <label className="flex items-center gap-2 mb-2">
                 <input type="checkbox" defaultChecked style={{ accentColor: accent }} />
-                <span className="text-[11px] text-white/80">Install third-party software for graphics and Wi-Fi</span>
+                <span className="text-[11px] text-white/70">Install third-party software for graphics and Wi-Fi</span>
               </label>
               <button onClick={() => { playClick(); handleNext(); }}
-                className="w-full rounded-lg py-1.5 text-xs font-semibold text-white"
-                style={{ background: accent }}>Next →</button>
+                className="rounded px-3 py-1 text-[10px] font-semibold text-white"
+                style={{ background: accent }}>Next</button>
             </>
           );
         case "app_selection":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Applications to install</div>
-              <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Applications to install</div>
+              <div className="flex gap-2 mb-2">
                 {[
                   { id: "normal", label: "Normal", desc: "Office, browser, games, media player" },
                   { id: "minimal", label: "Minimal", desc: "Browser and basic utilities" },
                 ].map((opt) => (
                   <button key={opt.id} onClick={() => { playClick(); setVal("apps", opt.id); }}
-                    className={`rounded-lg border p-3 text-left transition-all ${
-                      values["apps"] === opt.id ? "border-white/20 text-white" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
-                    }`} style={values["apps"] === opt.id ? { borderColor: accent, background: `${accent}15` } : {}}>
+                    className={`text-left transition-all ${values["apps"] === opt.id ? "text-white" : "text-white/50 hover:text-white/80"}`}>
                     <div className="text-[11px] font-semibold">{opt.label}</div>
-                    <div className="text-[9px] text-white/30 mt-0.5">{opt.desc}</div>
+                    <div className="text-[9px] text-white/40">{opt.desc}</div>
                   </button>
                 ))}
               </div>
               <button onClick={() => { playClick(); handleNext(); }}
-                className="w-full rounded-lg py-1.5 text-xs font-semibold text-white"
-                style={{ background: accent }}>Next →</button>
+                className="rounded px-3 py-1 text-[10px] font-semibold text-white"
+                style={{ background: accent }}>Next</button>
             </>
           );
         case "timezone":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Select your timezone</div>
-              <div className="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto mb-3">
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Select your timezone</div>
+              <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto mb-2">
                 {["UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
                   "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Tokyo", "Australia/Sydney",
                 ].map((tz) => (
                   <button key={tz} onClick={() => { playClick(); setVal("timezone", tz); }}
-                    className={`rounded-md px-3 py-1.5 text-[11px] text-left transition-all ${
-                      values["timezone"] === tz ? "text-white font-semibold" : "bg-white/10 text-white/70 hover:bg-white/15"
-                    }`} style={values["timezone"] === tz ? { background: accent, boxShadow: `0 4px 12px ${accent}40` } : {}}>{tz}</button>
+                    className={`rounded px-2 py-1 text-[11px] transition-all ${
+                      values["timezone"] === tz ? "text-white font-semibold" : "text-white/50 hover:text-white/80"
+                    }`} style={values["timezone"] === tz ? { background: accent } : {}}>{tz}</button>
                 ))}
               </div>
               <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-                style={{ background: accent }}>Next →</button>
+                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
+                style={{ background: accent }}>Next</button>
             </>
           );
         case "create_user":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Who are you?</div>
-              <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Who are you?</div>
+              <div className="flex flex-wrap gap-2 mb-2">
                 {[
                   { key: "name", placeholder: "Your name" },
                   { key: "computer_name", placeholder: "Computer name" },
@@ -634,19 +616,19 @@ export default function Install({ config, speed, onComplete, path }: {
                   <input key={f.key} type={f.secret ? "password" : "text"}
                     value={values[f.key] ?? ""} placeholder={f.placeholder}
                     onChange={(e) => { setVal(f.key, e.target.value); playKeyClick(); }}
-                    className="rounded-md bg-white/10 border border-white/10 px-3 py-2 text-[11px] text-white/90 outline-none placeholder:text-white/25 transition-colors" />
+                    className="border-b border-white/20 bg-transparent px-1 py-0.5 text-[11px] text-white/90 outline-none placeholder:text-white/30 transition-colors w-[120px]" />
                 ))}
               </div>
               <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-                style={{ background: accent }}>Next →</button>
+                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
+                style={{ background: accent }}>Next</button>
             </>
           );
         case "review":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Ready to install</div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 bg-white/5 rounded-lg p-3 border border-white/10 mb-2">
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Ready to install</div>
+              <div className="flex flex-wrap gap-x-4 gap-y-0.5 mb-1">
                 {[
                   ["Language", values["language"] ?? "English"],
                   ["Keyboard", values["keyboard"] ?? "English (US)"],
@@ -655,93 +637,83 @@ export default function Install({ config, speed, onComplete, path }: {
                   ["Timezone", values["timezone"] ?? "UTC"],
                   ["Username", values["username"] ?? "user"],
                 ].map(([l, v]) => (
-                  <div key={l} className="flex justify-between text-[10px]">
-                    <span className="text-white/40">{l}</span>
+                  <div key={l} className="text-[10px]">
+                    <span className="text-white/40">{l}: </span>
                     <span className="text-white/70 font-medium">{v}</span>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-white/40 mb-2">If you continue, the changes listed above will be written to disk.</p>
+              <p className="text-[9px] text-white/40 mb-1">The changes listed above will be written to disk.</p>
               <button onClick={() => { playClick(); setPhase("installing"); }}
-                className="w-full rounded-lg py-2 text-xs font-bold text-white transition-all hover:scale-[1.02]"
+                className="rounded px-3 py-1.5 text-[10px] font-semibold text-white"
                 style={{ background: accent }}>Install Now</button>
             </>
           );
         case "partition":
           return (
             <>
-              <div className="text-[10px] font-semibold tracking-wider mb-2" style={{ color: accent }}>Manual Partitioning</div>
-              <div className="space-y-1 max-h-40 overflow-y-auto mb-2">
+              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Manual Partitioning</div>
+              <div className="space-y-0.5 max-h-36 overflow-y-auto mb-1">
                 {partitions.map((p, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-md bg-white/5 px-2.5 py-1.5 text-[10px]">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-white/70">{p.device}</span>
-                      <span className="text-white/40">{p.sizeGB} GB</span>
-                      {p.mount && <span className="font-mono text-white/60">{p.mount}</span>}
-                    </div>
-                    <div className="flex gap-1">
-                      <button onClick={() => { playClick(); setPartForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" }); setEditPartIdx(i); setShowPartForm(true); }}
-                        className="text-[9px] text-white/40 hover:text-white/70 transition-colors">Edit</button>
-                      <button onClick={() => { playClick(); setPartitions(prev => prev.filter((_, j) => j !== i)); }}
-                        className="text-[9px] text-red-400/60 hover:text-red-400 transition-colors">Del</button>
-                    </div>
+                  <div key={i} className="flex items-center gap-2 text-[10px]">
+                    <span className="font-mono text-white/60">{p.device}</span>
+                    <span className="text-white/30">{p.sizeGB} GB</span>
+                    {p.mount && <span className="font-mono text-white/50">{p.mount}</span>}
+                    <button onClick={() => { playClick(); setPartForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" }); setEditPartIdx(i); setShowPartForm(true); }}
+                      className="text-white/40 hover:text-white/80">Edit</button>
+                    <button onClick={() => { playClick(); setPartitions(prev => prev.filter((_, j) => j !== i)); }}
+                      className="text-red-400/60 hover:text-red-400">Del</button>
                   </div>
                 ))}
                 <button onClick={() => { playClick(); setEditPartIdx(null); setPartForm({ sizeGB: 50, fs: "ext4", mount: "/" }); setShowPartForm(true); }}
-                  className="w-full rounded-md border border-dashed border-white/10 py-1.5 text-[10px] text-white/40 hover:bg-white/5 hover:text-white/70 transition-all"
-                  style={{ borderColor: `${accent}40`, color: accent }}>
-                  + Add partition
-                </button>
+                  className="text-[10px] text-white/40 hover:text-white/80"
+                  style={{ color: accent }}>+ Add partition</button>
               </div>
               {showPartForm && (
-                <div className="rounded-lg border border-white/15 bg-[#1a1a24] p-3 mb-2 space-y-2">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="text-[8px] text-white/40 block mb-0.5">Size (GB)</label>
-                      <input type="number" min={1} max={500}
-                        value={partForm.sizeGB} onChange={(e) => setPartForm(p => ({ ...p, sizeGB: Number(e.target.value) }))}
-                        className="w-full rounded border border-white/15 bg-[#2a2a2b] px-2 py-1 text-[10px] text-white/90 outline-none" />
-                    </div>
-                    <div>
-                      <label className="text-[8px] text-white/40 block mb-0.5">FS</label>
-                      <select value={partForm.fs} onChange={(e) => setPartForm(p => ({ ...p, fs: e.target.value }))}
-                        className="w-full rounded border border-white/15 bg-[#2a2a2b] px-2 py-1 text-[10px] text-white/90 outline-none">
-                        {FILESYSTEMS.map(fs => <option key={fs} value={fs}>{fs}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[8px] text-white/40 block mb-0.5">Mount</label>
-                      <select value={partForm.mount} onChange={(e) => setPartForm(p => ({ ...p, mount: e.target.value }))}
-                        className="w-full rounded border border-white/15 bg-[#2a2a2b] px-2 py-1 text-[10px] text-white/90 outline-none">
-                        {MOUNT_POINTS.map(mp => <option key={mp} value={mp}>{mp}</option>)}
-                      </select>
-                    </div>
+                <div className="flex flex-wrap gap-2 mb-1">
+                  <div>
+                    <label className="text-[8px] text-white/40 block">Size (GB)</label>
+                    <input type="number" min={1} max={500}
+                      value={partForm.sizeGB} onChange={(e) => setPartForm(p => ({ ...p, sizeGB: Number(e.target.value) }))}
+                      className="w-16 border-b border-white/20 bg-transparent px-1 text-[10px] text-white/90 outline-none" />
                   </div>
-                  <div className="flex justify-end gap-1.5">
-                    <button onClick={() => { playClick(); setShowPartForm(false); setEditPartIdx(null); }}
-                      className="rounded px-2 py-1 text-[9px] text-white/50 hover:bg-white/10 transition-colors">Cancel</button>
-                    <button onClick={() => {
-                      playClick();
-                      const np: PartitionEntry = {
-                        device: `/dev/sda${partitions.length + 1}`,
-                        type: partForm.mount === "/" ? "Linux filesystem" : partForm.mount === "[swap]" ? "Linux swap" : "Linux filesystem",
-                        fs: partForm.fs, sizeGB: partForm.sizeGB, mount: partForm.mount,
-                        flags: partForm.mount === "/" ? ["root"] : partForm.mount === "/boot" ? ["boot"] : [],
-                      };
-                      if (editPartIdx !== null) setPartitions(prev => prev.map((p, i) => (i === editPartIdx ? np : p)));
-                      else setPartitions(prev => [...prev, np]);
-                      setShowPartForm(false); setEditPartIdx(null);
-                    }} disabled={partForm.sizeGB < 1}
-                      className="rounded px-2 py-1 text-[9px] font-semibold text-white disabled:opacity-40"
-                      style={{ background: accent }}>
-                      {editPartIdx !== null ? "Save" : "Create"}
-                    </button>
+                  <div>
+                    <label className="text-[8px] text-white/40 block">FS</label>
+                    <select value={partForm.fs} onChange={(e) => setPartForm(p => ({ ...p, fs: e.target.value }))}
+                      className="border-b border-white/20 bg-transparent px-1 text-[10px] text-white/90 outline-none">
+                      {FILESYSTEMS.map(fs => <option key={fs} value={fs}>{fs}</option>)}
+                    </select>
                   </div>
+                  <div>
+                    <label className="text-[8px] text-white/40 block">Mount</label>
+                    <select value={partForm.mount} onChange={(e) => setPartForm(p => ({ ...p, mount: e.target.value }))}
+                      className="border-b border-white/20 bg-transparent px-1 text-[10px] text-white/90 outline-none">
+                      {MOUNT_POINTS.map(mp => <option key={mp} value={mp}>{mp}</option>)}
+                    </select>
+                  </div>
+                  <button onClick={() => { playClick(); setShowPartForm(false); setEditPartIdx(null); }}
+                    className="text-[9px] text-white/50">Cancel</button>
+                  <button onClick={() => {
+                    playClick();
+                    const np: PartitionEntry = {
+                      device: `/dev/sda${partitions.length + 1}`,
+                      type: partForm.mount === "/" ? "Linux filesystem" : partForm.mount === "[swap]" ? "Linux swap" : "Linux filesystem",
+                      fs: partForm.fs, sizeGB: partForm.sizeGB, mount: partForm.mount,
+                      flags: partForm.mount === "/" ? ["root"] : partForm.mount === "/boot" ? ["boot"] : [],
+                    };
+                    if (editPartIdx !== null) setPartitions(prev => prev.map((p, i) => (i === editPartIdx ? np : p)));
+                    else setPartitions(prev => [...prev, np]);
+                    setShowPartForm(false); setEditPartIdx(null);
+                  }} disabled={partForm.sizeGB < 1}
+                    className="rounded px-2 py-0.5 text-[9px] font-semibold text-white disabled:opacity-40"
+                    style={{ background: accent }}>
+                    {editPartIdx !== null ? "Save" : "Create"}
+                  </button>
                 </div>
               )}
               <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="w-full rounded-lg py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-                style={{ background: accent }}>Next →</button>
+                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
+                style={{ background: accent }}>Next</button>
             </>
           );
       }
@@ -766,13 +738,9 @@ export default function Install({ config, speed, onComplete, path }: {
             ))}
           </div>
 
-          {/* Fields float directly on the image */}
-          <div className="absolute bottom-2 left-2 right-2 z-10 max-w-lg mx-auto"
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-            <motion.div
-              key={step}
-              initial={{ y: 8, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
+          {/* Interactive elements on the image */}
+          <div className="absolute bottom-2 left-2 right-2 z-10">
+            <motion.div key={step} initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}>
               {formContent()}
             </motion.div>
