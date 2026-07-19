@@ -36,6 +36,9 @@ const ACCOUNT_KEY_MAP: Record<string, string> = {
   "Your computer's name": "computer_name",
   "Pick a username": "username",
   "Choose a password": "password",
+  "Full name": "name",
+  "Username": "username",
+  "Password": "password",
 };
 
 export default function Install({ config, speed, onComplete, path }: {
@@ -110,7 +113,12 @@ export default function Install({ config, speed, onComplete, path }: {
     switch (currentStep?.kind) {
       case "language": return !!selectedLang;
       case "keyboard": return !!selectedKb;
-      case "account": return !!(values["username"] || "").trim() && !!(values["password"] || "").trim();
+      case "account": {
+        const prompts = "prompts" in currentStep ? currentStep.prompts : [];
+        const hasPassword = prompts.some(p => p.secret && !!((values[ACCOUNT_KEY_MAP[p.label] || p.label] || "").trim()));
+        const hasUser = prompts.some(p => !p.secret && !!((values[ACCOUNT_KEY_MAP[p.label] || p.label] || "").trim()));
+        return hasPassword && hasUser;
+      }
       default: return true;
     }
   }
