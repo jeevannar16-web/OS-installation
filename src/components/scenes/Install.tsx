@@ -116,14 +116,6 @@ const KEYBOARD_LAYOUTS = [
   "Français", "Deutsch", "Italiano", "Português (Brasil)", "Dvorak", "Colemak",
 ];
 
-const INSTALL_SLIDES = [
-  { title: "Fast and secure", body: "Boots in seconds and keeps your data safe with built-in firewall and disk encryption." },
-  { title: "Productive out of the box", body: "Office suite, email client, web browser, and media player — all pre-installed." },
-  { title: "Software Centre", body: "Thousands of free applications available at your fingertips." },
-  { title: "Customise your desktop", body: "Themes, fonts, dock position, widgets — make it yours." },
-  { title: "Built-in security", body: "Automatic updates, firewall, and full-disk encryption keep you safe." },
-];
-
 export default function Install({ config, speed, onComplete, path }: {
   config: OSConfig; speed: "normal" | "fast"; onComplete: () => void; path?: string;
 }) {
@@ -139,8 +131,6 @@ export default function Install({ config, speed, onComplete, path }: {
   const [installType, setInstallType] = useState<string>(path === "vm" ? "erase" : "erase");
   const [progress, setProgress] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [slideIdx, setSlideIdx] = useState(0);
-  const [tipIdx, setTipIdx] = useState(0);
   const [showSparkle, setShowSparkle] = useState(false);
   const [fileIdx, setFileIdx] = useState(0);
   const [restartPhase, setRestartPhase] = useState<"countdown" | "done">("countdown");
@@ -201,15 +191,6 @@ export default function Install({ config, speed, onComplete, path }: {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [phase, installDuration, config.installFiles]);
-
-  useEffect(() => {
-    if (phase !== "installing") return;
-    const iv = setInterval(() => {
-      setSlideIdx((p) => (p + 1) % INSTALL_SLIDES.length);
-      setTipIdx((p) => (p + 1) % config.installTips.length);
-    }, speed === "fast" ? 600 : 3000);
-    return () => clearInterval(iv);
-  }, [phase, config.installTips.length, speed]);
 
   useEffect(() => {
     if (bootSplash) {
@@ -340,43 +321,30 @@ export default function Install({ config, speed, onComplete, path }: {
     }
     const installImg = getInstallProgressImg(config.id);
     return (
-      <div className="mx-auto w-full max-w-5xl">
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <SparkleBurst trigger={showSparkle} />
-        <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
-          <img src={installImg} alt={`Installing ${osName}`} className="w-full object-cover" style={{ maxHeight: "75vh" }} />
+        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+          <img src={installImg} alt={`Installing ${osName}`}
+            className="absolute inset-0 w-full h-full object-cover" />
 
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/80 to-transparent pt-24 pb-5 px-6">
-            <div className="max-w-lg mx-auto space-y-3">
-              <div className="text-center">
-                <h3 className="text-sm font-bold text-white">Installing {osName}</h3>
-                <p className="text-[11px] text-white/50 mt-0.5">{config.installTips[tipIdx]}</p>
-              </div>
-              <div className="space-y-1.5">
-                <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+          {/* Progress info floats on the install screenshot */}
+          <div className="absolute bottom-0 inset-x-0 z-10">
+            <div className="px-4 pb-3 pt-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+              <div className="max-w-lg mx-auto">
+                <div className="flex justify-between text-[9px] text-white/40 font-mono mb-1">
+                  <span>{Math.floor(progress)}%</span>
+                  <span>{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>
+                </div>
+                <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
                   <motion.div className="h-full rounded-full" style={{ background: accent }}
                     animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }} />
                 </div>
-                <div className="flex justify-between text-[10px] text-white/40 font-mono">
-                  <span>{Math.floor(progress)}% complete</span>
-                  <span>{INSTALL_SLIDES[slideIdx].title}</span>
-                  <span>{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>
+                <div className="mt-1 h-8 overflow-hidden text-[9px] text-white/40 font-mono">
+                  {config.installFiles.slice(Math.max(0, fileIdx - 1), fileIdx + 1).map((file, i) => {
+                    const isCurrent = Math.max(0, fileIdx - 1) + i === fileIdx;
+                    return <div key={i} className={`truncate ${isCurrent ? "text-white/70" : "opacity-40"}`}>{isCurrent && "▸ "}{file}</div>;
+                  })}
                 </div>
-              </div>
-              <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-center">
-                <div className="text-xs font-semibold text-white/70 mb-0.5">{INSTALL_SLIDES[slideIdx].title}</div>
-                <div className="text-[10px] text-white/35 leading-relaxed">{INSTALL_SLIDES[slideIdx].body}</div>
-              </div>
-              <div className="h-14 overflow-hidden rounded border border-white/10 bg-black/40 p-2 font-mono text-[9px] text-white/40">
-                {config.installFiles.slice(Math.max(0, fileIdx - 3), fileIdx + 1).map((file, i) => {
-                  const actualIdx = Math.max(0, fileIdx - 3) + i;
-                  const isCurrent = actualIdx === fileIdx;
-                  return (
-                    <div key={fileIdx - 3 + i} className={`truncate leading-relaxed ${isCurrent ? "" : "opacity-40"}`}
-                      style={isCurrent ? { color: accent } : {}}>
-                      {isCurrent && "▸ "}{file}
-                    </div>
-                  );
-                })}
               </div>
             </div>
           </div>
@@ -392,23 +360,12 @@ export default function Install({ config, speed, onComplete, path }: {
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0" style={{ background: surface }}>
           <img src={getRestartImg(config.id)} alt="Restart needed"
             className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/40 to-transparent pt-24 pb-6 px-6 flex items-end">
-            <div className="max-w-md mx-auto space-y-3 text-center w-full">
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <div className="bg-black/60 backdrop-blur-sm rounded-xl p-5 border border-white/10 space-y-3">
-                  <div className="text-2xl">🔌</div>
-                  <h3 className="text-sm font-bold text-white">Remove installation media</h3>
-                  <p className="text-xs text-white/50 leading-relaxed">
-                    Unplug the USB drive or eject the installation media, then press <strong className="text-white/70">Continue</strong> to restart.
-                  </p>
-                  <button onClick={() => { playClick(); setPhase("done"); }}
-                    className="rounded-lg px-6 py-2.5 text-sm font-bold text-white hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
-                    style={{ background: accent, boxShadow: `0 10px 25px -5px ${accent}40` }}>
-                    Continue →
-                  </button>
-                </div>
-              </motion.div>
-            </div>
+          <div className="absolute bottom-4 left-4 right-4 z-10 max-w-xs mx-auto">
+            <button onClick={() => { playClick(); setPhase("done"); }}
+              className="w-full rounded-lg py-2.5 text-sm font-bold text-white shadow-lg"
+              style={{ background: accent }}>
+              Continue →
+            </button>
           </div>
         </div>
       </div>
@@ -418,28 +375,23 @@ export default function Install({ config, speed, onComplete, path }: {
   // ─── Done ───
   if (phase === "done") {
     return (
-      <div className="mx-auto w-full max-w-5xl">
-        <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
-          <img src={getRestartImg(config.id)} alt="Restart" className="w-full object-cover" style={{ maxHeight: "75vh" }} />
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <div className="text-center space-y-4 bg-black/60 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-              <SparkleBurst trigger={showSparkle} />
-              <div className="text-3xl">🎉</div>
-              <h2 className="text-lg font-bold text-white">Installation complete!</h2>
-              <p className="text-xs text-white/50 max-w-xs mx-auto">
-                Remove the installation media and restart your computer.
-              </p>
-              {restartPhase === "done" ? (
-                <button onClick={() => { playSuccess(); onComplete(); }}
-                  className="rounded-lg px-6 py-2.5 text-sm font-bold text-white hover:opacity-90 transition-colors shadow-lg"
-                  style={{ background: accent, boxShadow: `0 10px 25px -5px ${accent}30` }}>
-                  Restart Now →
-                </button>
-              ) : (
-                <div className="text-xs text-white/40 font-mono">Restarting…</div>
-              )}
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+          <img src={getRestartImg(config.id)} alt="Restart"
+            className="absolute inset-0 w-full h-full object-cover" />
+          {restartPhase === "done" ? (
+            <div className="absolute bottom-4 left-4 right-4 z-10 max-w-xs mx-auto">
+              <button onClick={() => { playSuccess(); onComplete(); }}
+                className="w-full rounded-lg py-2.5 text-sm font-bold text-white shadow-lg"
+                style={{ background: accent }}>
+                Restart Now →
+              </button>
             </div>
-          </div>
+          ) : (
+            <div className="absolute bottom-4 left-4 right-4 z-10 text-center">
+              <div className="text-xs text-white/40 font-mono">Restarting…</div>
+            </div>
+          )}
         </div>
       </div>
     );

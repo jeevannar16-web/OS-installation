@@ -3,14 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { playClick, playKeyClick, playSuccess } from "../shared/sounds";
 import type { OSConfig } from "../../data/types";
 
-type Step = "overview" | "name" | "memory" | "disk" | "summary";
+type Step = "name" | "memory" | "disk" | "summary";
 
-const STEPS: { key: Step; label: string; img: string }[] = [
-  { key: "overview", label: "Create Virtual Machine", img: "/images/virtualbox/01-new-vm-wizard.jpg" },
-  { key: "name", label: "Name and Operating System", img: "/images/virtualbox/02-name-vm.jpg" },
-  { key: "memory", label: "Memory and CPU", img: "/images/virtualbox/03-allocate-resources.jpg" },
-  { key: "disk", label: "Hard Disk", img: "/images/virtualbox/04-allocate-disk.jpg" },
-  { key: "summary", label: "Summary", img: "/images/virtualbox/06-start-vm.jpg" },
+const STEPS: { key: Step; label: string }[] = [
+  { key: "name", label: "Name and Operating System" },
+  { key: "memory", label: "Memory size" },
+  { key: "disk", label: "Hard disk" },
+  { key: "summary", label: "Summary" },
 ];
 
 export default function CreateVM({ config, onComplete }: { config: OSConfig; onComplete: () => void }) {
@@ -73,117 +72,149 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
             <div className="mt-1 text-[7px] text-gray-400 px-2 py-1">Powered Off</div>
           </div>
 
-          <div className="flex-1 relative bg-[#2a2a2b] overflow-hidden">
+          <div className="flex-1 relative bg-[#f0f0f0] overflow-hidden flex flex-col">
             <AnimatePresence mode="wait">
               <motion.div key={current.key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }} className="absolute inset-0">
-                <img src={current.img} alt={current.label}
-                  className="absolute inset-0 w-full h-full object-cover" />
+                transition={{ duration: 0.15 }} className="flex-1 flex flex-col p-4">
 
-                {/* Step dots */}
-                <div className="absolute top-3 left-9 z-20 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full pointer-events-none">
+                {/* Step indicator — VirtualBox wizard style */}
+                <div className="flex items-center gap-2 mb-4 text-[10px] font-medium text-gray-500 border-b border-gray-300/60 pb-2">
                   {STEPS.map((s, i) => (
-                    <div key={s.key} className={`h-1.5 rounded-full transition-all ${i <= stepIdx ? "w-3" : "w-1.5"}`}
-                      style={{ background: i <= stepIdx ? accent : "rgba(255,255,255,0.2)" }} />
+                    <div key={s.key} className="flex items-center gap-1">
+                      <span className={`${i === stepIdx ? "text-[#4a8cff]" : i < stepIdx ? "text-green-600" : "text-gray-400"}`}>
+                        {i < stepIdx ? "✓" : i + 1}
+                      </span>
+                      <span className={`${i === stepIdx ? "text-gray-800 font-semibold" : "text-gray-400"}`}>{s.label}</span>
+                      {i < STEPS.length - 1 && <span className="text-gray-300 mx-1">→</span>}
+                    </div>
                   ))}
                 </div>
 
-                {/* Each step's lone interactive element — no container, no panel */}
-                {current.key === "overview" && (
-                  <button onClick={next}
-                    className="absolute bottom-[11%] left-1/2 -translate-x-1/2 rounded-lg px-5 py-2 text-xs font-bold text-white shadow-lg"
-                    style={{ background: accent }}>
-                    + New Virtual Machine
-                  </button>
-                )}
-
-                {current.key === "name" && (
-                  <>
-                    <input value={vmName} onChange={e => { setVmName(e.target.value); playKeyClick(); }}
-                      className="absolute top-[30%] left-[33%] right-[18%] rounded border border-gray-300 bg-white px-2.5 py-1 text-xs text-gray-800 outline-none"
-                      style={{ height: "22px" } as React.CSSProperties} />
-                    <button onClick={() => { playClick(); setIsoSelected(true); }}
-                      className={`absolute top-[50%] left-[33%] right-[18%] rounded border px-2.5 py-1 text-[10px] text-left transition-all ${
-                        isoSelected
-                          ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600"
-                          : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
-                      }`}
-                      style={{ height: "22px" } as React.CSSProperties}>
-                      {isoSelected ? `✓ ${config.iso.filename.slice(0, 20)}…` : "📁 Select..."}
-                    </button>
-                    <button onClick={() => { if (!isoSelected) return; playClick(); next(); }} disabled={!isoSelected}
-                      className="absolute bottom-[6%] right-[18%] rounded px-4 py-1 text-[10px] font-semibold text-white disabled:opacity-40"
-                      style={{ background: accent }}>
-                      Next →
-                    </button>
-                  </>
-                )}
-
-                {current.key === "memory" && (
-                  <>
-                    <div className="absolute top-[30%] left-[33%] right-[18%]">
-                      <input type="range" min={1024} max={8192} step={256} value={memory}
-                        onChange={e => setMemory(Number(e.target.value))}
-                        className="w-full h-1.5" style={{ accentColor: accent }} />
-                      <div className="flex justify-between text-[8px] text-gray-500 mt-0.5">
-                        <span>1 GB</span><span className="font-medium text-gray-800">{memory} MB</span><span>8 GB</span>
+                {/* Wizard content — pure HTML matching VirtualBox style */}
+                <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
+                  {current.key === "name" && (
+                    <div>
+                      <div className="mb-5">
+                        <label className="block text-xs text-gray-700 mb-1 font-medium">Name</label>
+                        <input value={vmName} onChange={e => { setVmName(e.target.value); playKeyClick(); }}
+                          className="w-full border border-[#7f9db9] bg-white px-2 py-1 text-xs text-gray-800 outline-none"
+                          style={{ boxShadow: "inset 1px 1px 2px rgba(0,0,0,0.1)" }} />
                       </div>
-                    </div>
-                    <div className="absolute top-[48%] left-[33%] right-[18%]">
-                      <input type="range" min={1} max={8} step={1} value={cpus}
-                        onChange={e => setCpus(Number(e.target.value))}
-                        className="w-full h-1.5" style={{ accentColor: accent }} />
-                      <div className="flex justify-between text-[8px] text-gray-500 mt-0.5">
-                        <span>1</span><span className="font-medium text-gray-800">{cpus} CPU</span><span>8</span>
-                      </div>
-                    </div>
-                    <button onClick={next}
-                      className="absolute bottom-[6%] right-[18%] rounded px-4 py-1 text-[10px] font-semibold text-white"
-                      style={{ background: accent }}>
-                      Next →
-                    </button>
-                  </>
-                )}
-
-                {current.key === "disk" && (
-                  <>
-                    <div className="absolute top-[38%] left-[33%] right-[18%]">
-                      <input type="range" min={10} max={100} step={5} value={diskSize}
-                        onChange={e => setDiskSize(Number(e.target.value))}
-                        className="w-full h-1.5" style={{ accentColor: accent }} />
-                      <div className="flex justify-between text-[8px] text-gray-500 mt-0.5">
-                        <span>10 GB</span><span className="font-medium text-gray-800">{diskSize} GB</span><span>100 GB</span>
-                      </div>
-                    </div>
-                    <button onClick={next}
-                      className="absolute bottom-[6%] right-[18%] rounded px-4 py-1 text-[10px] font-semibold text-white"
-                      style={{ background: accent }}>
-                      Next →
-                    </button>
-                  </>
-                )}
-
-                {current.key === "summary" && (
-                  <>
-                    <div className="absolute top-[30%] left-[33%] right-[18%] space-y-1 text-[10px] bg-white/90 p-2 rounded border border-gray-200 shadow-sm">
-                      {[["Name", vmName], ["Memory", `${memory} MB`], ["CPU", `${cpus} cores`],
-                        ["Disk", `${diskSize} GB`], ["ISO", config.iso.filename.slice(0, 18) + "…"],
-                      ].map(([l, v]) => (
-                        <div key={l} className="flex justify-between">
-                          <span className="text-gray-500">{l}</span>
-                          <span className="text-gray-800 font-medium">{v}</span>
+                      <div className="mb-5">
+                        <label className="block text-xs text-gray-700 mb-1 font-medium">ISO Image</label>
+                        <div className="flex gap-1">
+                          <input readOnly value={isoSelected ? config.iso.filename : ""}
+                            placeholder="(empty)"
+                            className="flex-1 border border-[#7f9db9] bg-white px-2 py-1 text-xs text-gray-600 outline-none"
+                            style={{ boxShadow: "inset 1px 1px 2px rgba(0,0,0,0.1)" }} />
+                          <button onClick={() => { playClick(); setIsoSelected(true); }}
+                            className="border border-[#7f9db9] bg-[#e8e8e8] px-2 py-1 text-xs text-gray-700 active:border-[#0078d4]"
+                            style={{ boxShadow: "1px 1px 2px rgba(0,0,0,0.15)" }}>
+                            Browse...
+                          </button>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                    <button onClick={next}
-                      className="absolute bottom-[6%] right-[18%] rounded px-5 py-1.5 text-xs font-bold text-white shadow-lg"
-                      style={{ background: accent }}>
-                      Finish →
-                    </button>
-                  </>
-                )}
+                  )}
+
+                  {current.key === "memory" && (
+                    <div>
+                      <div className="mb-5">
+                        <label className="block text-xs text-gray-700 mb-1 font-medium">Base Memory (MB)</label>
+                        <div className="flex items-center gap-3">
+                          <input type="range" min={1024} max={8192} step={256} value={memory}
+                            onChange={e => setMemory(Number(e.target.value))}
+                            className="flex-1 h-1.5" style={{ accentColor: accent }} />
+                          <input type="number" value={memory} min={1024} max={8192} step={256}
+                            onChange={e => setMemory(Number(e.target.value))}
+                            className="w-20 border border-[#7f9db9] bg-white px-1 py-0.5 text-xs text-gray-800 text-right outline-none"
+                            style={{ boxShadow: "inset 1px 1px 2px rgba(0,0,0,0.1)" }} />
+                        </div>
+                        <div className="flex justify-between text-[9px] text-gray-500 mt-1">
+                          <span>1 GB</span><span>8 GB</span>
+                        </div>
+                      </div>
+                      <div className="mb-5">
+                        <label className="block text-xs text-gray-700 mb-1 font-medium">Processors</label>
+                        <div className="flex items-center gap-3">
+                          <input type="range" min={1} max={8} step={1} value={cpus}
+                            onChange={e => setCpus(Number(e.target.value))}
+                            className="flex-1 h-1.5" style={{ accentColor: accent }} />
+                          <input type="number" value={cpus} min={1} max={8} step={1}
+                            onChange={e => setCpus(Number(e.target.value))}
+                            className="w-20 border border-[#7f9db9] bg-white px-1 py-0.5 text-xs text-gray-800 text-right outline-none"
+                            style={{ boxShadow: "inset 1px 1px 2px rgba(0,0,0,0.1)" }} />
+                        </div>
+                        <div className="flex justify-between text-[9px] text-gray-500 mt-1">
+                          <span>1</span><span>8</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {current.key === "disk" && (
+                    <div>
+                      <div className="mb-5">
+                        <label className="block text-xs text-gray-700 mb-1 font-medium">Disk Size (GB)</label>
+                        <div className="flex items-center gap-3">
+                          <input type="range" min={10} max={100} step={5} value={diskSize}
+                            onChange={e => setDiskSize(Number(e.target.value))}
+                            className="flex-1 h-1.5" style={{ accentColor: accent }} />
+                          <input type="number" value={diskSize} min={10} max={100} step={5}
+                            onChange={e => setDiskSize(Number(e.target.value))}
+                            className="w-20 border border-[#7f9db9] bg-white px-1 py-0.5 text-xs text-gray-800 text-right outline-none"
+                            style={{ boxShadow: "inset 1px 1px 2px rgba(0,0,0,0.1)" }} />
+                        </div>
+                        <div className="flex justify-between text-[9px] text-gray-500 mt-1">
+                          <span>10 GB</span><span>100 GB</span>
+                        </div>
+                      </div>
+                      <p className="text-[9px] text-gray-500 leading-relaxed">
+                        A virtual hard disk file will be created at the selected size.
+                        The file will grow as you add data (dynamic allocation).
+                      </p>
+                    </div>
+                  )}
+
+                  {current.key === "summary" && (
+                    <div className="border border-[#7f9db9] bg-white p-3">
+                      <div className="text-xs font-semibold text-gray-700 mb-2">Virtual machine settings</div>
+                      <div className="space-y-1.5 text-[10px]">
+                        {[["Name", vmName], ["Memory", `${memory} MB`], ["CPU", `${cpus} cores`],
+                          ["Disk", `${diskSize} GB VDI (dynamic)`],
+                          ["ISO", config.iso.filename.length > 30 ? config.iso.filename.slice(0, 28) + "…" : config.iso.filename],
+                        ].map(([l, v]) => (
+                          <div key={l} className="flex">
+                            <span className="text-gray-500 w-16">{l}</span>
+                            <span className="text-gray-800 font-medium">{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             </AnimatePresence>
+
+            {/* Bottom action buttons — VirtualBox style */}
+            <div className="border-t border-gray-300/60 bg-[#f0f0f0] px-3 py-2 flex items-center justify-end gap-2">
+              <button onClick={() => { if (stepIdx > 0) { playClick(); setStepIdx(p => p - 1); } }}
+                className={`px-3 py-1 text-[10px] border border-[#7f9db9] bg-[#e8e8e8] text-gray-700 ${stepIdx === 0 ? "opacity-30" : "active:border-[#0078d4]"}`}
+                style={{ boxShadow: "1px 1px 2px rgba(0,0,0,0.15)" }}
+                disabled={stepIdx === 0}>
+                &lt; Back
+              </button>
+              <button onClick={next}
+                className="px-3 py-1 text-[10px] border border-[#7f9db9] bg-[#e8e8e8] text-gray-700 active:border-[#0078d4]"
+                style={{ boxShadow: "1px 1px 2px rgba(0,0,0,0.15)" }}>
+                {isLast ? "Create" : "Next >"}
+              </button>
+              <button onClick={() => { playClick(); onComplete(); }}
+                className="px-3 py-1 text-[10px] border border-[#7f9db9] bg-[#e8e8e8] text-gray-700 active:border-[#0078d4]"
+                style={{ boxShadow: "1px 1px 2px rgba(0,0,0,0.15)" }}>
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
 
