@@ -16,42 +16,12 @@ const TOTAL_GB = 500;
 const FILESYSTEMS = ["ext4", "xfs", "btrfs", "f2fs", "swap", "FAT32", "NTFS"];
 const MOUNT_POINTS = ["/", "/boot", "/boot/efi", "/home", "/var", "/tmp", "[swap]", "none"];
 
-function getPartitionImg(osId: string): Record<string, string> {
-  if (osId === "mint") return {
-    manual: "/images/mint/22-mint-partition.webp",
-    boot: "/images/mint/22-mint-partition.webp",
-    root: "/images/mint/23-mint-create-partition.webp",
-    home: "/images/mint/23-mint-create-partition.webp",
-    swap: "/images/mint/22-mint-partition.webp",
-  };
-  if (osId === "zorin") return {
-    manual: "/images/zorin/11-installer.png",
-    boot: "/images/zorin/11-installer.png",
-    root: "/images/zorin/11-installer.png",
-    home: "/images/zorin/11-installer.png",
-    swap: "/images/zorin/11-installer.png",
-  };
-  if (osId === "arch") return {
-    manual: "/images/arch/08-disk-partitioning.png",
-    boot: "/images/arch/08-disk-partitioning.png",
-    root: "/images/arch/08-disk-partitioning.png",
-    home: "/images/arch/08-disk-partitioning.png",
-    swap: "/images/arch/08-disk-partitioning.png",
-  };
-  if (osId === "windows") return {
-    manual: "/images/win11-setup/07-partition-select.webp",
-    boot: "/images/win11-setup/07-partition-select.webp",
-    root: "/images/win11-setup/07-partition-select.webp",
-    home: "/images/win11-setup/07-partition-select.webp",
-    swap: "/images/win11-setup/07-partition-select.webp",
-  };
-  return {
-    manual: "/images/ubuntu/16-manual-partition.webp",
-    boot: "/images/ubuntu/17-boot-partition.png",
-    root: "/images/ubuntu/18-root-partition.webp",
-    home: "/images/ubuntu/19-home-partition.webp",
-    swap: "/images/ubuntu/20-swap-partition.webp",
-  };
+function getPartitionImg(osId: string): string {
+  if (osId === "mint") return "/images/mint/22-mint-partition.webp";
+  if (osId === "zorin") return "/images/zorin/11-installer.png";
+  if (osId === "arch") return "/images/arch/08-disk-partitioning.png";
+  if (osId === "windows") return "/images/win11-setup/07-partition-select.webp";
+  return "/images/ubuntu/16-manual-partition.webp";
 }
 
 const DEFAULT_PARTITIONS: PartitionEntry[] = [
@@ -62,27 +32,19 @@ const DEFAULT_PARTITIONS: PartitionEntry[] = [
 ];
 
 export default function Partition({
-  config,
-  onComplete,
-  diskShrunk,
-  onRebootWindows,
+  config, onComplete, diskShrunk, onRebootWindows,
 }: {
-  config: OSConfig;
-  onComplete: () => void;
-  diskShrunk: boolean;
-  onRebootWindows: () => void;
+  config: OSConfig; onComplete: () => void; diskShrunk: boolean; onRebootWindows: () => void;
 }) {
   const [partitions, setPartitions] = useState<PartitionEntry[]>(DEFAULT_PARTITIONS);
   const [showDialog, setShowDialog] = useState(false);
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [form, setForm] = useState({ sizeGB: 50, fs: "ext4", mount: "/" });
   const accent = config.branding.accent;
-  const PARTITION_IMG = getPartitionImg(config.id);
+  const partImg = getPartitionImg(config.id);
 
   const usedGB = partitions.reduce((sum, p) => sum + p.sizeGB, 0);
   const freeGB = Math.max(0, TOTAL_GB - usedGB);
-
-  const canAdd = freeGB >= 1;
   const canConfirm = partitions.some((p) => p.fs === "ext4" && p.mount === "/");
 
   const handleSubmit = useCallback(() => {
@@ -90,9 +52,7 @@ export default function Partition({
     const newPart: PartitionEntry = {
       device: `/dev/sda${partitions.length + 1}`,
       type: form.mount === "/" ? "Linux filesystem" : form.mount === "[swap]" ? "Linux swap" : "Linux filesystem",
-      fs: form.fs,
-      sizeGB: form.sizeGB,
-      mount: form.mount,
+      fs: form.fs, sizeGB: form.sizeGB, mount: form.mount,
       flags: form.mount === "/" ? ["root"] : form.mount === "/boot" ? ["boot"] : [],
     };
     if (editIdx !== null) {
@@ -105,31 +65,16 @@ export default function Partition({
     setForm({ sizeGB: 50, fs: "ext4", mount: "/" });
   }, [form, editIdx, partitions.length]);
 
-  const handleDelete = useCallback((idx: number) => {
-    playClick();
-    setPartitions((prev) => prev.filter((_, i) => i !== idx));
-  }, []);
-
-  const handleEdit = useCallback((idx: number) => {
-    playClick();
-    const p = partitions[idx];
-    setForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" });
-    setEditIdx(idx);
-    setShowDialog(true);
-  }, [partitions]);
-
   if (!diskShrunk) {
     return (
-      <div className="mx-auto w-full max-w-5xl">
-        <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
-          <img src={PARTITION_IMG.manual} alt="Manual partitioning" className="w-full h-auto" />
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+          <img src={partImg} alt="Partition" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
             <div className="text-center space-y-4 bg-black/60 backdrop-blur-sm rounded-2xl p-8 border border-red-500/20">
               <div className="text-3xl">⚠️</div>
-              <h2 className="text-lg font-bold text-red-400">No Unallocated Space Found</h2>
-              <p className="text-xs text-white/50 max-w-sm mx-auto">
-                Shrink your Windows partition in Disk Management before continuing.
-              </p>
+              <h2 className="text-lg font-bold text-red-400">No Unallocated Space</h2>
+              <p className="text-xs text-white/50 max-w-sm mx-auto">Shrink your Windows partition first.</p>
               <button onClick={() => { playClick(); onRebootWindows(); }}
                 className="rounded-lg bg-red-600 hover:bg-red-700 px-6 py-2.5 text-sm font-semibold text-white transition-colors">
                 Reboot into Windows
@@ -141,183 +86,79 @@ export default function Partition({
     );
   }
 
+  const hotspots = [
+    { id: "add", x: 8, y: 8, w: 20, h: 10, onClick: () => { playClick(); setEditIdx(null); setForm({ sizeGB: Math.min(50, Math.floor(freeGB || 50)), fs: "ext4", mount: "/" }); setShowDialog(true); } },
+    { id: "confirm", x: 72, y: 88, w: 18, h: 8, onClick: () => { if (canConfirm) { playClick(); onComplete(); } } },
+    { id: "back", x: 8, y: 88, w: 14, h: 8, onClick: () => { playClick(); onRebootWindows(); } },
+    { id: "edit-first", x: 8, y: 28, w: 60, h: 6, onClick: () => { const p = partitions[0]; playClick(); setForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" }); setEditIdx(0); setShowDialog(true); } },
+    { id: "edit-second", x: 8, y: 36, w: 60, h: 6, onClick: () => { const p = partitions[1] || partitions[0]; playClick(); setForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" }); setEditIdx(partitions.length > 1 ? 1 : 0); setShowDialog(true); } },
+  ];
+
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-      <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-[#1a1a24]">
-
-        {/* Full background screenshot */}
-        <img src={PARTITION_IMG.manual} alt="Manual partitioning"
+      <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+        <img src={partImg} alt="Manual partitioning"
           className="absolute inset-0 w-full h-full object-cover" />
+        {hotspots.map(h => (
+          <div key={h.id} onClick={h.onClick}
+            className="absolute z-10"
+            style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: "pointer" }} />
+        ))}
 
-        {/* Content floats on the screenshot */}
-        <div className="absolute inset-x-0 bottom-0 pt-20 pb-4 px-4 overflow-y-auto max-h-full"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-
-            {/* Disk visual bar */}
-            <div className="max-w-3xl mx-auto space-y-2 mb-3">
-              <div className="text-[10px] font-medium text-white/50">/dev/sda — {TOTAL_GB} GB</div>
-              <div className="flex h-8 w-full overflow-hidden rounded-lg border border-white/10 bg-white/[0.06]">
-                {partitions.map((p, i) => {
-                  const pct = (p.sizeGB / TOTAL_GB) * 100;
-                  const colors: Record<string, string> = {
-                    FAT32: "bg-blue-200", NTFS: "bg-blue-300", ext4: "bg-emerald-300",
-                    swap: "bg-amber-200", xfs: "bg-purple-200", btrfs: "bg-cyan-200", f2fs: "bg-teal-200",
-                  };
-                  return (
-                    <div key={i} className={`${colors[p.fs] || "bg-white/10"} flex items-center justify-center text-[9px] font-medium text-white/80 border-r border-white/50 overflow-hidden`}
-                      style={{ width: `${pct}%` }} title={`${p.device} — ${p.fs} — ${p.sizeGB} GB — ${p.mount}`}>
-                      {pct > 5 && <span className="truncate px-1">{p.mount || p.fs}</span>}
-                    </div>
-                  );
-                })}
-                {freeGB > 0 && (
-                  <div className="flex items-center justify-center text-[9px] font-medium text-white/40 border-r border-white/50 border-dashed"
-                    style={{ width: `${(freeGB / TOTAL_GB) * 100}%` }}>
-                    {freeGB > 10 && <span className="truncate px-1">Free ({freeGB} GB)</span>}
+        <AnimatePresence>
+          {showDialog && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center p-4">
+              <div className="bg-[#12121a] border border-white/15 rounded-xl p-5 max-w-sm w-full shadow-2xl">
+                <h3 className="text-sm font-bold text-white/90 mb-3">{editIdx !== null ? "Edit partition" : "Create partition"}</h3>
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div>
+                    <label className="block text-[10px] font-medium text-white/60 mb-1">Size (GB)</label>
+                    <input type="number" min={1} max={Math.floor(freeGB + (editIdx !== null ? partitions[editIdx].sizeGB : 0))}
+                      value={form.sizeGB} onChange={(e) => setForm((p) => ({ ...p, sizeGB: Number(e.target.value) }))}
+                      className="w-full rounded-lg border border-white/15 px-2 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]" />
                   </div>
-                )}
-              </div>
-              <div className="flex justify-between text-[10px] text-white/40">
-                <span>Used: {usedGB.toFixed(1)} GB</span>
-                <span>Free: {freeGB.toFixed(1)} GB</span>
-              </div>
-            </div>
-
-            {/* Add partition button */}
-            <div className="max-w-3xl mx-auto mb-2">
-              <button disabled={!canAdd} onClick={() => { playClick(); setEditIdx(null); setForm({ sizeGB: Math.min(50, Math.floor(freeGB)), fs: "ext4", mount: "/" }); setShowDialog(true); }}
-                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-medium transition-colors ${
-                  canAdd ? "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]" : "border-white/10 bg-white/[0.03] text-white/30 cursor-not-allowed"
-                }`} style={canAdd ? { borderColor: `${accent}30`, color: accent } : {}}>
-                + Add partition
-              </button>
-            </div>
-
-            {/* Partition table */}
-            <div className="max-w-3xl mx-auto rounded-xl border border-white/10 overflow-hidden bg-[#12121a]/80 backdrop-blur-sm">
-              <table className="w-full text-[11px]">
-                <thead>
-                  <tr className="bg-white/[0.03] border-b border-white/10 text-left text-[10px] font-medium text-white/50 uppercase tracking-wider">
-                    <th className="px-3 py-1.5">Device</th>
-                    <th className="px-3 py-1.5">Type</th>
-                    <th className="px-3 py-1.5">Filesystem</th>
-                    <th className="px-3 py-1.5">Size</th>
-                    <th className="px-3 py-1.5">Mount Point</th>
-                    <th className="px-3 py-1.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {partitions.map((p, i) => (
-                    <tr key={i} className={`${p.mount === "/" ? "bg-emerald-500/5" : ""} hover:bg-white/[0.05] transition-colors`}>
-                      <td className="px-3 py-1.5 font-mono text-[10px] text-white/60">{p.device}</td>
-                      <td className="px-3 py-1.5 text-white/80">{p.type}</td>
-                      <td className="px-3 py-1.5">
-                        {p.fs ? <span className="inline-block rounded bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-medium text-white/60">{p.fs}</span> : <span className="text-white/30">—</span>}
-                      </td>
-                      <td className="px-3 py-1.5 text-white/60">{p.sizeGB} GB</td>
-                      <td className="px-3 py-1.5">
-                        {p.mount ? <span className={`font-mono text-[10px] ${p.mount === "/" ? "text-emerald-400 font-semibold" : "text-white/60"}`}>{p.mount}</span> : <span className="text-white/30">—</span>}
-                      </td>
-                      <td className="px-3 py-1.5 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => handleEdit(i)} className="rounded px-1.5 py-0.5 text-[10px] text-white/50 hover:bg-white/[0.06] hover:text-white/80 transition-colors">Edit</button>
-                          <button onClick={() => handleDelete(i)} className="rounded px-1.5 py-0.5 text-[10px] text-white/40 hover:bg-red-500/5 hover:text-red-500 transition-colors">Delete</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {freeGB > 0 && (
-                    <tr className="bg-white/[0.03]">
-                      <td className="px-3 py-1.5 font-mono text-[10px] text-white/40">—</td>
-                      <td className="px-3 py-1.5 text-white/40 italic text-[10px]">Free Space</td>
-                      <td className="px-3 py-1.5 text-white/30">—</td>
-                      <td className="px-3 py-1.5 text-white/40">{freeGB.toFixed(1)} GB</td>
-                      <td className="px-3 py-1.5 text-white/30">—</td>
-                      <td className="px-3 py-1.5" />
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Legend + confirm */}
-            <div className="max-w-3xl mx-auto mt-2 space-y-2">
-              <div className="flex flex-wrap gap-3 text-[10px] text-white/40">
-                {[{ fs: "FAT32", color: "bg-blue-200" }, { fs: "NTFS", color: "bg-blue-300" }, { fs: "ext4", color: "bg-emerald-300" }, { fs: "swap", color: "bg-amber-200" }].map((l) => (
-                  <div key={l.fs} className="flex items-center gap-1"><div className={`h-2.5 w-2.5 rounded ${l.color}`} /><span>{l.fs}</span></div>
-                ))}
-              </div>
-              {!canConfirm && (
-                <div className="text-[10px] text-amber-400 bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-1 text-center">
-                  You must have an ext4 partition mounted at / to continue
+                  <div>
+                    <label className="block text-[10px] font-medium text-white/60 mb-1">FS</label>
+                    <select value={form.fs} onChange={(e) => setForm((p) => ({ ...p, fs: e.target.value }))}
+                      className="w-full rounded-lg border border-white/15 px-2 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
+                      {FILESYSTEMS.map((fs) => <option key={fs} value={fs}>{fs}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-medium text-white/60 mb-1">Mount</label>
+                    <select value={form.mount} onChange={(e) => setForm((p) => ({ ...p, mount: e.target.value }))}
+                      className="w-full rounded-lg border border-white/15 px-2 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
+                      {MOUNT_POINTS.map((mp) => <option key={mp} value={mp}>{mp}</option>)}
+                    </select>
+                  </div>
                 </div>
-              )}
-            </div>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => { playClick(); setShowDialog(false); }}
+                    className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white/60 hover:bg-white/[0.03]">Cancel</button>
+                  <button onClick={handleSubmit} disabled={form.sizeGB < 1}
+                    className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+                    style={{ background: accent }}>{editIdx !== null ? "Save" : "Create"}</button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Inline create/edit partition form */}
-            <AnimatePresence>
-              {showDialog && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }} className="max-w-3xl mx-auto mt-2 overflow-hidden">
-                  <div className="rounded-xl border border-white/15 bg-[#12121a] p-4 shadow-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="rounded-lg overflow-hidden border border-white/10 shrink-0">
-                        <img src={PARTITION_IMG[form.mount === "/boot" ? "boot" : form.mount === "/home" ? "home" : form.mount === "[swap]" ? "swap" : "root"]}
-                          alt="Partition type" className="w-20 h-14 object-cover" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-white/90">{editIdx !== null ? "Edit partition" : "Create partition"}</h3>
-                        <p className="text-[10px] text-white/50">Configure the new partition for {config.branding.name}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-medium text-white/60 mb-1">Size (GB)</label>
-                        <input type="number" min={1} max={Math.floor(freeGB + (editIdx !== null ? partitions[editIdx].sizeGB : 0))}
-                          value={form.sizeGB} onChange={(e) => setForm((p) => ({ ...p, sizeGB: Number(e.target.value) }))}
-                          className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-medium text-white/60 mb-1">Filesystem</label>
-                        <select value={form.fs} onChange={(e) => setForm((p) => ({ ...p, fs: e.target.value }))}
-                          className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
-                          {FILESYSTEMS.map((fs) => <option key={fs} value={fs}>{fs}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-medium text-white/60 mb-1">Mount point</label>
-                        <select value={form.mount} onChange={(e) => setForm((p) => ({ ...p, mount: e.target.value }))}
-                          className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/90 outline-none bg-[#1a1a24]">
-                          {MOUNT_POINTS.map((mp) => <option key={mp} value={mp}>{mp}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2 mt-3">
-                      <button onClick={() => { playClick(); setShowDialog(false); setEditIdx(null); }}
-                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white/60 hover:bg-white/[0.03] transition-colors">Cancel</button>
-                      <button onClick={handleSubmit} disabled={form.sizeGB < 1}
-                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-                        style={{ background: accent }}>
-                        {editIdx !== null ? "Save" : "Create"}
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        {/* Subtle disk used bar at bottom */}
+        <div className="absolute bottom-0 inset-x-0 z-10 px-2 py-1 bg-gradient-to-t from-black/60 to-transparent">
+          <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            {partitions.map((p, i) => {
+              const pct = (p.sizeGB / TOTAL_GB) * 100;
+              const colors: Record<string, string> = {
+                FAT32: "bg-blue-300", NTFS: "bg-blue-400", ext4: "bg-emerald-400",
+                swap: "bg-amber-300", xfs: "bg-purple-300", btrfs: "bg-cyan-300",
+              };
+              return <div key={i} className={`${colors[p.fs] || "bg-white/20"}`} style={{ width: `${pct}%` }} />;
+            })}
+            {freeGB > 0 && <div className="bg-white/5" style={{ width: `${(freeGB / TOTAL_GB) * 100}%` }} />}
           </div>
-      </div>
-
-      {/* Bottom nav */}
-      <div className="flex items-center justify-between border-t border-white/10 bg-[#1a1a24] px-4 py-2 rounded-b-2xl shrink-0">
-        <button onClick={() => { playClick(); onRebootWindows(); }}
-          className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-medium text-white/60 hover:bg-white/10 transition-colors">
-          ← Back
-        </button>
-        <button disabled={!canConfirm} onClick={() => { playClick(); onComplete(); }}
-          className={`rounded-lg px-5 py-2 text-[11px] font-semibold transition-colors text-white ${
-            canConfirm ? "hover:opacity-90" : "bg-white/10 text-white/30 cursor-not-allowed"
-          }`} style={canConfirm ? { background: accent } : {}}>Install now →</button>
+        </div>
       </div>
     </div>
   );

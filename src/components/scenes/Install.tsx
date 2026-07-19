@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
-import { playClick, playKeyClick, playSuccess } from "../shared/sounds";
+import { playClick, playSuccess } from "../shared/sounds";
 import { SparkleBurst } from "../shared/InteractiveEffects";
 import { useSceneAdvance } from "../shared/SceneAdvance";
 
@@ -104,8 +104,6 @@ function getStepImg(osId: string, step: InstallerStep): string {
   return STEP_IMG[step];
 }
 
-
-
 const LANGUAGES = [
   "English", "Español", "Français", "Deutsch", "Português (Brasil)",
   "Italiano", "中文 (简体)", "日本語", "한국어", "Русский",
@@ -115,6 +113,8 @@ const KEYBOARD_LAYOUTS = [
   "English (US)", "English (UK)", "English (India)", "Español (Latinoamérica)",
   "Français", "Deutsch", "Italiano", "Português (Brasil)", "Dvorak", "Colemak",
 ];
+
+type HotspotDef = { id: string; x: number; y: number; w: number; h: number; onClick: () => void };
 
 export default function Install({ config, speed, onComplete, path }: {
   config: OSConfig; speed: "normal" | "fast"; onComplete: () => void; path?: string;
@@ -130,23 +130,10 @@ export default function Install({ config, speed, onComplete, path }: {
   const [values, setValues] = useState<Record<string, string>>({});
   const [installType, setInstallType] = useState<string>(path === "vm" ? "erase" : "erase");
   const [progress, setProgress] = useState(0);
-  const [elapsed, setElapsed] = useState(0);
   const [showSparkle, setShowSparkle] = useState(false);
   const [fileIdx, setFileIdx] = useState(0);
   const [restartPhase, setRestartPhase] = useState<"countdown" | "done">("countdown");
-  type PartitionEntry = { device: string; type: string; fs: string; sizeGB: number; mount: string; flags: string[] };
-  const FILESYSTEMS = ["ext4", "xfs", "btrfs", "f2fs", "swap", "FAT32", "NTFS"];
-  const MOUNT_POINTS = ["/", "/boot", "/boot/efi", "/home", "/var", "/tmp", "[swap]", "none"];
-  const DEFAULT_PARTITIONS: PartitionEntry[] = [
-    { device: "/dev/sda1", type: "EFI System", fs: "FAT32", sizeGB: 0.5, mount: "/boot/efi", flags: ["boot", "esp"] },
-    { device: "/dev/sda2", type: "Microsoft reserved", fs: "", sizeGB: 0.1, mount: "", flags: [] },
-    { device: "/dev/sda3", type: "Basic Data", fs: "NTFS", sizeGB: 450, mount: "/mnt/windows", flags: [] },
-    { device: "/dev/sda4", type: "Linux swap", fs: "swap", sizeGB: 8, mount: "[swap]", flags: [] },
-  ];
-  const [partitions, setPartitions] = useState<PartitionEntry[]>(DEFAULT_PARTITIONS);
-  const [showPartForm, setShowPartForm] = useState(false);
-  const [editPartIdx, setEditPartIdx] = useState<number | null>(null);
-  const [partForm, setPartForm] = useState({ sizeGB: 50, fs: "ext4", mount: "/" });
+  const [wizardAction, setWizardAction] = useState<"idle" | "clicked">("idle");
 
   const baseOrder = getStepOrder(config.id);
   const STEP_ORDER: InstallerStep[] = installType === "something"
@@ -161,29 +148,14 @@ export default function Install({ config, speed, onComplete, path }: {
   }, [phase, registerAdvance, onComplete]);
 
   useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Enter") {
-        const active = document.activeElement;
-        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
-        e.preventDefault();
-        handleNext();
-      }
-    }
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, step, values, installType]);
-
-  useEffect(() => {
     if (phase !== "installing") return;
-    setProgress(0); setFileIdx(0); setElapsed(0);
+    setProgress(0); setFileIdx(0);
     const start = performance.now();
     let raf = 0;
     const files = config.installFiles;
     const tick = (now: number) => {
       const pct = Math.min(100, ((now - start) / installDuration) * 100);
       setProgress(pct);
-      setElapsed(Math.floor((now - start) / 1000));
       setFileIdx(Math.min(files.length - 1, Math.floor((pct / 100) * files.length)));
       if (pct < 100) raf = requestAnimationFrame(tick);
       else { setShowSparkle(true); setTimeout(() => setShowSparkle(false), 1500); setPhase(isWindows ? "done" : "remove_media"); }
@@ -211,7 +183,7 @@ export default function Install({ config, speed, onComplete, path }: {
       case "language": return !!values["language"];
       case "keyboard": return !!values["keyboard"];
       case "create_user": return !!(values["username"] || "").trim() && !!(values["password"] || "").trim();
-      case "partition": return partitions.some((p) => p.fs === "ext4" && p.mount === "/");
+      case "partition": return true;
       default: return true;
     }
   }
@@ -229,56 +201,82 @@ export default function Install({ config, speed, onComplete, path }: {
 
   function setVal(field: string, val: string) { setValues((p) => ({ ...p, [field]: val })); }
 
-  // ─── Boot phase ───
-  if (phase === "boot") {
-    if (bootSplash) {
-      return (
-        <div className="mx-auto w-full max-w-5xl flex flex-col items-center justify-center rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-          style={{ height: "min(600px, 70vh)", background: surface }}>
-          <div className="flex flex-col items-center gap-6">
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
-              <svg width="72" height="72" viewBox="0 0 32 32" fill="none">
-                <circle cx="16" cy="16" r="15" stroke="white" strokeWidth="1.5" fill="none" />
-                <circle cx="16" cy="5.5" r="2.5" fill="white" />
-                <circle cx="7" cy="20.5" r="2.5" fill="white" />
-                <circle cx="25" cy="20.5" r="2.5" fill="white" />
-              </svg>
-            </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-              className="flex gap-1.5">
-              {[0, 1, 2].map(i => (
-                <motion.div key={i}
-                  className="h-2 w-2 rounded-full bg-white/60"
-                  animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
-              ))}
-            </motion.div>
-            <div className="text-xs text-white/40 font-mono">Loading installer…</div>
-          </div>
-        </div>
-      );
+  function getBootHotspots(): HotspotDef[] {
+    if (isWindows || bootSplash) return [];
+    return [
+      { id: "install", x: 20, y: 62, w: 25, h: 10, onClick: () => { playClick(); setBootSplash(true); } },
+      { id: "try", x: 20, y: 75, w: 25, h: 10, onClick: () => { playClick(); setBootSplash(true); } },
+    ];
+  }
+
+  function getWizardHotspots(): HotspotDef[] {
+    const base: HotspotDef[] = [
+      { id: "next", x: 65, y: 82, w: 18, h: 9, onClick: handleNext },
+    ];
+    if (currentIdx > 0) {
+      base.push({
+        id: "back", x: 15, y: 82, w: 18, h: 9,
+        onClick: () => { if (currentIdx > 0) { playClick(); setStep(STEP_ORDER[currentIdx - 1]); } },
+      });
     }
+    return base;
+  }
+
+  function getRemoveMediaHotspots(): HotspotDef[] {
+    return [
+      { id: "restart", x: 30, y: 70, w: 40, h: 10, onClick: () => { playClick(); setPhase("done"); } },
+    ];
+  }
+
+  function getDoneHotspots(): HotspotDef[] {
+    if (restartPhase !== "done") return [];
+    return [
+      { id: "restart", x: 30, y: 70, w: 40, h: 10, onClick: () => { playSuccess(); onComplete(); } },
+    ];
+  }
+
+  function renderHotspotPhase(src: string, hotspots: HotspotDef[]) {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
-          <img src={getBootImg(config.id)} alt={`Try or Install ${osName}`}
-            className="absolute inset-0 w-full h-full object-cover" style={{ background: surface }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/[0.02] pointer-events-none" />
-
-          <div className="absolute bottom-3 left-3 right-3 z-10 max-w-xs mx-auto space-y-2">
-            <button onClick={() => { playClick(); setBootSplash(true); }}
-              className="w-full rounded-lg py-2.5 text-sm font-bold text-white shadow-lg"
-              style={{ background: accent }}>
-              Install {osName}
-            </button>
-            <button onClick={() => { playClick(); setBootSplash(true); }}
-              className="w-full rounded-lg border border-white/20 bg-white/5 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all">
-              Try {osName}
-            </button>
-          </div>
+          <img src={src} alt=""
+            className="absolute inset-0 w-full h-full object-cover" />
+          {hotspots.map(h => (
+            <div key={h.id} onClick={h.onClick}
+              className="absolute z-10"
+              style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: "pointer" }} />
+          ))}
+          {phase === "boot" && bootSplash && (
+            <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4">
+                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}>
+                  <svg width="60" height="60" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="15" stroke={accent} strokeWidth="1.5" fill="none" />
+                    <circle cx="16" cy="5.5" r="2.5" fill={accent} />
+                    <circle cx="7" cy="20.5" r="2.5" fill={accent} />
+                    <circle cx="25" cy="20.5" r="2.5" fill={accent} />
+                  </svg>
+                </motion.div>
+                <div className="flex gap-1.5">
+                  {[0, 1, 2].map(i => (
+                    <motion.div key={i} className="h-2 w-2 rounded-full"
+                      style={{ background: accent }}
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
+                  ))}
+                </div>
+                <div className="text-xs text-white/40 font-mono">Starting installer…</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
+  }
+
+  // ─── Boot phase ───
+  if (phase === "boot") {
+    return renderHotspotPhase(getBootImg(config.id), getBootHotspots());
   }
 
   // ─── Installing phase ───
@@ -288,7 +286,6 @@ export default function Install({ config, speed, onComplete, path }: {
         <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
           <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10"
             style={{ background: "linear-gradient(180deg, #0a0a0f 0%, #0d1117 40%, #0a0a0f 100%)" }}>
-            {/* Windows logo — upper area */}
             <div className="absolute top-[18%] inset-x-0 flex justify-center">
               <div className="grid grid-cols-2 gap-px">
                 <div className="w-3 h-3 bg-[#0078d4]" style={{ borderTopLeftRadius: "1px" }} />
@@ -297,7 +294,6 @@ export default function Install({ config, speed, onComplete, path }: {
                 <div className="w-3 h-3 bg-[#0078d4]" style={{ borderBottomRightRadius: "1px" }} />
               </div>
             </div>
-            {/* Dots — below logo */}
             <div className="absolute top-[26%] inset-x-0 flex justify-center gap-1">
               {[0, 1, 2, 3, 4].map((i) => (
                 <motion.div key={i} className="h-1 w-1 rounded-full bg-white/50"
@@ -305,7 +301,6 @@ export default function Install({ config, speed, onComplete, path }: {
                   transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.25 }} />
               ))}
             </div>
-            {/* Text — center */}
             <div className="absolute top-[32%] inset-x-0 text-center">
               <p className="text-xs text-white/60 font-light tracking-wide">Copying Windows files</p>
               <p className="text-[9px] text-white/25 font-mono mt-1">{Math.floor(progress)}%</p>
@@ -315,7 +310,6 @@ export default function Install({ config, speed, onComplete, path }: {
                 </p>
               )}
             </div>
-            {/* Bottom progress bar */}
             <div className="absolute bottom-0 inset-x-0 h-0.5" style={{ background: "rgba(255,255,255,0.06)" }}>
               <motion.div className="h-full" style={{ background: "#0078d4" }}
                 animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }} />
@@ -331,28 +325,6 @@ export default function Install({ config, speed, onComplete, path }: {
         <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
           <img src={installImg} alt={`Installing ${osName}`}
             className="absolute inset-0 w-full h-full object-cover" />
-
-          {/* Progress info floats on the install screenshot */}
-          <div className="absolute bottom-0 inset-x-0 z-10">
-            <div className="px-4 pb-3 pt-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-              <div className="max-w-lg mx-auto">
-                <div className="flex justify-between text-[9px] text-white/40 font-mono mb-1">
-                  <span>{Math.floor(progress)}%</span>
-                  <span>{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>
-                </div>
-                <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
-                  <motion.div className="h-full rounded-full" style={{ background: accent }}
-                    animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }} />
-                </div>
-                <div className="mt-1 h-8 overflow-hidden text-[9px] text-white/40 font-mono">
-                  {config.installFiles.slice(Math.max(0, fileIdx - 1), fileIdx + 1).map((file, i) => {
-                    const isCurrent = Math.max(0, fileIdx - 1) + i === fileIdx;
-                    return <div key={i} className={`truncate ${isCurrent ? "text-white/70" : "opacity-40"}`}>{isCurrent && "▸ "}{file}</div>;
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -360,352 +332,88 @@ export default function Install({ config, speed, onComplete, path }: {
 
   // ─── Remove media ───
   if (phase === "remove_media") {
-    return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0" style={{ background: surface }}>
-          <img src={getRestartImg(config.id)} alt="Restart needed"
-            className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute bottom-4 left-4 right-4 z-10 max-w-xs mx-auto">
-            <button onClick={() => { playClick(); setPhase("done"); }}
-              className="w-full rounded-lg py-2.5 text-sm font-bold text-white shadow-lg"
-              style={{ background: accent }}>
-              Continue →
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return renderHotspotPhase(getRestartImg(config.id), getRemoveMediaHotspots());
   }
 
   // ─── Done ───
   if (phase === "done") {
-    return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
-          <img src={getRestartImg(config.id)} alt="Restart"
-            className="absolute inset-0 w-full h-full object-cover" />
-          {restartPhase === "done" ? (
-            <div className="absolute bottom-4 left-4 right-4 z-10 max-w-xs mx-auto">
-              <button onClick={() => { playSuccess(); onComplete(); }}
-                className="w-full rounded-lg py-2.5 text-sm font-bold text-white shadow-lg"
-                style={{ background: accent }}>
-                Restart Now →
-              </button>
-            </div>
-          ) : (
-            <div className="absolute bottom-4 left-4 right-4 z-10 text-center">
-              <div className="text-xs text-white/40 font-mono">Restarting…</div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
+    return renderHotspotPhase(getRestartImg(config.id), getDoneHotspots());
   }
 
   // ══════════════════════════════════════════════════════════════
-  // WIZARD — Screenshot fills the frame, fields sit IN the image via bottom overlay
+  // WIZARD — Screenshot fills the frame, hotspots over buttons
   // ══════════════════════════════════════════════════════════════
-  function renderWizard() {
-    const formContent = () => {
-      switch (step) {
-        case "language":
-          return (
-            <>
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Select your language</div>
-              <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto mb-2">
-                {LANGUAGES.map((lang) => (
-                  <button key={lang} onClick={() => { playClick(); setVal("language", lang); }}
-                    className={`rounded px-2 py-1 text-[11px] transition-all ${
-                      values["language"] === lang ? "text-white font-semibold" : "text-white/50 hover:text-white/80"
-                    }`} style={values["language"] === lang ? { background: accent } : {}}>{lang}</button>
-                ))}
-              </div>
-              <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
-                style={{ background: accent }}>Next</button>
-            </>
-          );
-        case "keyboard":
-          return (
-            <>
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Keyboard layout</div>
-              <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto mb-2">
-                {KEYBOARD_LAYOUTS.map((layout) => (
-                  <button key={layout} onClick={() => { playClick(); setVal("keyboard", layout); }}
-                    className={`rounded px-2 py-1 text-[11px] transition-all ${
-                      values["keyboard"] === layout ? "text-white font-semibold" : "text-white/50 hover:text-white/80"
-                    }`} style={values["keyboard"] === layout ? { background: accent } : {}}>{layout}</button>
-                ))}
-              </div>
-              <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
-                style={{ background: accent }}>Next</button>
-            </>
-          );
-        case "network":
-          return (
-            <>
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Connect to network</div>
-              <div className="space-y-1 mb-2">
-                {[{ id: "wifi", label: "HomeWiFi", icon: "📶" }, { id: "ethernet", label: "Wired Ethernet", icon: "🔌" }].map((n) => (
-                  <button key={n.id} onClick={() => { playClick(); setVal("network", n.id); }}
-                    className={`block text-[11px] transition-all ${
-                      values["network"] === n.id ? "text-white font-semibold" : "text-white/50 hover:text-white/80"
-                    }`}>
-                    <span>{n.icon}</span> <span>{n.label}</span>
-                  </button>
-                ))}
-                <button onClick={() => { playClick(); setVal("network", "skip"); }}
-                  className={`block text-[11px] transition-all ${
-                    values["network"] === "skip" ? "text-white font-semibold" : "text-white/40 hover:text-white/60"
-                  }`}>Skip for now</button>
-              </div>
-              <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
-                style={{ background: accent }}>Next</button>
-            </>
-          );
-        case "install_type":
-          return (
-            <>
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Type of installation</div>
-              <div className="space-y-1 mb-2">
-                {[
-                  { id: "erase", label: `Erase disk and install ${osName}` },
-                  { id: "alongside", label: `Install ${osName} alongside existing OS` },
-                  { id: "something", label: "Something else (manual partitioning)" },
-                ].filter(opt => path !== "vm" || opt.id === "erase").map((opt) => (
-                  <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
-                    className={`block text-[11px] text-left transition-all ${
-                      installType === opt.id ? "text-white font-semibold" : "text-white/50 hover:text-white/80"
-                    }`}>{opt.label}</button>
-                ))}
-              </div>
-              <button onClick={() => { if (installType === "something") { setStep(STEP_ORDER[currentIdx + 1]); } else { playClick(); handleNext(); } }}
-                className="rounded px-3 py-1 text-[10px] font-semibold text-white"
-                style={{ background: accent }}>Next</button>
-            </>
-          );
-        case "install_option":
-          return (
-            <>
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Installation method</div>
-              <div className="flex gap-2 mb-2">
-                {[
-                  { id: "interactive", label: "Interactive", desc: "Walk through each step" },
-                  { id: "automated", label: "Automated", desc: "Use a preseed file" },
-                ].map((opt) => (
-                  <button key={opt.id} onClick={() => { playClick(); setVal("install_option", opt.id); }}
-                    className={`text-left transition-all ${values["install_option"] === opt.id ? "text-white" : "text-white/50 hover:text-white/80"}`}>
-                    <div className="text-[11px] font-semibold">{opt.label}</div>
-                    <div className="text-[9px] text-white/30">{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-              <button onClick={() => { playClick(); handleNext(); }}
-                className="rounded px-3 py-1 text-[10px] font-semibold text-white"
-                style={{ background: accent }}>Next</button>
-            </>
-          );
-        case "third_party":
-          return (
-            <>
-              <label className="flex items-center gap-2 mb-2">
-                <input type="checkbox" defaultChecked style={{ accentColor: accent }} />
-                <span className="text-[11px] text-white/70">Install third-party software for graphics and Wi-Fi</span>
-              </label>
-              <button onClick={() => { playClick(); handleNext(); }}
-                className="rounded px-3 py-1 text-[10px] font-semibold text-white"
-                style={{ background: accent }}>Next</button>
-            </>
-          );
-        case "app_selection":
-          return (
-            <>
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Applications to install</div>
-              <div className="flex gap-2 mb-2">
-                {[
-                  { id: "normal", label: "Normal", desc: "Office, browser, games, media player" },
-                  { id: "minimal", label: "Minimal", desc: "Browser and basic utilities" },
-                ].map((opt) => (
-                  <button key={opt.id} onClick={() => { playClick(); setVal("apps", opt.id); }}
-                    className={`text-left transition-all ${values["apps"] === opt.id ? "text-white" : "text-white/50 hover:text-white/80"}`}>
-                    <div className="text-[11px] font-semibold">{opt.label}</div>
-                    <div className="text-[9px] text-white/40">{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-              <button onClick={() => { playClick(); handleNext(); }}
-                className="rounded px-3 py-1 text-[10px] font-semibold text-white"
-                style={{ background: accent }}>Next</button>
-            </>
-          );
-        case "timezone":
-          return (
-            <>
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Select your timezone</div>
-              <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto mb-2">
-                {["UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-                  "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Tokyo", "Australia/Sydney",
-                ].map((tz) => (
-                  <button key={tz} onClick={() => { playClick(); setVal("timezone", tz); }}
-                    className={`rounded px-2 py-1 text-[11px] transition-all ${
-                      values["timezone"] === tz ? "text-white font-semibold" : "text-white/50 hover:text-white/80"
-                    }`} style={values["timezone"] === tz ? { background: accent } : {}}>{tz}</button>
-                ))}
-              </div>
-              <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
-                style={{ background: accent }}>Next</button>
-            </>
-          );
-        case "create_user":
-          return (
-            <>
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Who are you?</div>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {[
-                  { key: "name", placeholder: "Your name" },
-                  { key: "computer_name", placeholder: "Computer name" },
-                  { key: "username", placeholder: "Username" },
-                  { key: "password", placeholder: "Password", secret: true },
-                ].map((f) => (
-                  <input key={f.key} type={f.secret ? "password" : "text"}
-                    value={values[f.key] ?? ""} placeholder={f.placeholder}
-                    onChange={(e) => { setVal(f.key, e.target.value); playKeyClick(); }}
-                    className="border-b border-white/20 bg-transparent px-1 py-0.5 text-[11px] text-white/90 outline-none placeholder:text-white/30 transition-colors w-[120px]" />
-                ))}
-              </div>
-              <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
-                style={{ background: accent }}>Next</button>
-            </>
-          );
-        case "review":
-          return (
-            <>
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Ready to install</div>
-              <div className="flex flex-wrap gap-x-4 gap-y-0.5 mb-1">
-                {[
-                  ["Language", values["language"] ?? "English"],
-                  ["Keyboard", values["keyboard"] ?? "English (US)"],
-                  ["Network", values["network"] === "skip" ? "Skipped" : values["network"] ?? "HomeWiFi"],
-                  ["Install type", installType === "erase" ? "Erase disk" : installType === "alongside" ? "Dual boot" : "Manual"],
-                  ["Timezone", values["timezone"] ?? "UTC"],
-                  ["Username", values["username"] ?? "user"],
-                ].map(([l, v]) => (
-                  <div key={l} className="text-[10px]">
-                    <span className="text-white/40">{l}: </span>
-                    <span className="text-white/70 font-medium">{v}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[9px] text-white/40 mb-1">The changes listed above will be written to disk.</p>
-              <button onClick={() => { playClick(); setPhase("installing"); }}
-                className="rounded px-3 py-1.5 text-[10px] font-semibold text-white"
-                style={{ background: accent }}>Install Now</button>
-            </>
-          );
-        case "partition":
-          return (
-            <>
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Manual Partitioning</div>
-              <div className="space-y-0.5 max-h-36 overflow-y-auto mb-1">
-                {partitions.map((p, i) => (
-                  <div key={i} className="flex items-center gap-2 text-[10px]">
-                    <span className="font-mono text-white/60">{p.device}</span>
-                    <span className="text-white/30">{p.sizeGB} GB</span>
-                    {p.mount && <span className="font-mono text-white/50">{p.mount}</span>}
-                    <button onClick={() => { playClick(); setPartForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" }); setEditPartIdx(i); setShowPartForm(true); }}
-                      className="text-white/40 hover:text-white/80">Edit</button>
-                    <button onClick={() => { playClick(); setPartitions(prev => prev.filter((_, j) => j !== i)); }}
-                      className="text-red-400/60 hover:text-red-400">Del</button>
-                  </div>
-                ))}
-                <button onClick={() => { playClick(); setEditPartIdx(null); setPartForm({ sizeGB: 50, fs: "ext4", mount: "/" }); setShowPartForm(true); }}
-                  className="text-[10px] text-white/40 hover:text-white/80"
-                  style={{ color: accent }}>+ Add partition</button>
-              </div>
-              {showPartForm && (
-                <div className="flex flex-wrap gap-2 mb-1">
-                  <div>
-                    <label className="text-[8px] text-white/40 block">Size (GB)</label>
-                    <input type="number" min={1} max={500}
-                      value={partForm.sizeGB} onChange={(e) => setPartForm(p => ({ ...p, sizeGB: Number(e.target.value) }))}
-                      className="w-16 border-b border-white/20 bg-transparent px-1 text-[10px] text-white/90 outline-none" />
-                  </div>
-                  <div>
-                    <label className="text-[8px] text-white/40 block">FS</label>
-                    <select value={partForm.fs} onChange={(e) => setPartForm(p => ({ ...p, fs: e.target.value }))}
-                      className="border-b border-white/20 bg-transparent px-1 text-[10px] text-white/90 outline-none">
-                      {FILESYSTEMS.map(fs => <option key={fs} value={fs}>{fs}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[8px] text-white/40 block">Mount</label>
-                    <select value={partForm.mount} onChange={(e) => setPartForm(p => ({ ...p, mount: e.target.value }))}
-                      className="border-b border-white/20 bg-transparent px-1 text-[10px] text-white/90 outline-none">
-                      {MOUNT_POINTS.map(mp => <option key={mp} value={mp}>{mp}</option>)}
-                    </select>
-                  </div>
-                  <button onClick={() => { playClick(); setShowPartForm(false); setEditPartIdx(null); }}
-                    className="text-[9px] text-white/50">Cancel</button>
-                  <button onClick={() => {
-                    playClick();
-                    const np: PartitionEntry = {
-                      device: `/dev/sda${partitions.length + 1}`,
-                      type: partForm.mount === "/" ? "Linux filesystem" : partForm.mount === "[swap]" ? "Linux swap" : "Linux filesystem",
-                      fs: partForm.fs, sizeGB: partForm.sizeGB, mount: partForm.mount,
-                      flags: partForm.mount === "/" ? ["root"] : partForm.mount === "/boot" ? ["boot"] : [],
-                    };
-                    if (editPartIdx !== null) setPartitions(prev => prev.map((p, i) => (i === editPartIdx ? np : p)));
-                    else setPartitions(prev => [...prev, np]);
-                    setShowPartForm(false); setEditPartIdx(null);
-                  }} disabled={partForm.sizeGB < 1}
-                    className="rounded px-2 py-0.5 text-[9px] font-semibold text-white disabled:opacity-40"
-                    style={{ background: accent }}>
-                    {editPartIdx !== null ? "Save" : "Create"}
-                  </button>
-                </div>
-              )}
-              <button onClick={() => { if (!canAdvance()) return; playClick(); handleNext(); }} disabled={!canAdvance()}
-                className="rounded px-3 py-1 text-[10px] font-semibold text-white disabled:opacity-30"
-                style={{ background: accent }}>Next</button>
-            </>
-          );
-      }
-    };
+  return (
+    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+        <AnimatePresence mode="wait">
+          <motion.img key={step} src={getStepImg(config.id, step)}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ background: surface }} />
+        </AnimatePresence>
 
-    return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
-          <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }} className="absolute inset-0">
-              <img src={getStepImg(config.id, step)} alt={step}
-                className="absolute inset-0 w-full h-full object-cover" style={{ background: surface }} />
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Step dots */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full">
-            {STEP_ORDER.map((s, i) => (
-              <div key={s} className={`h-1.5 rounded-full transition-all ${i <= currentIdx ? "w-3" : "w-1.5"}`}
-                style={{ background: i <= currentIdx ? accent : "rgba(255,255,255,0.2)" }} />
-            ))}
-          </div>
-
-          {/* Interactive elements on the image */}
-          <div className="absolute bottom-2 left-2 right-2 z-10">
-            <motion.div key={step} initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}>
-              {formContent()}
-            </motion.div>
-          </div>
+        {/* Step dots */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full">
+          {STEP_ORDER.map((s, i) => (
+            <div key={s} className={`h-1.5 rounded-full transition-all ${i <= currentIdx ? "w-3" : "w-1.5"}`}
+              style={{ background: i <= currentIdx ? accent : "rgba(255,255,255,0.2)" }} />
+          ))}
         </div>
-      </div>
-    );
-  }
 
-  return renderWizard();
+        {/* Navigation hotspots */}
+        {getWizardHotspots().map(h => (
+          <div key={h.id} onClick={h.onClick}
+            className="absolute z-10"
+            style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: "pointer" }} />
+        ))}
+
+        {/* Main content interaction hotspot */}
+        <div onClick={() => {
+          if (wizardAction === "idle") {
+            setWizardAction("clicked");
+            playClick();
+            switch (step) {
+              case "language": {
+                const idx = LANGUAGES.indexOf(values["language"] || "");
+                setVal("language", LANGUAGES[(idx + 1) % LANGUAGES.length]);
+                break;
+              }
+              case "keyboard": {
+                const idx = KEYBOARD_LAYOUTS.indexOf(values["keyboard"] || "");
+                setVal("keyboard", KEYBOARD_LAYOUTS[(idx + 1) % KEYBOARD_LAYOUTS.length]);
+                break;
+              }
+              case "network":
+                setVal("network", values["network"] === "wifi" ? "ethernet" : values["network"] === "ethernet" ? "skip" : "wifi");
+                break;
+              case "install_type":
+                setInstallType(installType === "erase" ? "something" : "erase");
+                break;
+              case "third_party":
+                setVal("third_party", values["third_party"] === "yes" ? "no" : "yes");
+                break;
+              case "timezone": {
+                const tzs = ["UTC", "America/New_York", "Europe/London", "Asia/Kolkata", "Asia/Tokyo"];
+                const idx = tzs.indexOf(values["timezone"] || "");
+                setVal("timezone", tzs[(idx + 1) % tzs.length]);
+                break;
+              }
+              case "create_user":
+                setVal("name", values["name"] || "User");
+                setVal("username", values["username"] || "user");
+                setVal("password", values["password"] || "password");
+                break;
+              case "review":
+                break;
+            }
+            setTimeout(() => setWizardAction("idle"), 200);
+          }
+        }}
+          className="absolute z-10"
+          style={{ left: "10%", top: "10%", width: "80%", height: "65%", cursor: "pointer" }} />
+      </div>
+    </div>
+  );
 }
