@@ -1,36 +1,11 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick, playKeyClick, playSuccess } from "../shared/sounds";
 import { SparkleBurst } from "../shared/InteractiveEffects";
 import { useSceneAdvance } from "../shared/SceneAdvance";
 
 type WizardPhase = "boot" | "wizard" | "installing" | "remove_media" | "done";
-
-type InstallerStep =
-  | "language" | "keyboard" | "network" | "install_type" | "partition"
-  | "install_option" | "third_party" | "app_selection" | "timezone" | "create_user" | "review";
-
-const STEP_ORDER_BASE: InstallerStep[] = [
-  "language", "keyboard", "network", "install_type", "install_option",
-  "third_party", "app_selection", "timezone", "create_user", "review",
-];
-
-const STEP_ORDER_MINT: InstallerStep[] = [
-  "language", "keyboard", "network", "third_party", "install_type",
-  "timezone", "create_user", "review",
-];
-
-const STEP_ORDER_ZORIN: InstallerStep[] = [
-  "language", "keyboard", "network", "install_type",
-  "timezone", "create_user", "review",
-];
-
-function getStepOrder(osId: string): InstallerStep[] {
-  if (osId === "mint") return STEP_ORDER_MINT;
-  if (osId === "zorin") return STEP_ORDER_ZORIN;
-  return STEP_ORDER_BASE;
-}
 
 const LANGUAGES = [
   "English", "Español", "Français", "Deutsch", "Português (Brasil)",
@@ -42,15 +17,19 @@ const KEYBOARD_LAYOUTS = [
   "Français", "Deutsch", "Italiano", "Português (Brasil)", "Dvorak", "Colemak",
 ];
 
-function Field({ label, value, onChange, placeholder, type, autoFocus }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; autoFocus?: boolean;
+function Field({ label, value, onChange, placeholder, type, autoFocus, light }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; autoFocus?: boolean; light?: boolean;
 }) {
   return (
     <div className="mb-3">
-      <label className="block text-xs text-gray-700 mb-1 font-medium">{label}</label>
+      <label className={`block text-xs mb-1 font-medium ${light ? "text-white/70" : "text-gray-700"}`}>{label}</label>
       <input type={type || "text"} value={value} onChange={e => { playKeyClick(); onChange(e.target.value); }}
         placeholder={placeholder || ""} autoFocus={autoFocus}
-        className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 bg-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
+        className={`w-full border rounded px-3 py-2 text-sm outline-none transition-colors ${
+          light
+            ? "border-white/20 bg-white/10 text-white placeholder-white/30 focus:border-white/40"
+            : "border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        }`} />
     </div>
   );
 }
@@ -63,9 +42,10 @@ export default function Install({ config, speed, onComplete, path }: {
   const accent = config.branding.accent;
   const surface = config.branding.surface;
   const osName = config.branding.name;
+  const isDark = config.id === "zorin";
   const [phase, setPhase] = useState<WizardPhase>(isWindows ? "installing" : "boot");
   const [bootSplash, setBootSplash] = useState(false);
-  const [step, setStep] = useState<InstallerStep>("language");
+  const [stepIdx, setStepIdx] = useState(0);
   const [values, setValues] = useState<Record<string, string>>({});
   const [installType, setInstallType] = useState<string>(path === "vm" ? "erase" : "erase");
   const [progress, setProgress] = useState(0);
@@ -75,13 +55,14 @@ export default function Install({ config, speed, onComplete, path }: {
   const [selectedLang, setSelectedLang] = useState("");
   const [selectedKb, setSelectedKb] = useState("");
 
-  const baseOrder = getStepOrder(config.id);
-  const STEP_ORDER: InstallerStep[] = installType === "something"
-    ? [...baseOrder.slice(0, baseOrder.indexOf("install_type") + 1), "partition", ...baseOrder.slice(baseOrder.indexOf("install_type") + 1)]
-    : baseOrder;
+  const wizard = config.wizard;
+  const hasPartition = installType === "something";
+  const allSteps = hasPartition
+    ? [...wizard.slice(0, wizard.findIndex(s => s.kind === "disk") + 1), { kind: "partition" as const, title: "Partition disks" }, ...wizard.slice(wizard.findIndex(s => s.kind === "disk") + 1)]
+    : wizard;
+  const currentStep = allSteps[stepIdx];
 
   const installDuration = speed === "fast" ? 2000 : 12000;
-  const currentIdx = STEP_ORDER.indexOf(step);
 
   useEffect(() => {
     if (phase === "installing") registerAdvance(() => onComplete());
@@ -119,11 +100,10 @@ export default function Install({ config, speed, onComplete, path }: {
   }, [phase, restartPhase, speed]);
 
   function canAdvance(): boolean {
-    switch (step) {
+    switch (currentStep?.kind) {
       case "language": return !!selectedLang;
       case "keyboard": return !!selectedKb;
-      case "create_user": return !!(values["username"] || "").trim() && !!(values["password"] || "").trim();
-      case "partition": return true;
+      case "account": return !!(values["username"] || "").trim() && !!(values["password"] || "").trim();
       default: return true;
     }
   }
@@ -134,283 +114,190 @@ export default function Install({ config, speed, onComplete, path }: {
     if (phase === "remove_media") { playClick(); setPhase("done"); return; }
     if (!canAdvance()) return;
     playClick();
-    if (step === "review") { setPhase("installing"); return; }
-    const nextIdx = currentIdx + 1;
-    if (nextIdx < STEP_ORDER.length) setStep(STEP_ORDER[nextIdx]);
+    if (stepIdx >= allSteps.length - 1) { setPhase("installing"); return; }
+    if (currentStep?.kind === "confirm") { setPhase("installing"); return; }
+    setStepIdx(p => p + 1);
   }
 
   function handleBack() {
-    if (currentIdx <= 0) return;
+    if (stepIdx <= 0) return;
     playClick();
-    setStep(STEP_ORDER[currentIdx - 1]);
+    setStepIdx(p => p - 1);
   }
 
-  const isZorinLike = config.id === "zorin" || config.id === "mint";
-
-  function renderWizardStep() {
-    const content = () => {
-      switch (step) {
-        case "language":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>Language</h2>
-              <div className="flex flex-wrap gap-1.5 max-h-52 overflow-y-auto">
-                {LANGUAGES.map(l => (
-                  <button key={l} onClick={() => { playClick(); setSelectedLang(l); }}
-                    className={`rounded px-3 py-1.5 text-xs transition-all ${
-                      selectedLang === l
-                        ? "text-white font-semibold shadow-sm"
-                        : isZorinLike ? "text-white/60 hover:text-white/80 hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                    }`}
-                    style={selectedLang === l ? { background: accent } : {}}>{l}</button>
-                ))}
-              </div>
-            </div>
-          );
-        case "keyboard":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>Keyboard layout</h2>
-              <div className="flex flex-wrap gap-1.5 max-h-52 overflow-y-auto">
-                {KEYBOARD_LAYOUTS.map(k => (
-                  <button key={k} onClick={() => { playClick(); setSelectedKb(k); }}
-                    className={`rounded px-3 py-1.5 text-xs transition-all ${
-                      selectedKb === k
-                        ? "text-white font-semibold shadow-sm"
-                        : isZorinLike ? "text-white/60 hover:text-white/80 hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                    }`}
-                    style={selectedKb === k ? { background: accent } : {}}>{k}</button>
-                ))}
-              </div>
-            </div>
-          );
-        case "network":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>Network</h2>
-              <div className="space-y-1.5">
-                {[{ id: "wifi", label: "Connect to Wi-Fi" }, { id: "ethernet", label: "Use wired connection" }, { id: "skip", label: "I don't want to connect" }].map(n => (
-                  <button key={n.id} onClick={() => { playClick(); setValues(p => ({...p, network: n.id})); }}
-                    className={`block text-xs text-left w-full py-2 px-3 rounded transition-all ${
-                      values["network"] === n.id
-                        ? "text-white font-semibold" : isZorinLike ? "text-white/60 hover:text-white/80" : "text-gray-600 hover:text-gray-900"
-                    }`}
-                    style={values["network"] === n.id ? { background: accent } : {}}>{n.label}</button>
-                ))}
-              </div>
-            </div>
-          );
-        case "install_type":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>Installation type</h2>
-              <div className="space-y-2">
-                {[
-                  { id: "erase", label: `Erase disk and install ${osName}`, desc: "Simple, recommended for most users" },
-                  { id: "alongside", label: `Install alongside existing OS`, desc: "Dual boot" },
-                  { id: "something", label: "Manual partitioning", desc: "Advanced users" },
-                ].filter(opt => path !== "vm" || opt.id === "erase").map(opt => (
-                  <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
-                    className={`w-full text-left border-2 rounded-lg p-3 transition-all ${
-                      installType === opt.id
-                        ? "border-blue-500 bg-blue-50" : isZorinLike ? "border-white/10 hover:border-white/30 bg-white/5" : "border-gray-200 hover:border-gray-300"
-                    }`}>
-                    <div className="text-sm font-medium" style={{ color: isZorinLike ? "#fff" : "#333" }}>{opt.label}</div>
-                    <div className="text-xs mt-0.5" style={{ color: isZorinLike ? "rgba(255,255,255,0.5)" : "#888" }}>{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        case "third_party":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>Updates & software</h2>
-              <label className="flex items-center gap-3 py-2 cursor-pointer">
-                <input type="checkbox" checked={values["third_party"] === "yes"} onChange={() => { playClick(); setValues(p => ({...p, third_party: p["third_party"] === "yes" ? "no" : "yes"})); }}
-                  className="w-4 h-4 accent-blue-600 cursor-pointer" />
-                <span className="text-xs" style={{ color: isZorinLike ? "rgba(255,255,255,0.8)" : "#555" }}>Install third-party software for graphics, Wi-Fi and media codecs</span>
-              </label>
-              <label className="flex items-center gap-3 py-2 cursor-pointer">
-                <input type="checkbox" checked={values["updates"] === "yes"} onChange={() => { playClick(); setValues(p => ({...p, updates: p["updates"] === "yes" ? "no" : "yes"})); }}
-                  className="w-4 h-4 accent-blue-600 cursor-pointer" />
-                <span className="text-xs" style={{ color: isZorinLike ? "rgba(255,255,255,0.8)" : "#555" }}>Download updates while installing</span>
-              </label>
-            </div>
-          );
-        case "app_selection":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>App selection</h2>
-              <div className="space-y-2">
-                {[
-                  { id: "normal", label: "Normal installation", desc: "Office suite, browser, games, media player" },
-                  { id: "minimal", label: "Minimal installation", desc: "Browser and basic utilities" },
-                ].map(opt => (
-                  <button key={opt.id} onClick={() => { playClick(); setValues(p => ({...p, apps: opt.id})); }}
-                    className={`w-full text-left border-2 rounded-lg p-3 transition-all ${
-                      values["apps"] === opt.id
-                        ? "border-blue-500 bg-blue-50" : isZorinLike ? "border-white/10 hover:border-white/30 bg-white/5" : "border-gray-200 hover:border-gray-300"
-                    }`}>
-                    <div className="text-sm font-medium" style={{ color: isZorinLike ? "#fff" : "#333" }}>{opt.label}</div>
-                    <div className="text-xs mt-0.5" style={{ color: isZorinLike ? "rgba(255,255,255,0.5)" : "#888" }}>{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        case "install_option":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>Installation method</h2>
-              <div className="space-y-2">
-                {[
-                  { id: "interactive", label: "Interactive installation", desc: "Walk through each step" },
-                  { id: "automated", label: "Automated installation", desc: "Use a preconfigured setup file" },
-                ].map(opt => (
-                  <button key={opt.id} onClick={() => { playClick(); setValues(p => ({...p, install_option: opt.id})); }}
-                    className={`w-full text-left border-2 rounded-lg p-3 transition-all ${
-                      values["install_option"] === opt.id
-                        ? "border-blue-500 bg-blue-50" : isZorinLike ? "border-white/10 hover:border-white/30 bg-white/5" : "border-gray-200 hover:border-gray-300"
-                    }`}>
-                    <div className="text-sm font-medium" style={{ color: isZorinLike ? "#fff" : "#333" }}>{opt.label}</div>
-                    <div className="text-xs mt-0.5" style={{ color: isZorinLike ? "rgba(255,255,255,0.5)" : "#888" }}>{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        case "timezone":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>Timezone</h2>
-              <div className="flex flex-wrap gap-1.5 max-h-52 overflow-y-auto">
-                {["UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-                  "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Tokyo", "Australia/Sydney",
-                  "Pacific/Auckland", "Africa/Cairo", "America/Sao_Paulo",
-                ].map(tz => (
-                  <button key={tz} onClick={() => { playClick(); setValues(p => ({...p, timezone: tz})); }}
-                    className={`rounded px-3 py-1.5 text-xs transition-all ${
-                      values["timezone"] === tz
-                        ? "text-white font-semibold shadow-sm"
-                        : isZorinLike ? "text-white/60 hover:text-white/80 hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                    }`}
-                    style={values["timezone"] === tz ? { background: accent } : {}}>{tz}</button>
-                ))}
-              </div>
-            </div>
-          );
-        case "create_user":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>Create account</h2>
-              <Field label="Your name" value={values["name"] || ""} onChange={v => setValues(p => ({...p, name: v}))} autoFocus />
-              <Field label="Computer name" value={values["computer_name"] || ""} onChange={v => setValues(p => ({...p, computer_name: v}))} placeholder="e.g. my-laptop" />
-              <Field label="Username" value={values["username"] || ""} onChange={v => setValues(p => ({...p, username: v}))} />
-              <Field label="Password" value={values["password"] || ""} onChange={v => setValues(p => ({...p, password: v}))} type="password" />
-            </div>
-          );
-        case "review":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>Ready to install</h2>
-              <div className={`border rounded-lg p-3 space-y-1.5 ${isZorinLike ? "border-white/10 bg-white/5" : "border-gray-200 bg-gray-50"}`}>
-                {[
-                  ["Language", selectedLang || "English"],
-                  ["Keyboard", selectedKb || "English (US)"],
-                  ["Network", values["network"] === "skip" ? "Skipped" : values["network"] || "Wired"],
-                  ["Install", installType === "erase" ? "Erase disk" : installType === "alongside" ? "Dual boot" : "Manual"],
-                  ["Timezone", values["timezone"] || "UTC"],
-                  ["Name", values["name"] || "user"],
-                ].map(([l, v]) => (
-                  <div key={l} className="flex gap-4 text-xs">
-                    <span style={{ color: isZorinLike ? "rgba(255,255,255,0.5)" : "#888", minWidth: 80 }}>{l}</span>
-                    <span className="font-medium" style={{ color: isZorinLike ? "#fff" : "#333" }}>{v}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs mt-3" style={{ color: isZorinLike ? "rgba(255,255,255,0.4)" : "#999" }}>The changes listed above will be written to disk. Click Install to start.</p>
-            </div>
-          );
-        case "partition":
-          return (
-            <div>
-              <h2 className={`text-base font-semibold mb-3 ${isZorinLike ? "text-white" : "text-gray-800"}`}>Partition disks</h2>
-              <p className="text-xs mb-3" style={{ color: isZorinLike ? "rgba(255,255,255,0.5)" : "#888" }}>Configure disk partitions manually.</p>
-              <div className={`border rounded-lg divide-y ${isZorinLike ? "border-white/10 divide-white/10" : "border-gray-200 divide-gray-200"}`}>
-                {["/dev/sda1  ext4  30 GB  /", "/dev/sda2  swap  8 GB  [swap]", "/dev/sda3  ext4  162 GB  /home"].map((row, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 text-xs font-mono"
-                    style={{ color: isZorinLike ? "rgba(255,255,255,0.7)" : "#666" }}>
-                    <span>{row}</span>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => { playClick(); }}
-                className="mt-2 text-xs font-medium px-3 py-1.5 rounded border border-dashed transition-all"
-                style={{ color: accent, borderColor: `${accent}40` }}>
-                + Add partition
-              </button>
-            </div>
-          );
-      }
-    };
-
-    const isZorin = config.id === "zorin";
-    const dialogBg = isZorin ? "#1e1e24" : "#ffffff";
-
-    return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
-        <div className="flex-1 flex items-center justify-center p-4"
-          style={{ background: `linear-gradient(135deg, ${surface}, ${surface}dd)`, borderRadius: "1rem" }}>
-          <div className="w-full max-w-xl rounded-xl shadow-2xl flex flex-col overflow-hidden"
-            style={{ background: dialogBg, border: `1px solid ${isZorin ? "rgba(255,255,255,0.08)" : "#e0e0e0"}`, maxHeight: "90%" }}>
-            {/* Header with step indicator */}
-            <div className="px-5 py-3 border-b shrink-0" style={{ borderColor: isZorin ? "rgba(255,255,255,0.08)" : "#e0e0e0" }}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold tracking-wider" style={{ color: accent }}>{osName}</span>
-                <div className="flex items-center gap-1">
-                  {STEP_ORDER.map((s, i) => (
-                    <div key={s} className={`h-1.5 rounded-full transition-all ${i <= currentIdx ? "w-3" : "w-1.5"}`}
-                      style={{ background: i <= currentIdx ? accent : isZorin ? "rgba(255,255,255,0.15)" : "#ddd" }} />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="px-5 py-4 flex-1 overflow-y-auto min-h-0">
-              <motion.div key={step} initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}>
-                {content()}
-              </motion.div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-between px-5 py-3 border-t shrink-0" style={{ borderColor: isZorin ? "rgba(255,255,255,0.08)" : "#e0e0e0" }}>
-              <button onClick={handleBack} disabled={currentIdx === 0}
-                className="text-xs font-medium px-4 py-1.5 rounded transition-all disabled:opacity-30"
-                style={{ color: isZorin ? "rgba(255,255,255,0.5)" : "#666" }}>
-                Back
-              </button>
-              <button onClick={handleNext} disabled={!canAdvance()}
-                className="rounded-lg px-5 py-1.5 text-xs font-semibold text-white disabled:opacity-40 shadow-sm hover:brightness-110 transition-all"
-                style={{ background: accent }}>
-                {step === "review" ? "Install Now" : "Continue"}
-              </button>
+  function renderStepContent() {
+    if (!currentStep) return null;
+    switch (currentStep.kind) {
+      case "language": {
+        const opts = "options" in currentStep ? currentStep.options : LANGUAGES;
+        return (
+          <div>
+            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto">
+              {opts.map(l => (
+                <button key={l} onClick={() => { playClick(); setSelectedLang(l); }}
+                  className={`rounded px-3 py-1.5 text-xs transition-all ${
+                    selectedLang === l
+                      ? "text-white font-semibold shadow-sm"
+                      : isDark ? "text-white/70 hover:text-white hover:bg-white/10" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                  style={selectedLang === l ? { background: accent } : {}}>{l}</button>
+              ))}
             </div>
           </div>
-        </div>
-      </div>
-    );
+        );
+      }
+      case "keyboard": {
+        const layouts = "layouts" in currentStep ? currentStep.layouts : KEYBOARD_LAYOUTS;
+        return (
+          <div>
+            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto">
+              {layouts.map(k => (
+                <button key={k} onClick={() => { playClick(); setSelectedKb(k); }}
+                  className={`rounded px-3 py-1.5 text-xs transition-all ${
+                    selectedKb === k
+                      ? "text-white font-semibold shadow-sm"
+                      : isDark ? "text-white/70 hover:text-white hover:bg-white/10" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                  style={selectedKb === k ? { background: accent } : {}}>{k}</button>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case "network": {
+        const nets = "interfaces" in currentStep ? currentStep.interfaces : [];
+        return (
+          <div>
+            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <div className="space-y-1.5">
+              {nets.map(n => (
+                <button key={n.id} onClick={() => { playClick(); setValues(p => ({...p, network: n.id})); }}
+                  className={`block text-xs text-left w-full py-2 px-3 rounded transition-all ${
+                    values["network"] === n.id
+                      ? "text-white font-semibold" : isDark ? "text-white/60 hover:text-white/80 hover:bg-white/5" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                  style={values["network"] === n.id ? { background: accent } : {}}>
+                  <span className="mr-2">{n.signal && n.signal >= 4 ? "📶" : n.signal ? "📡" : "🔗"}</span>
+                  {n.label}
+                </button>
+              ))}
+              <button onClick={() => { playClick(); setValues(p => ({...p, network: "skip"})); }}
+                className={`block text-xs text-left w-full py-2 px-3 rounded transition-all ${
+                  values["network"] === "skip" ? "text-white font-semibold" : isDark ? "text-white/40 hover:text-white/60" : "text-gray-500 hover:text-gray-700"
+                }`}
+                style={values["network"] === "skip" ? { background: accent } : {}}>I don't want to connect to a network</button>
+            </div>
+          </div>
+        );
+      }
+      case "timezone": {
+        const zones = "zones" in currentStep ? currentStep.zones : [];
+        return (
+          <div>
+            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto">
+              {zones.map(tz => (
+                <button key={tz} onClick={() => { playClick(); setValues(p => ({...p, timezone: tz})); }}
+                  className={`rounded px-3 py-1.5 text-xs transition-all ${
+                    values["timezone"] === tz
+                      ? "text-white font-semibold shadow-sm"
+                      : isDark ? "text-white/70 hover:text-white hover:bg-white/10" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                  style={values["timezone"] === tz ? { background: accent } : {}}>{tz}</button>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case "disk": {
+        const choices = "choices" in currentStep ? currentStep.choices : [];
+        return (
+          <div>
+            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <div className="space-y-2">
+              {choices.filter(opt => path !== "vm" || opt.id === "erase").map(opt => (
+                <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
+                  className={`w-full text-left border-2 rounded-lg p-3 transition-all ${
+                    installType === opt.id
+                      ? "border-blue-500 bg-blue-50" : isDark ? "border-white/15 hover:border-white/30 bg-white/5" : "border-gray-200 hover:border-gray-300"
+                  }`}>
+                  <div className="text-sm font-medium" style={{ color: isDark ? "#fff" : "#1f2937" }}>{opt.label}</div>
+                  <div className="text-xs mt-0.5" style={{ color: isDark ? "rgba(255,255,255,0.5)" : "#6b7280" }}>{opt.hint}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case "account": {
+        const prompts = "prompts" in currentStep ? currentStep.prompts : [];
+        return (
+          <div>
+            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            {prompts.map((p, i) => (
+              <Field key={i} label={p.label} value={values[p.label] || ""}
+                onChange={v => setValues(prev => ({...prev, [p.label]: v}))}
+                placeholder={p.placeholder} type={p.secret ? "password" : "text"}
+                autoFocus={i === 0} light={isDark} />
+            ))}
+          </div>
+        );
+      }
+      case "confirm":
+        return (
+          <div>
+            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <p className={`text-xs mb-4 ${isDark ? "text-white/50" : "text-gray-600"}`}>{"body" in currentStep ? currentStep.body : "Review your choices before proceeding."}</p>
+            <div className={`border rounded-lg p-3 space-y-1.5 ${isDark ? "border-white/10 bg-white/5" : "border-gray-200 bg-gray-50"}`}>
+              {[
+                ["Language", selectedLang || "English"],
+                ["Keyboard", selectedKb || "English (US)"],
+                ["Network", values["network"] === "skip" ? "Skipped" : values["network"] || "Wired"],
+                ["Install", installType === "erase" ? "Erase disk" : installType === "alongside" ? "Dual boot" : "Manual"],
+                ["Timezone", values["timezone"] || "UTC"],
+                ["Name", values["Your name"] || "user"],
+              ].map(([l, v]) => (
+                <div key={l} className="flex gap-4 text-xs">
+                  <span style={{ color: isDark ? "rgba(255,255,255,0.4)" : "#888", minWidth: 80 }}>{l}</span>
+                  <span className="font-medium" style={{ color: isDark ? "#fff" : "#1f2937" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      case "partition":
+        return (
+          <div>
+            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>Partition disks</h2>
+            <p className={`text-xs mb-3 ${isDark ? "text-white/50" : "text-gray-600"}`}>Configure disk partitions manually.</p>
+            <div className={`border rounded-lg divide-y ${isDark ? "border-white/10 divide-white/10" : "border-gray-200 divide-gray-200"}`}>
+              {["/dev/sda1  ext4  30 GB  /", "/dev/sda2  swap  8 GB  [swap]", "/dev/sda3  ext4  162 GB  /home"].map((row, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-2 text-xs font-mono"
+                  style={{ color: isDark ? "rgba(255,255,255,0.7)" : "#4b5563" }}>
+                  <span>{row}</span>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => { playClick(); }}
+              className="mt-2 text-xs font-medium px-3 py-1.5 rounded border border-dashed transition-all"
+              style={{ color: accent, borderColor: `${accent}40` }}>
+              + Add partition
+            </button>
+          </div>
+        );
+      default:
+        return <p className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>Unknown step</p>;
+    }
   }
 
-  // ─── Boot phase ───
+  // ─── BOOT ───
   if (phase === "boot") {
     if (bootSplash) {
       return (
         <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
-          <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden border border-white/10"
-            style={{ background: surface }}>
+          <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden border border-white/10" style={{ background: surface }}>
             <div className="flex flex-col items-center gap-4">
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}>
                 <svg width="60" height="60" viewBox="0 0 32 32" fill="none">
@@ -458,7 +345,7 @@ export default function Install({ config, speed, onComplete, path }: {
     );
   }
 
-  // ─── Installing phase ───
+  // ─── INSTALLING ───
   if (phase === "installing") {
     if (isWindows) {
       return (
@@ -518,12 +405,11 @@ export default function Install({ config, speed, onComplete, path }: {
     );
   }
 
-  // ─── Remove media ───
+  // ─── REMOVE MEDIA ───
   if (phase === "remove_media") {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
-        <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
-          style={{ background: surface }}>
+        <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10" style={{ background: surface }}>
           <div className="text-center space-y-4">
             <div className="text-lg font-bold text-white">Installation Complete</div>
             <p className="text-xs text-white/50">Please remove the installation media, then click Restart.</p>
@@ -538,7 +424,7 @@ export default function Install({ config, speed, onComplete, path }: {
     );
   }
 
-  // ─── Done ───
+  // ─── DONE ───
   if (phase === "done") {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
@@ -556,9 +442,7 @@ export default function Install({ config, speed, onComplete, path }: {
                 </button>
               </>
             ) : (
-              <>
-                <div className="text-sm text-white/40 font-mono">Restarting…</div>
-              </>
+              <div className="text-sm text-white/40 font-mono">Restarting…</div>
             )}
           </div>
         </div>
@@ -566,6 +450,70 @@ export default function Install({ config, speed, onComplete, path }: {
     );
   }
 
-  // ─── Wizard ───
-  return renderWizardStep();
+  // ─── WIZARD ───
+  const bg = isDark ? "#1e1e24" : "#ffffff";
+  const border = isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb";
+  const mutedColor = isDark ? "rgba(255,255,255,0.4)" : "#6b7280";
+
+  return (
+    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+      <div className="flex-1 flex items-center justify-center p-4"
+        style={{ background: `linear-gradient(135deg, ${surface}, ${surface}dd)`, borderRadius: "1rem" }}>
+        <div className="w-full max-w-2xl rounded-xl shadow-2xl flex flex-col overflow-hidden"
+          style={{ background: bg, border: `1px solid ${border}`, maxHeight: "92%" }}>
+          <div className="px-5 py-3 border-b shrink-0 flex items-center justify-between" style={{ borderColor: border }}>
+            <span className="text-xs font-semibold tracking-wider" style={{ color: accent }}>{osName}</span>
+            <div className="flex items-center gap-1">
+              {allSteps.map((s, i) => (
+                <div key={s.kind} className={`h-1.5 rounded-full transition-all ${i <= stepIdx ? "w-3" : "w-1.5"}`}
+                  style={{ background: i <= stepIdx ? accent : isDark ? "rgba(255,255,255,0.15)" : "#d1d5db" }} />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-1 min-h-0">
+            <div className={`w-40 shrink-0 p-3 border-r hidden sm:block ${isDark ? "bg-[#25252b] border-white/5" : "bg-gray-50 border-gray-200"}`}>
+              <div className={`text-[7px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-white/30" : "text-gray-400"}`}>Steps</div>
+              <div className="space-y-0.5">
+                {allSteps.map((s, i) => (
+                  <div key={s.kind} className={`flex items-center gap-2 px-2 py-1 rounded text-[10px] transition-all ${
+                    i === stepIdx
+                      ? isDark ? "bg-white/10 text-white" : "bg-blue-50 text-blue-700 font-medium"
+                      : isDark ? "text-white/40" : "text-gray-500"
+                  }`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${i <= stepIdx ? "opacity-100" : "opacity-30"}`}
+                      style={{ background: i <= stepIdx ? accent : isDark ? "#fff" : "#9ca3af" }} />
+                    <span className="truncate">{s.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                <AnimatePresence mode="wait">
+                  <motion.div key={stepIdx} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}>
+                    {renderStepContent()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <div className="flex items-center justify-between px-5 py-3 border-t shrink-0" style={{ borderColor: border }}>
+                <button onClick={handleBack} disabled={stepIdx === 0}
+                  className="text-xs font-medium px-4 py-1.5 rounded transition-all disabled:opacity-30"
+                  style={{ color: mutedColor }}>
+                  Back
+                </button>
+                <button onClick={handleNext} disabled={!canAdvance()}
+                  className="rounded-lg px-5 py-1.5 text-xs font-semibold text-white disabled:opacity-40 shadow-sm hover:brightness-110 transition-all"
+                  style={{ background: accent }}>
+                  {currentStep?.kind === "confirm" || (stepIdx >= allSteps.length - 1) ? "Install Now" : "Continue"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
