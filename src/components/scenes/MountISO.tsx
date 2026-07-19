@@ -94,29 +94,25 @@ export default function MountISO({ config, onComplete }: { config: OSConfig; onC
               )}
             </AnimatePresence>
 
-            {/* Browsing overlay — blends into bottom of the settings window */}
+            {/* Browsing animation — floats on the image */}
             <AnimatePresence>
               {browsing && (
-                <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }}
-                  className="absolute bottom-0 inset-x-0 z-20"
-                  style={{
-                    background: `linear-gradient(to top, ${config.branding.surface} 0%, ${config.branding.surface}dd 50%, transparent 100%)`,
-                  }}>
-                  <div className="px-4 pt-8 pb-3 text-center">
-                    <div className="flex items-center justify-center gap-2 text-xs text-white/60 font-medium mb-2">
-                      <motion.div animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                        className="inline-block text-lg">💿</motion.div>
-                      <span>Selecting {config.branding.shortName} disk image...</span>
-                    </div>
-                    <div className="text-[10px] text-white/30 font-mono mb-2">{config.iso.filename}</div>
-                    <motion.div className="h-1 rounded-full bg-white/10 mx-auto max-w-[200px] overflow-hidden">
-                      <motion.div className="h-full rounded-full"
-                        initial={{ width: 0 }} animate={{ width: "100%" }}
-                        transition={{ duration: 1.4, ease: "easeInOut" }}
-                        style={{ background: accent }} />
-                    </motion.div>
+                <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 10, opacity: 0 }}
+                  className="absolute bottom-10 left-2 right-2 z-20 text-center"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+                  <div className="flex items-center justify-center gap-2 text-xs text-white/70 font-medium mb-1">
+                    <motion.div animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                      className="inline-block text-lg">💿</motion.div>
+                    <span>Selecting {config.branding.shortName} disk image...</span>
                   </div>
+                  <div className="text-[10px] text-white/50 font-mono mb-2">{config.iso.filename}</div>
+                  <motion.div className="h-1 rounded-full bg-white/10 mx-auto max-w-[200px] overflow-hidden">
+                    <motion.div className="h-full rounded-full"
+                      initial={{ width: 0 }} animate={{ width: "100%" }}
+                      transition={{ duration: 1.4, ease: "easeInOut" }}
+                      style={{ background: accent }} />
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>

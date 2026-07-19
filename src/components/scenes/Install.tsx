@@ -284,26 +284,22 @@ export default function Install({ config, speed, onComplete, path }: {
             className="absolute inset-0 w-full h-full object-cover" style={{ background: surface }} />
           <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/[0.02] pointer-events-none" />
 
-          {/* Bottom overlay — Try/Install buttons sit IN the image */}
-          <div className="absolute bottom-0 inset-x-0 z-10"
-            style={{
-              background: `linear-gradient(to top, ${surface} 0%, ${surface}dd 50%, transparent 100%)`,
-            }}>
-            <div className="px-5 pt-10 pb-4 max-w-sm mx-auto text-center">
-              <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Try or Install {osName}</div>
-              <div className="space-y-2 mb-2">
-                <button onClick={() => { playClick(); setBootSplash(true); }}
-                  className="w-full rounded-lg px-4 py-2.5 text-sm font-bold text-white text-left transition-all hover:scale-[1.02]"
-                  style={{ background: accent }}>
-                  Install {osName}
-                </button>
-                <button onClick={() => { playClick(); setBootSplash(true); }}
-                  className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all text-left">
-                  Try {osName}
-                </button>
-              </div>
-              <p className="text-[10px] text-white/40">You can try before installing. This won't change anything.</p>
+          {/* Buttons float directly on the boot image */}
+          <div className="absolute bottom-2 left-2 right-2 z-10 max-w-sm mx-auto text-center"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+            <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>Try or Install {osName}</div>
+            <div className="space-y-2 mb-2">
+              <button onClick={() => { playClick(); setBootSplash(true); }}
+                className="w-full rounded-lg px-4 py-2.5 text-sm font-bold text-white transition-all hover:scale-[1.02]"
+                style={{ background: accent }}>
+                Install {osName}
+              </button>
+              <button onClick={() => { playClick(); setBootSplash(true); }}
+                className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all text-left">
+                Try {osName}
+              </button>
             </div>
+            <p className="text-[10px] text-white/40">You can try before installing. This won't change anything.</p>
           </div>
         </div>
       </div>
@@ -770,20 +766,17 @@ export default function Install({ config, speed, onComplete, path }: {
             ))}
           </div>
 
-          {/* Bottom overlay — the form is part of the image, not a card on top */}
-          <motion.div
-            key={step}
-            initial={{ y: 40, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="absolute bottom-0 inset-x-0 z-10"
-            style={{
-              background: `linear-gradient(to top, ${surface} 0%, ${surface}ee 50%, transparent 100%)`,
-            }}>
-            <div className="px-5 pt-12 pb-4 max-w-lg mx-auto">
+          {/* Fields float directly on the image */}
+          <div className="absolute bottom-2 left-2 right-2 z-10 max-w-lg mx-auto"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+            <motion.div
+              key={step}
+              initial={{ y: 8, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}>
               {formContent()}
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </div>
     );

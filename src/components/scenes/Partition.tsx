@@ -149,9 +149,9 @@ export default function Partition({
         <img src={PARTITION_IMG.manual} alt="Manual partitioning"
           className="absolute inset-0 w-full h-full object-cover" />
 
-        {/* Interactive overlay — partition table + controls */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#12121a]/95 via-[#12121a]/50 to-transparent">
-          <div className="absolute inset-x-0 bottom-0 pt-20 pb-4 px-4 overflow-y-auto max-h-full">
+        {/* Content floats on the screenshot */}
+        <div className="absolute inset-x-0 bottom-0 pt-20 pb-4 px-4 overflow-y-auto max-h-full"
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
 
             {/* Disk visual bar */}
             <div className="max-w-3xl mx-auto space-y-2 mb-3">
@@ -306,7 +306,6 @@ export default function Partition({
               )}
             </AnimatePresence>
           </div>
-        </div>
       </div>
 
       {/* Bottom nav */}

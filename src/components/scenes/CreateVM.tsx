@@ -115,12 +115,9 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                   ))}
                 </div>
 
-                {/* Bottom overlay — fields sit IN the screenshot, not as a separate card */}
-                <div className="absolute bottom-0 inset-x-0 z-10"
-                  style={{
-                    background: `linear-gradient(to top, ${config.branding.surface} 0%, ${config.branding.surface}dd 50%, transparent 100%)`,
-                  }}>
-                  <div className="px-4 pt-10 pb-3 max-w-sm mx-auto">
+                {/* Fields float directly on the image */}
+                <div className="absolute bottom-2 left-2 right-2 z-10 max-w-sm mx-auto"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
                     {current.key === "overview" && (
                       <div>
                         <div className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: accent }}>
@@ -253,7 +250,6 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                         </button>
                       </div>
                     )}
-                  </div>
                 </div>
               </motion.div>
             </AnimatePresence>
