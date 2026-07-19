@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Monitor, ArrowLeftRight, Usb, ChevronDown, Lock, ExternalLink, Play, Check, BookOpen } from "lucide-react";
+import { Monitor, ArrowLeftRight, Usb, ChevronDown, ExternalLink, Play, Check, BookOpen } from "lucide-react";
 import { OS_LIST } from "../data";
 import Footer from "../components/Footer";
 import BootSequence from "../components/BootSequence";
@@ -137,7 +137,7 @@ function HowItWorksDropdown({ open, osId }: { open: boolean; osId: string }) {
    OUTCOME CARDS — ways to install an OS
    ═══════════════════════════════════════════════════════════════════ */
 type Outcome = "live-usb" | "dual-boot" | "vm" | "practical";
-type SelectedOS = "ubuntu" | "arch" | "windows" | "zorin" | "mint";
+type SelectedOS = "ubuntu" | "arch" | "windows" | "zorin" | "mint" | "fedora" | "debian";
 
 interface OutcomeInfo {
   id: Outcome;
@@ -403,6 +403,106 @@ const OS_OUTCOMES: Record<SelectedOS, OutcomeInfo[]> = {
       sceneCount: 0,
     },
   ],
+  fedora: [
+    {
+      id: "vm",
+      title: "Virtual Machine",
+      tagline: "Safest first try",
+      description: "Run Fedora Workstation inside VirtualBox — no risk to your real files. Perfect for a first rehearsal.",
+      icon: <Monitor size={22} strokeWidth={1.5} />,
+      accent: "#3C6EB4",
+      steps: ["Download ISO", "Create VM", "Boot VM", "Install Fedora"],
+      time: "~10 min",
+      risk: "Zero risk",
+      sceneCount: 10,
+    },
+    {
+      id: "dual-boot",
+      title: "Dual Boot",
+      tagline: "Fedora + Windows",
+      description: "Install Fedora alongside Windows. Choose which OS to boot each time you start your PC.",
+      icon: <ArrowLeftRight size={22} strokeWidth={1.5} />,
+      accent: "#3C6EB4",
+      steps: ["Download ISO", "Flash USB", "BIOS Setup", "Install Fedora", "GRUB Menu"],
+      time: "~15 min",
+      risk: "Low risk",
+      sceneCount: 14,
+    },
+    {
+      id: "live-usb",
+      title: "Try Fedora Live",
+      tagline: "No install needed",
+      description: "Boot from USB into a full Fedora Workstation desktop. Try it without touching your hard drive.",
+      icon: <Usb size={22} strokeWidth={1.5} />,
+      accent: "#22c55e",
+      steps: ["Download ISO", "Flash USB", "Boot from USB", "Try Fedora"],
+      time: "~5 min",
+      risk: "Zero risk",
+      sceneCount: 11,
+    },
+    {
+      id: "practical",
+      title: "Practical Guide",
+      tagline: "Real install on your PC",
+      description: "Step-by-step guide with real terminal commands for an actual installation on your hardware.",
+      icon: <BookOpen size={22} strokeWidth={1.5} />,
+      accent: "#f59e0b",
+      steps: ["Download", "Flash USB", "Boot", "Follow guide"],
+      time: "~15 min",
+      risk: "Real install",
+      sceneCount: 0,
+    },
+  ],
+  debian: [
+    {
+      id: "vm",
+      title: "Virtual Machine",
+      tagline: "Safest first try",
+      description: "Run Debian inside VirtualBox — no risk to your real files. Perfect for a first rehearsal.",
+      icon: <Monitor size={22} strokeWidth={1.5} />,
+      accent: "#A80030",
+      steps: ["Download ISO", "Create VM", "Boot VM", "Install Debian"],
+      time: "~10 min",
+      risk: "Zero risk",
+      sceneCount: 10,
+    },
+    {
+      id: "dual-boot",
+      title: "Dual Boot",
+      tagline: "Debian + Windows",
+      description: "Install Debian alongside Windows. Choose which OS to boot each time you start your PC.",
+      icon: <ArrowLeftRight size={22} strokeWidth={1.5} />,
+      accent: "#A80030",
+      steps: ["Download ISO", "Flash USB", "BIOS Setup", "Install Debian", "GRUB Menu"],
+      time: "~15 min",
+      risk: "Low risk",
+      sceneCount: 14,
+    },
+    {
+      id: "live-usb",
+      title: "Try Debian Live",
+      tagline: "No install needed",
+      description: "Boot from USB into a full Debian desktop. Try it without touching your hard drive.",
+      icon: <Usb size={22} strokeWidth={1.5} />,
+      accent: "#22c55e",
+      steps: ["Download ISO", "Flash USB", "Boot from USB", "Try Debian"],
+      time: "~5 min",
+      risk: "Zero risk",
+      sceneCount: 11,
+    },
+    {
+      id: "practical",
+      title: "Practical Guide",
+      tagline: "Real install on your PC",
+      description: "Step-by-step guide with real terminal commands for an actual installation on your hardware.",
+      icon: <BookOpen size={22} strokeWidth={1.5} />,
+      accent: "#f59e0b",
+      steps: ["Download", "Flash USB", "Boot", "Follow guide"],
+      time: "~15 min",
+      risk: "Real install",
+      sceneCount: 0,
+    },
+  ],
 };
 
 function OutcomeCard({ outcome, selected, onSelect }: {
@@ -576,7 +676,7 @@ export default function LandingPage() {
             >
               <div className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
                 style={{ background: activeOS?.branding.accent }}>
-                {activeOS && <OsIcon osId={activeOS.id} accent={activeOS.branding.accent} size={20} />}
+                {activeOS && <OsIcon osId={activeOS.id} accent={activeOS.branding.accent} img={activeOS.branding.logoImg} size={20} />}
               </div>
               <span className="text-[11px] font-semibold" style={{ color: activeOS?.branding.accent }}>
                 {activeOS?.branding.name}
@@ -632,7 +732,11 @@ export default function LandingPage() {
                       ? "Four ways to install Zorin OS — from practical guide to bare metal dual-boot"
                       : selectedOS === "mint"
                         ? "Four ways to install Linux Mint — from practical guide to bare metal dual-boot"
-                        : "Four ways to experience Ubuntu — pick one and start the simulation"}
+                        : selectedOS === "fedora"
+                          ? "Four ways to install Fedora Workstation — from practical guide to bare metal dual-boot"
+                          : selectedOS === "debian"
+                            ? "Four ways to install Debian — from practical guide to bare metal dual-boot"
+                            : "Four ways to experience Ubuntu — pick one and start the simulation"}
               </p>
             </motion.div>
 
@@ -682,37 +786,34 @@ export default function LandingPage() {
 
             {/* OS cards row — clickable to switch OS */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }} className="mt-10">
-              <div className="text-center text-[10px] text-white/20 uppercase tracking-wider mb-3">More operating systems</div>
+              <div className="text-center text-[10px] text-white/20 uppercase tracking-wider mb-3">Choose an operating system</div>
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 {OS_LIST.map((o) => {
-                  const disabled = !!o.stub;
                   const isActive = o.id === selectedOS;
-                  const available = o.id === "ubuntu" || o.id === "arch" || o.id === "windows" || o.id === "zorin" || o.id === "mint";
                   return (
                     <button
                       key={o.id}
-                      onClick={() => available && switchOS(o.id as SelectedOS)}
-                      disabled={disabled || !available}
-                      className={`flex items-center gap-2 rounded-lg px-3 py-1.5 border text-xs transition-all ${
-                        disabled
-                          ? "border-white/[0.04] bg-white/[0.01] opacity-40 cursor-not-allowed"
-                          : isActive
-                            ? "border-white/20 bg-white/[0.06] shadow-lg"
-                            : available
-                              ? "border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/[0.15] hover:bg-white/[0.04] cursor-pointer"
-                              : "border-white/[0.04] bg-white/[0.01] opacity-40 cursor-not-allowed"
+                      onClick={() => switchOS(o.id as SelectedOS)}
+                      className={`relative flex items-center gap-2 rounded-xl px-3.5 py-2 border text-xs font-medium transition-all ${
+                        isActive
+                          ? "border-white/25 bg-white/[0.07] shadow-lg"
+                          : "border-white/[0.08] bg-white/[0.02] text-white/55 hover:border-white/[0.18] hover:bg-white/[0.05] cursor-pointer"
                       }`}
-                      style={isActive ? { borderColor: `${o.branding.accent}40`, background: `${o.branding.accent}15`, color: o.branding.accent } : {}}
+                      style={isActive ? { borderColor: `${o.branding.accent}55`, background: `${o.branding.accent}18`, color: o.branding.accent, boxShadow: `0 0 24px -8px ${o.branding.accent}80` } : {}}
                     >
                       <div
-                        className="h-5 w-5 rounded flex items-center justify-center text-[9px] font-bold"
-                        style={{ background: disabled ? "rgba(255,255,255,0.03)" : `${o.branding.accent}15`, color: disabled ? "rgba(255,255,255,0.15)" : o.branding.accent }}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
+                        style={{
+                          background: `${o.branding.accent}18`,
+                          border: `1px solid ${o.branding.accent}30`,
+                        }}
                       >
-                        {disabled ? <Lock size={9} /> : <OsIcon osId={o.id} accent={o.branding.accent} size={18} />}
+                        <OsIcon osId={o.id} accent={o.branding.accent} img={o.branding.logoImg} size={22} />
                       </div>
-                      <span className="font-medium">{o.branding.name}</span>
-                      {disabled && <span className="text-[8px] text-white/20 uppercase ml-1">Soon</span>}
-                      {isActive && <span className="text-[8px] font-semibold ml-1" style={{ color: o.branding.accent }}>Active</span>}
+                      <span>{o.branding.name}</span>
+                      {isActive && (
+                        <span className="text-[8px] font-semibold ml-1" style={{ color: o.branding.accent }}>Active</span>
+                      )}
                     </button>
                   );
                 })}

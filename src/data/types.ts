@@ -31,6 +31,8 @@ export type Branding = {
   surface: string;
   /** Emoji or short glyph used as a lightweight logo in the grid / headers. */
   logo: string;
+  /** Optional path to a real logo image (PNG/SVG) used in place of the drawn icon. */
+  logoImg?: string;
   /** Real, official download URL (used in the final "do it for real" card). */
   officialUrl: string;
 };

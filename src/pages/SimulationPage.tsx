@@ -359,7 +359,7 @@ function SimulationPageInner() {
               <Link to="/" className="text-[11px] text-white/40 hover:text-white/70 transition-colors shrink-0">← Home</Link>
               <div className="h-3 w-px bg-white/10 mx-0.5" />
               <div className="flex items-center gap-1.5">
-                <OsIcon osId={config.id} accent={config.branding.accent} size={14} />
+                <OsIcon osId={config.id} accent={config.branding.accent} img={config.branding.logoImg} size={14} />
                 <span className="text-[11px] font-semibold text-white/60">{config.branding.shortName}</span>
                 <span className="text-[9px] text-white/25">· practical guide</span>
               </div>
@@ -440,7 +440,7 @@ function SimulationPageInner() {
             )}
             <div className="h-3 w-px bg-white/10 mx-0.5" />
             <div className="flex items-center gap-1.5 min-w-0">
-              <OsIcon osId={cfg.id} accent={cfg.branding.accent} size={14} />
+              <OsIcon osId={cfg.id} accent={cfg.branding.accent} img={cfg.branding.logoImg} size={14} />
               <span className="text-[11px] font-semibold text-white/60 truncate">{cfg.branding.shortName}</span>
               <span className="text-[9px] text-white/25 hidden sm:inline">· {path}</span>
             </div>
@@ -720,20 +720,20 @@ function SimulationPageInner() {
         <AnimatePresence>
           {showEscHint && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.4 }}
-              className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 rounded-2xl border border-white/10 bg-[#12121a]/95 backdrop-blur-xl px-6 py-4 shadow-2xl"
+              className="fixed top-16 right-4 z-[60] flex items-center gap-3 rounded-2xl border border-white/10 bg-[#12121a]/95 backdrop-blur-xl px-5 py-3.5 shadow-2xl max-w-[260px]"
             >
-              <div className="h-10 w-10 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0">
-                <span className="text-accent text-lg font-bold">⛶</span>
+              <div className="h-9 w-9 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0">
+                <span className="text-accent text-base font-bold">⛶</span>
               </div>
               <div>
-                <p className="text-sm text-white/80 font-semibold">You're in fullscreen</p>
-                <p className="text-[11px] text-white/40 mt-0.5">
-                  Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-white/60 text-[10px]">ESC</kbd> to exit · {" "}
-                  <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-white/60 text-[10px]">Enter</kbd> to continue steps
+                <p className="text-[13px] text-white/80 font-semibold leading-tight">Fullscreen mode</p>
+                <p className="text-[10px] text-white/40 mt-0.5 leading-snug">
+                  Press <kbd className="px-1 py-0.5 rounded bg-white/10 font-mono text-white/60 text-[9px]">ESC</kbd> to exit · {" "}
+                  <kbd className="px-1 py-0.5 rounded bg-white/10 font-mono text-white/60 text-[9px]">Enter</kbd> for next step
                 </p>
               </div>
             </motion.div>

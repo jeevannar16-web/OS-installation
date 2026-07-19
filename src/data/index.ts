@@ -13,8 +13,8 @@ export const OS_REGISTRY: OSData = {
   arch,
   zorin,
   mint,
-  debian,
   fedora,
+  debian,
 };
 
 export const OS_LIST = Object.values(OS_REGISTRY);
