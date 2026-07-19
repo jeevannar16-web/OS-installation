@@ -1,7 +1,8 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
 import { useState } from "react";
+import SceneShell from "../shared/SceneShell";
 
 const OS_LIVE_IMG: Record<string, string> = {
   ubuntu: "/images/ubuntu/01-try-or-install.png",
@@ -17,25 +18,16 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
   const bgImg = OS_LIVE_IMG[config.id] || OS_LIVE_IMG.ubuntu;
   const [phase, setPhase] = useState<"idle" | "install" | "try">("idle");
 
-  const hotspots = phase === "idle" ? [
-    { id: "install", x: 5, y: 12, w: 22, h: 14, onClick: () => { playClick(); setPhase("install"); setTimeout(() => onInstall(), 400); } },
-    { id: "try", x: 5, y: 28, w: 22, h: 14, onClick: () => { playClick(); setPhase("try"); setTimeout(() => onTry(), 400); } },
+  const zones = phase === "idle" ? [
+    { id: "install", x: 5, y: 5, w: 30, h: 40, onClick: () => { playClick(); setPhase("install"); setTimeout(onInstall, 400); } },
+    { id: "try", x: 5, y: 50, w: 30, h: 40, onClick: () => { playClick(); setPhase("try"); setTimeout(onTry, 400); } },
   ] : [];
 
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
       <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
-        <AnimatePresence>
-          <motion.img key={bgImg} src={bgImg} alt={config.branding.name}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="absolute inset-0 w-full h-full object-cover" draggable={false} />
-        </AnimatePresence>
-        {hotspots.map(h => (
-          <div key={h.id} onClick={h.onClick}
-            className="absolute z-10"
-            style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: "pointer" }} />
-        ))}
+        <SceneShell src={bgImg} alt={config.branding.name} zones={zones} />
+
         {phase !== "idle" && (
           <div className="absolute inset-0 z-20 bg-black/60 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">

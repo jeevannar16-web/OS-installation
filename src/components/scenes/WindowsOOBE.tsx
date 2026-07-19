@@ -1,21 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playClick } from "../shared/sounds";
+import SceneShell from "../shared/SceneShell";
 
 type OobeStep =
-  | "region"
-  | "keyboard"
-  | "second_keyboard"
-  | "computer_name"
-  | "setup_type"
-  | "account"
-  | "pin"
-  | "privacy"
-  | "backup"
-  | "customize"
-  | "phone_link"
-  | "edge"
-  | "loading";
+  | "region" | "keyboard" | "second_keyboard" | "computer_name" | "setup_type"
+  | "account" | "pin" | "privacy" | "backup" | "customize" | "phone_link" | "edge" | "loading";
 
 const STEP_BG: Record<string, string> = {
   region: "/images/win11-setup/09-oobe-region.webp",
@@ -32,40 +22,19 @@ const STEP_BG: Record<string, string> = {
   edge: "/images/win11-setup/19-oobe-edge.webp",
 };
 
-const REGIONS = [
-  "United States", "United Kingdom", "India", "Canada",
-  "Australia", "Germany", "France", "Japan", "Brazil", "Nepal",
-];
+const REGIONS = ["United States", "United Kingdom", "India", "Canada", "Australia", "Germany", "France", "Japan", "Brazil", "Nepal"];
 
-const KEYBOARDS = ["US", "UK", "US - International", "French", "German", "Japanese", "Korean"];
-
-const PRIVACY_TOGGLES = [
-  { id: "location", label: "Location", desc: "Let apps use your location", defaultOn: true },
-  { id: "find", label: "Find my device", desc: "Help find your device if lost", defaultOn: true },
-  { id: "inking", label: "Inking & typing", desc: "Improve inking and typing", defaultOn: true },
-  { id: "diag", label: "Diagnostics", desc: "Send diagnostic data to Microsoft", defaultOn: true },
-  { id: "ads", label: "Advertising ID", desc: "Let apps show personalized ads", defaultOn: false },
-  { id: "speech", label: "Online speech recognition", desc: "Use online speech recognition", defaultOn: true },
-];
-
-const CUSTOMIZE_OPTIONS = [
-  "Gaming", "School", "Creativity", "Business",
-  "Family", "Entertainment", "Software development", "Health and fitness",
-];
-
-export default function WindowsOOBE({ osName: _osName, onComplete }: { osName: string; onComplete: () => void }) {
+export default function WindowsOOBE({ onComplete }: { osName: string; onComplete: () => void }) {
   const [step, setStep] = useState<OobeStep>("region");
   const [region, setRegion] = useState("United States");
-  const [keyboard, setKeyboard] = useState("US");
   const [computerName, setComputerName] = useState("DESKTOP-SIM001");
   const [msEmail, setMsEmail] = useState("");
   const [msPassword, setMsPassword] = useState("");
   const [pin, setPin] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
-  const [privacy, setPrivacy] = useState(Object.fromEntries(PRIVACY_TOGGLES.map((t) => [t.id, t.defaultOn])));
-  const [customizeSelections, setCustomizeSelections] = useState<string[]>([]);
   const [loadingText, setLoadingText] = useState("Hi");
   const [loadingProgress, setLoadingProgress] = useState(0);
+
   useEffect(() => {
     if (step !== "loading") return;
     const texts = ["Hi", "Getting things ready for you", "This might take a few minutes", "Almost there"];
@@ -94,56 +63,6 @@ export default function WindowsOOBE({ osName: _osName, onComplete }: { osName: s
   ];
   const currentIdx = steps.indexOf(step);
 
-  function handleInteract() {
-    playClick();
-    switch (step) {
-      case "region": {
-        const idx = REGIONS.indexOf(region);
-        setRegion(REGIONS[(idx + 1) % REGIONS.length]);
-        break;
-      }
-      case "keyboard": {
-        const idx = KEYBOARDS.indexOf(keyboard);
-        setKeyboard(KEYBOARDS[(idx + 1) % KEYBOARDS.length]);
-        break;
-      }
-      case "computer_name":
-        setComputerName(computerName === "DESKTOP-SIM001" ? "DESKTOP-WIN11" : "DESKTOP-SIM001");
-        break;
-      case "account":
-        if (!msEmail) setMsEmail("user@outlook.com");
-        else if (!msPassword) setMsPassword("password123");
-        else go("pin");
-        break;
-      case "pin":
-        if (!pin) setPin("1234");
-        else if (!pinConfirm) setPinConfirm("1234");
-        else go("privacy");
-        break;
-      case "privacy": {
-        const keys = Object.keys(privacy);
-        const offIdx = keys.findIndex(k => !privacy[k]);
-        if (offIdx >= 0) setPrivacy(p => ({ ...p, [keys[offIdx]]: true }));
-        else go("backup");
-        break;
-      }
-      case "backup":
-        go("customize");
-        break;
-      case "customize":
-        if (customizeSelections.length < CUSTOMIZE_OPTIONS.length) {
-          setCustomizeSelections(prev => [...prev, CUSTOMIZE_OPTIONS[prev.length]]);
-        } else go("phone_link");
-        break;
-      case "phone_link":
-        go("edge");
-        break;
-      case "edge":
-        go("loading");
-        break;
-    }
-  }
-
   function handleNext() {
     playClick();
     const map: Partial<Record<OobeStep, OobeStep>> = {
@@ -166,6 +85,46 @@ export default function WindowsOOBE({ osName: _osName, onComplete }: { osName: s
     if (prev) { playClick(); go(prev); }
   }
 
+  function handleInteract() {
+    playClick();
+    switch (step) {
+      case "region": {
+        const idx = REGIONS.indexOf(region);
+        setRegion(REGIONS[(idx + 1) % REGIONS.length]);
+        break;
+      }
+      case "keyboard":
+      case "second_keyboard":
+        handleNext();
+        break;
+      case "computer_name":
+        setComputerName(computerName === "DESKTOP-SIM001" ? "DESKTOP-PC" : "DESKTOP-SIM001");
+        break;
+      case "account":
+        if (!msEmail) setMsEmail("user@outlook.com");
+        else if (!msPassword) setMsPassword("pass123");
+        else handleNext();
+        break;
+      case "pin":
+        if (!pin) setPin("1234");
+        else if (!pinConfirm) setPinConfirm("1234");
+        else handleNext();
+        break;
+      case "backup":
+        handleNext();
+        break;
+      case "customize":
+        handleNext();
+        break;
+      case "phone_link":
+        handleNext();
+        break;
+      case "edge":
+        handleNext();
+        break;
+    }
+  }
+
   if (step === "loading") {
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
@@ -179,7 +138,7 @@ export default function WindowsOOBE({ osName: _osName, onComplete }: { osName: s
               <div className="w-3 h-3 bg-[#0078d4] rounded-sm" />
             </div>
             <p className="text-white/80 text-base font-light mb-1">{loadingText}</p>
-            <p className="text-white/30 text-xs font-mono">Progress: {loadingProgress}%</p>
+            <p className="text-white/30 text-xs font-mono">Loading: {loadingProgress}%</p>
           </div>
           <div className="absolute bottom-0 inset-x-0 h-0.5 bg-white/5">
             <motion.div className="h-full bg-[#0078d4]" animate={{ width: `${loadingProgress}%` }} transition={{ duration: 0.1 }} />
@@ -189,65 +148,42 @@ export default function WindowsOOBE({ osName: _osName, onComplete }: { osName: s
     );
   }
 
-  const hotspots: { id: string; x: number; y: number; w: number; h: number; onClick: () => void }[] = [];
-  hotspots.push(
-    { id: "next", x: 70, y: 85, w: 20, h: 9, onClick: handleNext },
-    { id: "interact", x: 10, y: 15, w: 80, h: 60, onClick: handleInteract }
-  );
-  if (["keyboard", "second_keyboard", "computer_name", "setup_type", "account", "pin", "privacy", "backup", "customize", "phone_link", "edge"].includes(step)) {
-    hotspots.push({ id: "back", x: 10, y: 85, w: 18, h: 9, onClick: handleBack });
-  }
+  const zones = [
+    { id: "next", x: 55, y: 78, w: 35, h: 16, onClick: handleNext },
+    { id: "interact", x: 5, y: 5, w: 65, h: 68, onClick: handleInteract },
+    ...(["keyboard", "second_keyboard", "computer_name", "setup_type", "account", "pin", "privacy", "backup", "customize", "phone_link", "edge"].includes(step)
+      ? [{ id: "back", x: 5, y: 78, w: 25, h: 16, onClick: handleBack }] : []),
+  ];
+
+  const globalInput = step === "computer_name" ? {
+    value: computerName,
+    onChange: (v: string) => setComputerName(v.replace(/[^a-zA-Z0-9-]/g, "")),
+    placeholder: "Device name",
+  } : step === "account" ? {
+    value: msEmail,
+    onChange: setMsEmail,
+    placeholder: "someone@example.com",
+  } : step === "pin" ? {
+    value: pin,
+    onChange: (v: string) => setPin(v.replace(/\D/g, "").slice(0, 6)),
+    placeholder: "PIN",
+    type: "password",
+  } : undefined;
+
+  const stepDots = steps.filter(s => s !== "loading");
 
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
       <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
         <AnimatePresence mode="wait">
-          <motion.img key={step} src={STEP_BG[step] || STEP_BG.region} alt=""
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="absolute inset-0 w-full h-full object-cover" />
+          <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }} className="absolute inset-0">
+            <SceneShell src={STEP_BG[step] || STEP_BG.region} alt={step} zones={zones} globalInput={globalInput} />
+          </motion.div>
         </AnimatePresence>
 
-        {hotspots.map(h => (
-          <div key={h.id} onClick={h.onClick}
-            className="absolute z-10"
-            style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: "pointer" }} />
-        ))}
-
-        {/* Invisible inputs for text fields */}
-        {step === "computer_name" && (
-          <input value={computerName} onChange={e => setComputerName(e.target.value.replace(/[^a-zA-Z0-9-]/g, ""))}
-            placeholder="DESKTOP-XXXXXXX" autoFocus
-            className="absolute z-10 bg-transparent border-none outline-none cursor-text"
-            style={{ left: "20%", top: "38%", width: "60%", height: "8%", color: "#000", fontSize: "15px", fontFamily: "Segoe UI, system-ui, sans-serif" }} />
-        )}
-        {step === "account" && (
-          <>
-            <input value={msEmail} onChange={e => setMsEmail(e.target.value)} placeholder="someone@example.com" autoFocus
-              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
-              style={{ left: "20%", top: "38%", width: "60%", height: "7%", color: "#000", fontSize: "14px", fontFamily: "Segoe UI, system-ui, sans-serif" }} />
-            {msEmail && (
-              <input value={msPassword} onChange={e => setMsPassword(e.target.value)} type="password" placeholder="Password"
-                className="absolute z-10 bg-transparent border-none outline-none cursor-text"
-                style={{ left: "20%", top: "48%", width: "60%", height: "7%", color: "#000", fontSize: "14px", fontFamily: "Segoe UI, system-ui, sans-serif" }} />
-            )}
-          </>
-        )}
-        {step === "pin" && (
-          <>
-            <input value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="Enter PIN" autoFocus maxLength={6}
-              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
-              style={{ left: "20%", top: "38%", width: "45%", height: "7%", color: "#000", fontSize: "14px", fontFamily: "monospace" }} />
-            <input value={pinConfirm} onChange={e => setPinConfirm(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="Confirm PIN" maxLength={6}
-              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
-              style={{ left: "20%", top: "48%", width: "45%", height: "7%", color: "#000", fontSize: "14px", fontFamily: "monospace" }} />
-          </>
-        )}
-
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full">
-          {steps.filter(s => s !== "loading").map((s, i) => (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full pointer-events-none">
+          {stepDots.map((s, i) => (
             <div key={s} className={`h-1.5 rounded-full transition-all ${i <= currentIdx ? "w-3" : "w-1.5"}`}
               style={{ background: i <= currentIdx ? "#0078d4" : "rgba(255,255,255,0.2)" }} />
           ))}

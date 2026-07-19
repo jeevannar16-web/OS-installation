@@ -4,6 +4,7 @@ import type { OSConfig } from "../../data/types";
 import { playClick, playSuccess } from "../shared/sounds";
 import { SparkleBurst } from "../shared/InteractiveEffects";
 import { useSceneAdvance } from "../shared/SceneAdvance";
+import SceneShell from "../shared/SceneShell";
 
 type WizardPhase = "boot" | "wizard" | "installing" | "remove_media" | "done";
 
@@ -114,8 +115,6 @@ const KEYBOARD_LAYOUTS = [
   "Français", "Deutsch", "Italiano", "Português (Brasil)", "Dvorak", "Colemak",
 ];
 
-type HotspotDef = { id: string; x: number; y: number; w: number; h: number; onClick: () => void };
-
 export default function Install({ config, speed, onComplete, path }: {
   config: OSConfig; speed: "normal" | "fast"; onComplete: () => void; path?: string;
 }) {
@@ -123,7 +122,6 @@ export default function Install({ config, speed, onComplete, path }: {
   const isWindows = config.id === "windows";
   const accent = config.branding.accent;
   const surface = config.branding.surface;
-  const osName = config.branding.name;
   const [phase, setPhase] = useState<WizardPhase>(isWindows ? "installing" : "boot");
   const [bootSplash, setBootSplash] = useState(false);
   const [step, setStep] = useState<InstallerStep>("language");
@@ -199,84 +197,124 @@ export default function Install({ config, speed, onComplete, path }: {
     if (nextIdx < STEP_ORDER.length) setStep(STEP_ORDER[nextIdx]);
   }
 
+  function handleInteract() {
+    if (wizardAction === "clicked") return;
+    setWizardAction("clicked");
+    playClick();
+    switch (step) {
+      case "language": {
+        const idx = LANGUAGES.indexOf(values["language"] || "");
+        setVal("language", LANGUAGES[(idx + 1) % LANGUAGES.length]);
+        break;
+      }
+      case "keyboard": {
+        const idx = KEYBOARD_LAYOUTS.indexOf(values["keyboard"] || "");
+        setVal("keyboard", KEYBOARD_LAYOUTS[(idx + 1) % KEYBOARD_LAYOUTS.length]);
+        break;
+      }
+      case "network":
+        setVal("network", values["network"] === "wifi" ? "ethernet" : values["network"] === "ethernet" ? "skip" : "wifi");
+        break;
+      case "install_type":
+        setInstallType(installType === "erase" ? "something" : "erase");
+        break;
+      case "third_party":
+        setVal("third_party", values["third_party"] === "yes" ? "no" : "yes");
+        break;
+      case "timezone": {
+        const tzs = ["UTC", "America/New_York", "Europe/London", "Asia/Kolkata", "Asia/Tokyo"];
+        const idx = tzs.indexOf(values["timezone"] || "");
+        setVal("timezone", tzs[(idx + 1) % tzs.length]);
+        break;
+      }
+      case "create_user":
+        if (!values["name"]) setVal("name", "User");
+        else if (!values["username"]) setVal("username", "user");
+        else if (!values["password"]) setVal("password", "password");
+        break;
+      case "partition":
+        setVal("partition_size", String(Math.min(500, (Number(values["partition_size"]) || 50) + 10)));
+        break;
+      case "install_option":
+        setVal("install_option", values["install_option"] === "interactive" ? "automated" : "interactive");
+        break;
+      case "app_selection":
+        setVal("apps", values["apps"] === "normal" ? "minimal" : "normal");
+        break;
+    }
+    setTimeout(() => setWizardAction("idle"), 200);
+  }
+
   function setVal(field: string, val: string) { setValues((p) => ({ ...p, [field]: val })); }
 
-  function getBootHotspots(): HotspotDef[] {
-    if (isWindows || bootSplash) return [];
+  function bootZones() {
     return [
-      { id: "install", x: 20, y: 62, w: 25, h: 10, onClick: () => { playClick(); setBootSplash(true); } },
-      { id: "try", x: 20, y: 75, w: 25, h: 10, onClick: () => { playClick(); setBootSplash(true); } },
+      { id: "install", x: 10, y: 50, w: 40, h: 25, onClick: () => { playClick(); setBootSplash(true); } },
+      { id: "try", x: 10, y: 75, w: 40, h: 20, onClick: () => { playClick(); setBootSplash(true); } },
     ];
   }
 
-  function getWizardHotspots(): HotspotDef[] {
-    const base: HotspotDef[] = [
-      { id: "next", x: 65, y: 82, w: 18, h: 9, onClick: handleNext },
+  function wizardZones() {
+    const z = [
+      { id: "next", x: 55, y: 78, w: 30, h: 16, onClick: handleNext },
+      { id: "interact", x: 5, y: 5, w: 70, h: 68, onClick: handleInteract },
     ];
     if (currentIdx > 0) {
-      base.push({
-        id: "back", x: 15, y: 82, w: 18, h: 9,
-        onClick: () => { if (currentIdx > 0) { playClick(); setStep(STEP_ORDER[currentIdx - 1]); } },
-      });
+      z.push({ id: "back", x: 5, y: 78, w: 25, h: 16, onClick: () => { if (currentIdx > 0) { playClick(); setStep(STEP_ORDER[currentIdx - 1]); } } });
     }
-    return base;
+    return z;
   }
 
-  function getRemoveMediaHotspots(): HotspotDef[] {
+  function removeMediaZones() {
     return [
-      { id: "restart", x: 30, y: 70, w: 40, h: 10, onClick: () => { playClick(); setPhase("done"); } },
+      { id: "restart", x: 20, y: 65, w: 60, h: 20, onClick: () => { playClick(); setPhase("done"); } },
     ];
   }
 
-  function getDoneHotspots(): HotspotDef[] {
+  function doneZones() {
     if (restartPhase !== "done") return [];
     return [
-      { id: "restart", x: 30, y: 70, w: 40, h: 10, onClick: () => { playSuccess(); onComplete(); } },
+      { id: "restart", x: 20, y: 65, w: 60, h: 20, onClick: () => { playSuccess(); onComplete(); } },
     ];
-  }
-
-  function renderHotspotPhase(src: string, hotspots: HotspotDef[]) {
-    return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
-          <img src={src} alt=""
-            className="absolute inset-0 w-full h-full object-cover" />
-          {hotspots.map(h => (
-            <div key={h.id} onClick={h.onClick}
-              className="absolute z-10"
-              style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: "pointer" }} />
-          ))}
-          {phase === "boot" && bootSplash && (
-            <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
-              <div className="flex flex-col items-center gap-4">
-                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}>
-                  <svg width="60" height="60" viewBox="0 0 32 32" fill="none">
-                    <circle cx="16" cy="16" r="15" stroke={accent} strokeWidth="1.5" fill="none" />
-                    <circle cx="16" cy="5.5" r="2.5" fill={accent} />
-                    <circle cx="7" cy="20.5" r="2.5" fill={accent} />
-                    <circle cx="25" cy="20.5" r="2.5" fill={accent} />
-                  </svg>
-                </motion.div>
-                <div className="flex gap-1.5">
-                  {[0, 1, 2].map(i => (
-                    <motion.div key={i} className="h-2 w-2 rounded-full"
-                      style={{ background: accent }}
-                      animate={{ opacity: [0.3, 1, 0.3] }}
-                      transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
-                  ))}
-                </div>
-                <div className="text-xs text-white/40 font-mono">Starting installer…</div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
   }
 
   // ─── Boot phase ───
   if (phase === "boot") {
-    return renderHotspotPhase(getBootImg(config.id), getBootHotspots());
+    if (bootSplash) {
+      return (
+        <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+          <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden border border-white/10"
+            style={{ background: surface }}>
+            <div className="flex flex-col items-center gap-4">
+              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}>
+                <svg width="60" height="60" viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="15" stroke={accent} strokeWidth="1.5" fill="none" />
+                  <circle cx="16" cy="5.5" r="2.5" fill={accent} />
+                  <circle cx="7" cy="20.5" r="2.5" fill={accent} />
+                  <circle cx="25" cy="20.5" r="2.5" fill={accent} />
+                </svg>
+              </motion.div>
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map(i => (
+                  <motion.div key={i} className="h-2 w-2 rounded-full"
+                    style={{ background: accent }}
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
+                ))}
+              </div>
+              <div className="text-xs text-white/40 font-mono">Starting installer…</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+          <SceneShell src={getBootImg(config.id)} alt="Installer" zones={bootZones()} />
+        </div>
+      </div>
+    );
   }
 
   // ─── Installing phase ───
@@ -318,13 +356,11 @@ export default function Install({ config, speed, onComplete, path }: {
         </div>
       );
     }
-    const installImg = getInstallProgressImg(config.id);
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <SparkleBurst trigger={showSparkle} />
         <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
-          <img src={installImg} alt={`Installing ${osName}`}
-            className="absolute inset-0 w-full h-full object-cover" />
+          <SceneShell src={getInstallProgressImg(config.id)} alt="Installing" zones={[]} />
         </div>
       </div>
     );
@@ -332,112 +368,54 @@ export default function Install({ config, speed, onComplete, path }: {
 
   // ─── Remove media ───
   if (phase === "remove_media") {
-    return renderHotspotPhase(getRestartImg(config.id), getRemoveMediaHotspots());
+    return (
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+          <SceneShell src={getRestartImg(config.id)} alt="Restart" zones={removeMediaZones()} />
+        </div>
+      </div>
+    );
   }
 
   // ─── Done ───
   if (phase === "done") {
-    return renderHotspotPhase(getRestartImg(config.id), getDoneHotspots());
+    return (
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+        <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+          <SceneShell src={getRestartImg(config.id)} alt="Restart" zones={doneZones()} />
+        </div>
+      </div>
+    );
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // WIZARD — Screenshot fills the frame, hotspots over buttons
-  // ══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════
+  // WIZARD
+  // ═══════════════════════════════════════
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
       <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
         <AnimatePresence mode="wait">
-          <motion.img key={step} src={getStepImg(config.id, step)}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ background: surface }} />
+          <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }} className="absolute inset-0">
+            <SceneShell
+              src={getStepImg(config.id, step)}
+              alt={step}
+              zones={wizardZones()}
+              globalInput={step === "create_user" ? {
+                value: values["name"] || "",
+                onChange: (v) => setVal("name", v),
+                placeholder: "Your name",
+              } : undefined} />
+          </motion.div>
         </AnimatePresence>
 
         {/* Step dots */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full pointer-events-none">
           {STEP_ORDER.map((s, i) => (
             <div key={s} className={`h-1.5 rounded-full transition-all ${i <= currentIdx ? "w-3" : "w-1.5"}`}
               style={{ background: i <= currentIdx ? accent : "rgba(255,255,255,0.2)" }} />
           ))}
         </div>
-
-        {/* Navigation hotspots */}
-        {getWizardHotspots().map(h => (
-          <div key={h.id} onClick={h.onClick}
-            className="absolute z-10"
-            style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: "pointer" }} />
-        ))}
-
-        {/* Main content interaction hotspot */}
-        <div onClick={() => {
-          if (wizardAction === "idle") {
-            setWizardAction("clicked");
-            playClick();
-            switch (step) {
-              case "language": {
-                const idx = LANGUAGES.indexOf(values["language"] || "");
-                setVal("language", LANGUAGES[(idx + 1) % LANGUAGES.length]);
-                break;
-              }
-              case "keyboard": {
-                const idx = KEYBOARD_LAYOUTS.indexOf(values["keyboard"] || "");
-                setVal("keyboard", KEYBOARD_LAYOUTS[(idx + 1) % KEYBOARD_LAYOUTS.length]);
-                break;
-              }
-              case "network":
-                setVal("network", values["network"] === "wifi" ? "ethernet" : values["network"] === "ethernet" ? "skip" : "wifi");
-                break;
-              case "install_type":
-                setInstallType(installType === "erase" ? "something" : "erase");
-                break;
-              case "third_party":
-                setVal("third_party", values["third_party"] === "yes" ? "no" : "yes");
-                break;
-              case "timezone": {
-                const tzs = ["UTC", "America/New_York", "Europe/London", "Asia/Kolkata", "Asia/Tokyo"];
-                const idx = tzs.indexOf(values["timezone"] || "");
-                setVal("timezone", tzs[(idx + 1) % tzs.length]);
-                break;
-              }
-              case "review":
-                break;
-            }
-            setTimeout(() => setWizardAction("idle"), 200);
-          }
-        }}
-          className="absolute z-10"
-          style={{ left: step === "create_user" ? "0" : "10%", top: "10%", width: step === "create_user" ? "0" : "80%", height: "65%", cursor: "pointer" }} />
-
-        {/* Invisible inputs for create_user step */}
-        {step === "create_user" && (
-          <>
-            <input value={values["name"] ?? ""} onChange={e => { setVal("name", e.target.value); playClick(); }}
-              placeholder="Your name" autoFocus
-              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
-              style={{ left: "18%", top: "26%", width: "35%", height: "6%", color: "#fff", fontSize: "13px", fontFamily: "system-ui, sans-serif" }} />
-            <input value={values["computer_name"] ?? ""} onChange={e => setVal("computer_name", e.target.value)}
-              placeholder="Computer name"
-              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
-              style={{ left: "18%", top: "37%", width: "35%", height: "6%", color: "#fff", fontSize: "13px", fontFamily: "system-ui, sans-serif" }} />
-            <input value={values["username"] ?? ""} onChange={e => { setVal("username", e.target.value); playClick(); }}
-              placeholder="Username"
-              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
-              style={{ left: "18%", top: "48%", width: "35%", height: "6%", color: "#fff", fontSize: "13px", fontFamily: "system-ui, sans-serif" }} />
-            <input value={values["password"] ?? ""} onChange={e => setVal("password", e.target.value)}
-              type="password" placeholder="Password"
-              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
-              style={{ left: "18%", top: "59%", width: "35%", height: "6%", color: "#fff", fontSize: "13px", fontFamily: "system-ui, sans-serif" }} />
-          </>
-        )}
-
-        {/* Invisible inputs for partition step */}
-        {step === "partition" && (
-          <input value={values["partition_size"] ?? "50"} onChange={e => setVal("partition_size", e.target.value)}
-            placeholder="Size (GB)"
-            className="absolute z-10 bg-transparent border-none outline-none cursor-text"
-            style={{ left: "18%", top: "35%", width: "20%", height: "6%", color: "#fff", fontSize: "13px", fontFamily: "monospace" }} />
-        )}
       </div>
     </div>
   );

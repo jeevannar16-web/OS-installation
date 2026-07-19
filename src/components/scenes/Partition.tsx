@@ -1,15 +1,11 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playClick } from "../shared/sounds";
+import SceneShell from "../shared/SceneShell";
 import type { OSConfig } from "../../data/types";
 
 type PartitionEntry = {
-  device: string;
-  type: string;
-  fs: string;
-  sizeGB: number;
-  mount: string;
-  flags: string[];
+  device: string; type: string; fs: string; sizeGB: number; mount: string; flags: string[];
 };
 
 const TOTAL_GB = 500;
@@ -69,41 +65,25 @@ export default function Partition({
     return (
       <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
-          <img src={partImg} alt="Partition" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <div className="text-center space-y-4 bg-black/60 backdrop-blur-sm rounded-2xl p-8 border border-red-500/20">
-              <div className="text-3xl">⚠️</div>
-              <h2 className="text-lg font-bold text-red-400">No Unallocated Space</h2>
-              <p className="text-xs text-white/50 max-w-sm mx-auto">Shrink your Windows partition first.</p>
-              <button onClick={() => { playClick(); onRebootWindows(); }}
-                className="rounded-lg bg-red-600 hover:bg-red-700 px-6 py-2.5 text-sm font-semibold text-white transition-colors">
-                Reboot into Windows
-              </button>
-            </div>
-          </div>
+          <SceneShell src={partImg} alt="Partition" zones={[
+            { id: "back", x: 0, y: 0, w: 100, h: 100, onClick: () => { playClick(); onRebootWindows(); } },
+          ]} />
         </div>
       </div>
     );
   }
 
-  const hotspots = [
-    { id: "add", x: 8, y: 8, w: 20, h: 10, onClick: () => { playClick(); setEditIdx(null); setForm({ sizeGB: Math.min(50, Math.floor(freeGB || 50)), fs: "ext4", mount: "/" }); setShowDialog(true); } },
-    { id: "confirm", x: 72, y: 88, w: 18, h: 8, onClick: () => { if (canConfirm) { playClick(); onComplete(); } } },
-    { id: "back", x: 8, y: 88, w: 14, h: 8, onClick: () => { playClick(); onRebootWindows(); } },
-    { id: "edit-first", x: 8, y: 28, w: 60, h: 6, onClick: () => { const p = partitions[0]; playClick(); setForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" }); setEditIdx(0); setShowDialog(true); } },
-    { id: "edit-second", x: 8, y: 36, w: 60, h: 6, onClick: () => { const p = partitions[1] || partitions[0]; playClick(); setForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" }); setEditIdx(partitions.length > 1 ? 1 : 0); setShowDialog(true); } },
+  const zones = [
+    { id: "add", x: 5, y: 5, w: 25, h: 15, onClick: () => { playClick(); setEditIdx(null); setForm({ sizeGB: Math.min(50, Math.floor(freeGB || 50)), fs: "ext4", mount: "/" }); setShowDialog(true); } },
+    { id: "confirm", x: 65, y: 80, w: 28, h: 15, onClick: () => { if (canConfirm) { playClick(); onComplete(); } } },
+    { id: "back", x: 5, y: 80, w: 25, h: 15, onClick: () => { playClick(); onRebootWindows(); } },
+    { id: "interact", x: 5, y: 22, w: 70, h: 50, onClick: () => { playClick(); if (partitions.length > 0) { const p = partitions[0]; setForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" }); setEditIdx(0); setShowDialog(true); } } },
   ];
 
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
       <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black">
-        <img src={partImg} alt="Manual partitioning"
-          className="absolute inset-0 w-full h-full object-cover" />
-        {hotspots.map(h => (
-          <div key={h.id} onClick={h.onClick}
-            className="absolute z-10"
-            style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: "pointer" }} />
-        ))}
+        <SceneShell src={partImg} alt="Manual partitioning" zones={zones} />
 
         <AnimatePresence>
           {showDialog && (
@@ -144,21 +124,6 @@ export default function Partition({
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Subtle disk used bar at bottom */}
-        <div className="absolute bottom-0 inset-x-0 z-10 px-2 py-1 bg-gradient-to-t from-black/60 to-transparent">
-          <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-            {partitions.map((p, i) => {
-              const pct = (p.sizeGB / TOTAL_GB) * 100;
-              const colors: Record<string, string> = {
-                FAT32: "bg-blue-300", NTFS: "bg-blue-400", ext4: "bg-emerald-400",
-                swap: "bg-amber-300", xfs: "bg-purple-300", btrfs: "bg-cyan-300",
-              };
-              return <div key={i} className={`${colors[p.fs] || "bg-white/20"}`} style={{ width: `${pct}%` }} />;
-            })}
-            {freeGB > 0 && <div className="bg-white/5" style={{ width: `${(freeGB / TOTAL_GB) * 100}%` }} />}
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playClick, playSuccess } from "../shared/sounds";
+import SceneShell from "../shared/SceneShell";
 import type { OSConfig } from "../../data/types";
 
 type Step = "name" | "memory" | "disk" | "summary";
@@ -12,64 +13,27 @@ const STEPS: { key: Step; label: string; img: string }[] = [
   { key: "summary", label: "Summary", img: "/images/virtualbox/01-new-vm-wizard.jpg" },
 ];
 
-function InvisibleInput({ value, onChange, placeholder, x, y, w, h, textColor = "#333" }: {
-  value: string; onChange: (v: string) => void; placeholder?: string;
-  x: number; y: number; w: number; h: number; textColor?: string;
-}) {
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    const timer = setTimeout(() => ref.current?.focus(), 100);
-    return () => clearTimeout(timer);
-  }, []);
-  return (
-    <input ref={ref} value={value}
-      onChange={e => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="absolute z-10 cursor-text"
-      style={{
-        left: `${x}%`, top: `${y}%`, width: `${w}%`, height: `${h}%`,
-        background: "transparent", border: "none", outline: "none",
-        color: textColor, fontSize: "12px", fontFamily: "Segoe UI, system-ui, sans-serif",
-        padding: "2px 4px",
-      }} />
-  );
-}
-
 export default function CreateVM({ config, onComplete }: { config: OSConfig; onComplete: () => void }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [vmName, setVmName] = useState("");
-  const [memory] = useState(config.vmConfig.defaultMemoryMB);
-  const [isoSelected, setIsoSelected] = useState(false);
 
   const current = STEPS[stepIdx];
   const isLast = stepIdx === STEPS.length - 1;
 
-  const stepHotspots = [
-    { id: "next", x: 52, y: 78, w: 16, h: 8, cursor: "pointer", onClick: () => { if (isLast) { playSuccess(); onComplete(); } else { playClick(); setStepIdx(p => p + 1); } } },
-    { id: "back", x: 32, y: 78, w: 14, h: 8, cursor: "pointer", onClick: () => { if (stepIdx > 0) { playClick(); setStepIdx(p => p - 1); } } },
-    { id: "cancel", x: 70, y: 78, w: 14, h: 8, cursor: "pointer", onClick: () => { playClick(); onComplete(); } },
+  const zones = [
+    { id: "next", x: 50, y: 75, w: 25, h: 18,
+      onClick: () => { if (isLast) { playSuccess(); onComplete(); } else { playClick(); setStepIdx(p => p + 1); } } },
+    { id: "back", x: 5, y: 75, w: 20, h: 18,
+      onClick: () => { if (stepIdx > 0) { playClick(); setStepIdx(p => p - 1); } } },
+    { id: "cancel", x: 77, y: 75, w: 18, h: 18,
+      onClick: () => { playClick(); onComplete(); } },
+    { id: "interact", x: 15, y: 15, w: 70, h: 55,
+      onClick: () => { if (current.key === "summary") { playSuccess(); onComplete(); } else { playClick(); setStepIdx(p => Math.min(STEPS.length - 1, p + 1)); } } },
   ];
-
-  if (current.key === "name") {
-    stepHotspots.push({
-      id: "browse", x: 72, y: 44, w: 14, h: 6, cursor: "pointer",
-      onClick: () => { playClick(); setIsoSelected(true); },
-    });
-  }
-
-  const stepInputs: { x: number; y: number; w: number; h: number; value: string; onChange: (v: string) => void; placeholder?: string }[] = [];
-  if (current.key === "name") {
-    stepInputs.push({ x: 28, y: 29, w: 44, h: 5.5, value: vmName, onChange: setVmName, placeholder: "VM Name" });
-    stepInputs.push({ x: 28, y: 44, w: 43, h: 5.5, value: isoSelected ? config.iso.filename : "", onChange: () => {}, placeholder: "(empty)" });
-  }
-  if (current.key === "memory") {
-    stepInputs.push({ x: 28, y: 30, w: 44, h: 5.5, value: `${memory} MB`, onChange: () => {} });
-  }
 
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
       <div className="flex-1 relative overflow-hidden rounded-2xl border border-gray-600/30 bg-[#3c3c3c] shadow-2xl flex flex-col">
-        {/* Title bar */}
         <div className="flex items-center gap-2 bg-gradient-to-b from-[#e8e8e8] to-[#d4d4d4] px-3 py-1.5 select-none rounded-t-2xl font-sans">
           <div className="flex gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57] border border-[#e0443e]" />
@@ -86,7 +50,6 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
           </div>
         </div>
 
-        {/* Toolbar */}
         <div className="flex items-center gap-1.5 bg-[#f0f0f0] px-2 py-1.5 border-b border-gray-300/60 font-sans">
           <button className="flex items-center gap-1 px-2.5 py-1 rounded text-[8px] font-medium bg-[#4a8cff] text-white shadow-sm">
             <span>⭐</span><span>New</span>
@@ -101,7 +64,6 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
           <span className="text-[7px] text-gray-400">VirtualBox 7.0.18</span>
         </div>
 
-        {/* Content area with screenshot + hotspots + inputs */}
         <div className="flex-1 flex overflow-hidden">
           <div className="w-40 bg-[#f5f5f5] border-r border-gray-300/40 p-2 hidden sm:block font-sans">
             <div className="text-[7px] text-gray-500 uppercase tracking-wider font-semibold mb-1.5">Virtual Machines</div>
@@ -116,22 +78,14 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
             <AnimatePresence mode="wait">
               <motion.div key={current.key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }} className="absolute inset-0">
-                <img src={current.img} alt={current.label}
-                  className="absolute inset-0 w-full h-full object-cover" />
+                <SceneShell src={current.img} alt={current.label}
+                  zones={zones}
+                  globalInput={current.key === "name" ? { value: vmName, onChange: setVmName, placeholder: "VM Name" } : undefined} />
               </motion.div>
             </AnimatePresence>
-            {stepHotspots.map(h => (
-              <div key={h.id} onClick={h.onClick}
-                className="absolute z-10"
-                style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: h.cursor }} />
-            ))}
-            {stepInputs.map((inp, i) => (
-              <InvisibleInput key={i} {...inp} />
-            ))}
           </div>
         </div>
 
-        {/* Status bar */}
         <div className="bg-[#2a2a2a] border-t border-gray-600/40 px-2 py-0.5 flex items-center gap-2 rounded-b-2xl font-sans">
           <div className="flex items-center gap-1">
             <div className="h-1.5 w-1.5 rounded-full bg-gray-500" />

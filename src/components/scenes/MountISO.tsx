@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick, playSuccess } from "../shared/sounds";
+import SceneShell from "../shared/SceneShell";
 
 export default function MountISO({ config, onComplete }: { config: OSConfig; onComplete: () => void }) {
   const [phase, setPhase] = useState<"settings" | "browsing" | "attached">("settings");
@@ -15,15 +16,15 @@ export default function MountISO({ config, onComplete }: { config: OSConfig; onC
     setTimeout(() => { setPhase("attached"); playSuccess(); }, 1600);
   }
 
-  const hotspots = phase === "settings"
+  const zones = phase === "settings"
     ? [
-        { id: "browse", x: 38, y: 42, w: 35, h: 8, onClick: handleBrowse },
-        { id: "cancel", x: 68, y: 82, w: 14, h: 8, onClick: () => { playClick(); onComplete(); } },
+        { id: "browse", x: 30, y: 35, w: 50, h: 25, onClick: handleBrowse },
+        { id: "cancel", x: 60, y: 78, w: 30, h: 16, onClick: () => { playClick(); onComplete(); } },
       ]
     : phase === "attached"
     ? [
-        { id: "ok", x: 52, y: 82, w: 14, h: 8, onClick: () => { playClick(); onComplete(); } },
-        { id: "cancel", x: 68, y: 82, w: 14, h: 8, onClick: () => { playClick(); onComplete(); } },
+        { id: "ok", x: 45, y: 78, w: 25, h: 16, onClick: () => { playClick(); onComplete(); } },
+        { id: "cancel", x: 72, y: 78, w: 22, h: 16, onClick: () => { playClick(); onComplete(); } },
       ]
     : [];
 
@@ -47,29 +48,19 @@ export default function MountISO({ config, onComplete }: { config: OSConfig; onC
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Category sidebar */}
           <div className="w-36 bg-[#f0f0f0] border-r border-gray-300/40 p-2 hidden sm:block">
             {["General", "System", "Display", "Storage", "Audio", "Network", "USB", "Shared Folders"].map(cat => (
               <div key={cat}
                 className={`text-[8px] px-2 py-1 rounded mb-0.5 font-medium ${
                   cat === "Storage" ? "bg-[#4a8cff] text-white" : "text-gray-600 hover:bg-gray-200 cursor-pointer"
-                }`}>
-                {cat}
-              </div>
+                }`}>{cat}</div>
             ))}
           </div>
 
-          {/* Screenshot + hotspots */}
           <div className="flex-1 relative bg-[#f0f0f0] overflow-hidden">
-            <img src={imgSrc} alt="VirtualBox Storage Settings"
-              className="absolute inset-0 w-full h-full object-cover" />
-            {hotspots.map(h => (
-              <div key={h.id} onClick={h.onClick}
-                className="absolute z-10"
-                style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: "pointer" }} />
-            ))}
+            <SceneShell src={imgSrc} alt="VirtualBox Storage Settings" zones={zones} />
+
             {phase === "browsing" && (
               <div className="absolute inset-0 z-20 bg-black/60 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
@@ -86,14 +77,13 @@ export default function MountISO({ config, onComplete }: { config: OSConfig; onC
               </div>
             )}
             {phase === "attached" && (
-              <div className="absolute bottom-2 right-2 z-20 bg-green-600/80 text-white text-[9px] px-2 py-0.5 rounded-full font-medium">
+              <div className="absolute bottom-2 right-2 z-20 bg-green-600/80 text-white text-[9px] px-2 py-0.5 rounded-full font-medium pointer-events-none">
                 ✓ ISO Mounted
               </div>
             )}
           </div>
         </div>
 
-        {/* Status bar */}
         <div className="bg-[#2a2a2a] border-t border-gray-600/40 px-2 py-0.5 flex items-center gap-2 rounded-b-2xl">
           <div className="flex items-center gap-1">
             <div className="h-1.5 w-1.5 rounded-full bg-gray-500" />
