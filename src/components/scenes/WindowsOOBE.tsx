@@ -84,7 +84,7 @@ export default function WindowsOOBE({ onComplete }: { osName: string; onComplete
 
   if (step === "loading") {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10"
           style={{ background: "linear-gradient(180deg, #0a0a0f 0%, #0d1117 40%, #0a0a0f 100%)" }}>
           <div className="absolute inset-0 flex flex-col items-center justify-center px-6">

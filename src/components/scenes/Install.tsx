@@ -359,13 +359,13 @@ export default function Install({ config, speed, onComplete, path }: {
     const dialogBg = isZorin ? "#1e1e24" : "#ffffff";
 
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
         <div className="flex-1 flex items-center justify-center p-4"
           style={{ background: `linear-gradient(135deg, ${surface}, ${surface}dd)`, borderRadius: "1rem" }}>
-          <div className="w-full max-w-lg rounded-xl shadow-2xl overflow-hidden"
-            style={{ background: dialogBg, border: `1px solid ${isZorin ? "rgba(255,255,255,0.08)" : "#e0e0e0"}` }}>
+          <div className="w-full max-w-xl rounded-xl shadow-2xl flex flex-col overflow-hidden"
+            style={{ background: dialogBg, border: `1px solid ${isZorin ? "rgba(255,255,255,0.08)" : "#e0e0e0"}`, maxHeight: "90%" }}>
             {/* Header with step indicator */}
-            <div className="px-5 py-3 border-b" style={{ borderColor: isZorin ? "rgba(255,255,255,0.08)" : "#e0e0e0" }}>
+            <div className="px-5 py-3 border-b shrink-0" style={{ borderColor: isZorin ? "rgba(255,255,255,0.08)" : "#e0e0e0" }}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold tracking-wider" style={{ color: accent }}>{osName}</span>
                 <div className="flex items-center gap-1">
@@ -378,7 +378,7 @@ export default function Install({ config, speed, onComplete, path }: {
             </div>
 
             {/* Body */}
-            <div className="px-5 py-4" style={{ maxHeight: "360px", overflowY: "auto" }}>
+            <div className="px-5 py-4 flex-1 overflow-y-auto min-h-0">
               <motion.div key={step} initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}>
                 {content()}
@@ -386,7 +386,7 @@ export default function Install({ config, speed, onComplete, path }: {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: isZorin ? "rgba(255,255,255,0.08)" : "#e0e0e0" }}>
+            <div className="flex items-center justify-between px-5 py-3 border-t shrink-0" style={{ borderColor: isZorin ? "rgba(255,255,255,0.08)" : "#e0e0e0" }}>
               <button onClick={handleBack} disabled={currentIdx === 0}
                 className="text-xs font-medium px-4 py-1.5 rounded transition-all disabled:opacity-30"
                 style={{ color: isZorin ? "rgba(255,255,255,0.5)" : "#666" }}>
@@ -408,7 +408,7 @@ export default function Install({ config, speed, onComplete, path }: {
   if (phase === "boot") {
     if (bootSplash) {
       return (
-        <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+        <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
           <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden border border-white/10"
             style={{ background: surface }}>
             <div className="flex flex-col items-center gap-4">
@@ -434,7 +434,7 @@ export default function Install({ config, speed, onComplete, path }: {
       );
     }
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
         <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
           style={{ background: `linear-gradient(135deg, ${surface}, ${surface}dd)` }}>
           <div className="text-center space-y-5">
@@ -462,7 +462,7 @@ export default function Install({ config, speed, onComplete, path }: {
   if (phase === "installing") {
     if (isWindows) {
       return (
-        <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+        <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
           <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10"
             style={{ background: "linear-gradient(180deg, #0a0a0f 0%, #0d1117 40%, #0a0a0f 100%)" }}>
             <div className="absolute top-[18%] inset-x-0 flex justify-center">
@@ -498,7 +498,7 @@ export default function Install({ config, speed, onComplete, path }: {
       );
     }
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
         <SparkleBurst trigger={showSparkle} />
         <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
           style={{ background: `linear-gradient(135deg, ${surface}, #000)` }}>
@@ -521,7 +521,7 @@ export default function Install({ config, speed, onComplete, path }: {
   // ─── Remove media ───
   if (phase === "remove_media") {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
         <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
           style={{ background: surface }}>
           <div className="text-center space-y-4">
@@ -541,7 +541,7 @@ export default function Install({ config, speed, onComplete, path }: {
   // ─── Done ───
   if (phase === "done") {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
         <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
           style={{ background: `linear-gradient(135deg, ${surface}, #000)` }}>
           <div className="text-center space-y-4">

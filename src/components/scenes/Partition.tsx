@@ -55,7 +55,7 @@ export default function Partition({
 
   if (!diskShrunk) {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
         <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
           style={{ background: `linear-gradient(135deg, ${config.branding.surface}, #000)` }}>
           <div className="text-center space-y-4">
@@ -71,7 +71,7 @@ export default function Partition({
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
       <div className="flex-1 flex flex-col rounded-2xl border border-white/10 overflow-hidden"
         style={{ background: "#0d0d14" }}>
         <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">

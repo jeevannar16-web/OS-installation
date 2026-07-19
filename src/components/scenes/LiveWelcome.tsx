@@ -27,9 +27,9 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
 
   if (phase === "transition") {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-        <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
-          style={{ background: `linear-gradient(135deg, ${surface}, #000)` }}>
+    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+      <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
+        style={{ background: `linear-gradient(135deg, ${surface}, #000)` }}>
           <div className="flex flex-col items-center gap-4">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-3xl">{logo}</motion.div>
             <div className="text-white/60 text-xs font-medium">
@@ -49,8 +49,8 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-      <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10 relative overflow-hidden"
+      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+        <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10 relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, ${surface} 0%, #000 100%)` }}>
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: `radial-gradient(circle at 25% 50%, ${accent} 0%, transparent 50%)` }} />
