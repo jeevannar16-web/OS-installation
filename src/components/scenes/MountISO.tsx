@@ -47,103 +47,36 @@ export default function MountISO({ config, onComplete }: { config: OSConfig; onC
             ))}
           </div>
 
-          {/* Storage settings — pure HTML matching VirtualBox style */}
-          <div className="flex-1 bg-[#f0f0f0] flex flex-col text-[10px]">
-            {/* Storage Tree */}
-            <div className="border-b border-gray-300/60 p-2">
-              <div className="text-[9px] font-semibold text-gray-700 mb-1">Storage Tree</div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-1 text-gray-600">
-                  <span>💾</span>
-                  <span>Controller: SATA</span>
-                </div>
-                <div className="ml-4 flex items-center gap-1 text-gray-600">
-                  <span className="text-[11px]">💿</span>
-                  <span>{config.branding.shortName}.vdi</span>
-                </div>
-                <div className="flex items-center gap-1 text-gray-600">
-                  <span>💾</span>
-                  <span>Controller: IDE</span>
-                </div>
-                <div className={`ml-4 flex items-center gap-1 ${phase === "attached" ? "text-green-700" : "text-gray-600"}`}>
-                  <span className="text-[11px]">💿</span>
-                  <span>
-                    {phase === "attached" ? config.iso.filename.slice(0, 22) + "…" : "[Optical Drive] Empty"}
-                  </span>
-                </div>
-              </div>
-            </div>
+          <div className="flex-1 relative bg-[#2a2a2b] overflow-hidden">
+            <img src="/images/virtualbox/05-select-iso.jpg" alt="Storage Settings"
+              className="absolute inset-0 w-full h-full object-cover" />
 
-            {/* Properties */}
-            <div className="flex-1 p-2">
-              <div className="text-[9px] font-semibold text-gray-700 mb-2">Properties</div>
+            {/* Invisible hotzone over the CD/DVD drive icon in the screenshot */}
+            <button onClick={handleClick} disabled={phase !== "settings"}
+              className="absolute z-10 cursor-pointer bg-transparent"
+              style={{ top: "46%", left: "43%", width: "10%", height: "18%" }} />
 
-              {/* CD/DVD drive panel — VirtualBox style */}
-              <div className="border border-[#7f9db9] bg-white p-2">
-                {phase === "attached" ? (
-                  <div>
-                    <div className="flex items-center gap-2 text-green-700 font-semibold mb-2">
-                      <span>✓</span>
-                      <span>Optical disk mounted</span>
-                    </div>
-                    <div className="text-gray-600 mb-2 font-mono text-[10px]">{config.iso.filename}</div>
-                    <button onClick={() => { playClick(); setPhase("settings"); }}
-                      className="border border-[#7f9db9] bg-[#e8e8e8] px-2 py-0.5 text-[10px] text-gray-700"
-                      style={{ boxShadow: "1px 1px 2px rgba(0,0,0,0.15)" }}>
-                      Remove disk
-                    </button>
-                  </div>
-                ) : phase === "browsing" ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <motion.span animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                        className="inline-block">💿</motion.span>
-                      <span>Selecting optical disk...</span>
-                    </div>
-                    <motion.div className="h-1 rounded-full bg-gray-200 overflow-hidden">
-                      <motion.div className="h-full rounded-full"
-                        initial={{ width: "0%" }} animate={{ width: "100%" }}
-                        transition={{ duration: 1.4, ease: "easeInOut" }}
-                        style={{ background: accent }} />
-                    </motion.div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <span>💿</span>
-                      <span className="text-gray-400 italic">(empty)</span>
-                    </div>
-                    <button onClick={handleClick}
-                      className="border border-[#7f9db9] bg-[#e8e8e8] px-2 py-0.5 text-[10px] text-gray-700 active:border-[#0078d4]"
-                      style={{ boxShadow: "1px 1px 2px rgba(0,0,0,0.15)" }}>
-                      Choose Virtual Optical Disk File...
-                    </button>
-                  </div>
-                )}
-              </div>
+            {/* Micro progress line during browsing — invisible zone */}
+            {phase === "browsing" && (
+              <motion.div className="absolute bottom-0 inset-x-0 h-0.5 z-10"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                style={{ background: "rgba(255,255,255,0.06)" }}>
+                <motion.div className="h-full"
+                  initial={{ width: "0%" }} animate={{ width: "100%" }}
+                  transition={{ duration: 1.4, ease: "easeInOut" }}
+                  style={{ background: accent }} />
+              </motion.div>
+            )}
 
-              <div className="mt-3 text-[9px] text-gray-500 leading-relaxed">
-                {phase === "attached"
-                  ? "The ISO is attached. Close this window and start the VM."
-                  : "Select an ISO file to mount as a virtual optical disk."}
-              </div>
-            </div>
-
-            {/* Dialog buttons */}
-            <div className="border-t border-gray-300/60 px-3 py-2 flex items-center justify-end gap-2">
-              <button onClick={() => { if (phase === "attached") { playClick(); onComplete(); } }}
-                disabled={phase !== "attached"}
-                className={`px-3 py-1 text-[10px] border border-[#7f9db9] bg-[#e8e8e8] disabled:opacity-30 active:border-[#0078d4]`}
-                style={{ boxShadow: "1px 1px 2px rgba(0,0,0,0.15)" }}>
-                OK
-              </button>
-              <button onClick={() => { playClick(); onComplete(); }}
-                className="px-3 py-1 text-[10px] border border-[#7f9db9] bg-[#e8e8e8] text-gray-700 active:border-[#0078d4]"
-                style={{ boxShadow: "1px 1px 2px rgba(0,0,0,0.15)" }}>
-                Cancel
-              </button>
-            </div>
+            {/* Tiny "attached" indicator over the now-empty drive in the image */}
+            {phase === "attached" && (
+              <div className="absolute z-10 pointer-events-none"
+                style={{
+                  top: "47%", left: "43%", width: "10%", height: "18%",
+                  background: "rgba(16,185,129,0.08)",
+                  borderRadius: "4px",
+                }} />
+            )}
           </div>
         </div>
 
@@ -156,6 +89,15 @@ export default function MountISO({ config, onComplete }: { config: OSConfig; onC
           <span className="text-[7px] text-gray-500">Storage</span>
         </div>
       </div>
+
+      {phase === "attached" && (
+        <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          onClick={() => { playClick(); onComplete(); }}
+          className="w-full rounded-b-2xl border-t border-white/10 py-3 text-sm font-bold text-white"
+          style={{ background: accent }}>
+          Start VM →
+        </motion.button>
+      )}
     </div>
   );
 }

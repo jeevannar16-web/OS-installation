@@ -286,33 +286,38 @@ export default function Install({ config, speed, onComplete, path }: {
     if (isWindows) {
       return (
         <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
-          <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black flex items-center justify-center">
-            <div className="text-center space-y-6">
-              {/* Blue Windows logo */}
-              <div className="flex gap-1 justify-center">
-                <div className="w-5 h-5 bg-[#0078d4] rounded-sm" />
-                <div className="w-5 h-5 bg-[#0078d4] rounded-sm" />
-                <div className="w-5 h-5 bg-[#0078d4] rounded-sm" />
-                <div className="w-5 h-5 bg-[#0078d4] rounded-sm" />
-              </div>
-              {/* Spinning dots */}
-              <div className="flex justify-center gap-1.5">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <motion.div key={i} className="h-1.5 w-1.5 rounded-full bg-white/60"
-                    animate={{ opacity: [0.2, 1, 0.2] }}
-                    transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
-                ))}
-              </div>
-              <div className="text-sm text-white/70 font-light">
-                Copying your Windows files … {Math.floor(progress)}%
-              </div>
-              <div className="text-[10px] text-white/30 font-mono max-w-xs mx-auto leading-relaxed">
-                {fileIdx < config.installFiles.length ? config.installFiles[fileIdx] : "Finalizing installation..."}
+          <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10"
+            style={{ background: "linear-gradient(180deg, #0a0a0f 0%, #0d1117 40%, #0a0a0f 100%)" }}>
+            {/* Windows logo — upper area */}
+            <div className="absolute top-[18%] inset-x-0 flex justify-center">
+              <div className="grid grid-cols-2 gap-px">
+                <div className="w-3 h-3 bg-[#0078d4]" style={{ borderTopLeftRadius: "1px" }} />
+                <div className="w-3 h-3 bg-[#0078d4]" style={{ borderTopRightRadius: "1px" }} />
+                <div className="w-3 h-3 bg-[#0078d4]" style={{ borderBottomLeftRadius: "1px" }} />
+                <div className="w-3 h-3 bg-[#0078d4]" style={{ borderBottomRightRadius: "1px" }} />
               </div>
             </div>
+            {/* Dots — below logo */}
+            <div className="absolute top-[26%] inset-x-0 flex justify-center gap-1">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <motion.div key={i} className="h-1 w-1 rounded-full bg-white/50"
+                  animate={{ opacity: [0.15, 0.8, 0.15] }}
+                  transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.25 }} />
+              ))}
+            </div>
+            {/* Text — center */}
+            <div className="absolute top-[32%] inset-x-0 text-center">
+              <p className="text-xs text-white/60 font-light tracking-wide">Copying Windows files</p>
+              <p className="text-[9px] text-white/25 font-mono mt-1">{Math.floor(progress)}%</p>
+              {fileIdx < config.installFiles.length && (
+                <p className="text-[8px] text-white/15 font-mono mt-2 max-w-[200px] mx-auto truncate">
+                  {config.installFiles[fileIdx]}
+                </p>
+              )}
+            </div>
             {/* Bottom progress bar */}
-            <div className="absolute bottom-0 inset-x-0 h-0.5 bg-white/10">
-              <motion.div className="h-full bg-[#0078d4]"
+            <div className="absolute bottom-0 inset-x-0 h-0.5" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <motion.div className="h-full" style={{ background: "#0078d4" }}
                 animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }} />
             </div>
           </div>
