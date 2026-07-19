@@ -214,6 +214,38 @@ export default function WindowsOOBE({ osName: _osName, onComplete }: { osName: s
             style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: "pointer" }} />
         ))}
 
+        {/* Invisible inputs for text fields */}
+        {step === "computer_name" && (
+          <input value={computerName} onChange={e => setComputerName(e.target.value.replace(/[^a-zA-Z0-9-]/g, ""))}
+            placeholder="DESKTOP-XXXXXXX" autoFocus
+            className="absolute z-10 bg-transparent border-none outline-none cursor-text"
+            style={{ left: "20%", top: "38%", width: "60%", height: "8%", color: "#000", fontSize: "15px", fontFamily: "Segoe UI, system-ui, sans-serif" }} />
+        )}
+        {step === "account" && (
+          <>
+            <input value={msEmail} onChange={e => setMsEmail(e.target.value)} placeholder="someone@example.com" autoFocus
+              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
+              style={{ left: "20%", top: "38%", width: "60%", height: "7%", color: "#000", fontSize: "14px", fontFamily: "Segoe UI, system-ui, sans-serif" }} />
+            {msEmail && (
+              <input value={msPassword} onChange={e => setMsPassword(e.target.value)} type="password" placeholder="Password"
+                className="absolute z-10 bg-transparent border-none outline-none cursor-text"
+                style={{ left: "20%", top: "48%", width: "60%", height: "7%", color: "#000", fontSize: "14px", fontFamily: "Segoe UI, system-ui, sans-serif" }} />
+            )}
+          </>
+        )}
+        {step === "pin" && (
+          <>
+            <input value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="Enter PIN" autoFocus maxLength={6}
+              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
+              style={{ left: "20%", top: "38%", width: "45%", height: "7%", color: "#000", fontSize: "14px", fontFamily: "monospace" }} />
+            <input value={pinConfirm} onChange={e => setPinConfirm(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="Confirm PIN" maxLength={6}
+              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
+              style={{ left: "20%", top: "48%", width: "45%", height: "7%", color: "#000", fontSize: "14px", fontFamily: "monospace" }} />
+          </>
+        )}
+
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full">
           {steps.filter(s => s !== "loading").map((s, i) => (
             <div key={s} className={`h-1.5 rounded-full transition-all ${i <= currentIdx ? "w-3" : "w-1.5"}`}

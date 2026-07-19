@@ -400,11 +400,6 @@ export default function Install({ config, speed, onComplete, path }: {
                 setVal("timezone", tzs[(idx + 1) % tzs.length]);
                 break;
               }
-              case "create_user":
-                setVal("name", values["name"] || "User");
-                setVal("username", values["username"] || "user");
-                setVal("password", values["password"] || "password");
-                break;
               case "review":
                 break;
             }
@@ -412,7 +407,37 @@ export default function Install({ config, speed, onComplete, path }: {
           }
         }}
           className="absolute z-10"
-          style={{ left: "10%", top: "10%", width: "80%", height: "65%", cursor: "pointer" }} />
+          style={{ left: step === "create_user" ? "0" : "10%", top: "10%", width: step === "create_user" ? "0" : "80%", height: "65%", cursor: "pointer" }} />
+
+        {/* Invisible inputs for create_user step */}
+        {step === "create_user" && (
+          <>
+            <input value={values["name"] ?? ""} onChange={e => { setVal("name", e.target.value); playClick(); }}
+              placeholder="Your name" autoFocus
+              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
+              style={{ left: "18%", top: "26%", width: "35%", height: "6%", color: "#fff", fontSize: "13px", fontFamily: "system-ui, sans-serif" }} />
+            <input value={values["computer_name"] ?? ""} onChange={e => setVal("computer_name", e.target.value)}
+              placeholder="Computer name"
+              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
+              style={{ left: "18%", top: "37%", width: "35%", height: "6%", color: "#fff", fontSize: "13px", fontFamily: "system-ui, sans-serif" }} />
+            <input value={values["username"] ?? ""} onChange={e => { setVal("username", e.target.value); playClick(); }}
+              placeholder="Username"
+              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
+              style={{ left: "18%", top: "48%", width: "35%", height: "6%", color: "#fff", fontSize: "13px", fontFamily: "system-ui, sans-serif" }} />
+            <input value={values["password"] ?? ""} onChange={e => setVal("password", e.target.value)}
+              type="password" placeholder="Password"
+              className="absolute z-10 bg-transparent border-none outline-none cursor-text"
+              style={{ left: "18%", top: "59%", width: "35%", height: "6%", color: "#fff", fontSize: "13px", fontFamily: "system-ui, sans-serif" }} />
+          </>
+        )}
+
+        {/* Invisible inputs for partition step */}
+        {step === "partition" && (
+          <input value={values["partition_size"] ?? "50"} onChange={e => setVal("partition_size", e.target.value)}
+            placeholder="Size (GB)"
+            className="absolute z-10 bg-transparent border-none outline-none cursor-text"
+            style={{ left: "18%", top: "35%", width: "20%", height: "6%", color: "#fff", fontSize: "13px", fontFamily: "monospace" }} />
+        )}
       </div>
     </div>
   );

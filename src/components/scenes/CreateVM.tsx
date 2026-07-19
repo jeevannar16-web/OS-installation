@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playClick, playSuccess } from "../shared/sounds";
 import type { OSConfig } from "../../data/types";
@@ -12,51 +12,59 @@ const STEPS: { key: Step; label: string; img: string }[] = [
   { key: "summary", label: "Summary", img: "/images/virtualbox/01-new-vm-wizard.jpg" },
 ];
 
+function InvisibleInput({ value, onChange, placeholder, x, y, w, h, textColor = "#333" }: {
+  value: string; onChange: (v: string) => void; placeholder?: string;
+  x: number; y: number; w: number; h: number; textColor?: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const timer = setTimeout(() => ref.current?.focus(), 100);
+    return () => clearTimeout(timer);
+  }, []);
+  return (
+    <input ref={ref} value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="absolute z-10 cursor-text"
+      style={{
+        left: `${x}%`, top: `${y}%`, width: `${w}%`, height: `${h}%`,
+        background: "transparent", border: "none", outline: "none",
+        color: textColor, fontSize: "12px", fontFamily: "Segoe UI, system-ui, sans-serif",
+        padding: "2px 4px",
+      }} />
+  );
+}
+
 export default function CreateVM({ config, onComplete }: { config: OSConfig; onComplete: () => void }) {
   const [stepIdx, setStepIdx] = useState(0);
-  const [vmName, setVmName] = useState(`${config.branding.shortName} VM`);
-  const [memory, setMemory] = useState(config.vmConfig.defaultMemoryMB);
-  const [cpus, setCpus] = useState(2);
-  const [diskSize, setDiskSize] = useState(config.vmConfig.defaultDiskGB);
+  const [vmName, setVmName] = useState("");
+  const [memory] = useState(config.vmConfig.defaultMemoryMB);
   const [isoSelected, setIsoSelected] = useState(false);
 
   const current = STEPS[stepIdx];
   const isLast = stepIdx === STEPS.length - 1;
 
-  function next() {
-    if (isLast) { playSuccess(); onComplete(); }
-    else { playClick(); setStepIdx(p => p + 1); }
-  }
-
-  function stepAction() {
-    playClick();
-    switch (current.key) {
-      case "name":
-        if (!vmName.trim()) { setVmName(config.branding.name + " VM"); return; }
-        if (!isoSelected) { setIsoSelected(true); return; }
-        next();
-        break;
-      case "memory":
-        if (memory < 4096) { setMemory(p => Math.min(8192, p + 512)); return; }
-        if (cpus < 4) { setCpus(p => Math.min(8, p + 1)); return; }
-        next();
-        break;
-      case "disk":
-        if (diskSize < 50) { setDiskSize(p => Math.min(100, p + 5)); return; }
-        next();
-        break;
-      case "summary":
-        next();
-        break;
-    }
-  }
-
   const stepHotspots = [
     { id: "next", x: 52, y: 78, w: 16, h: 8, cursor: "pointer", onClick: () => { if (isLast) { playSuccess(); onComplete(); } else { playClick(); setStepIdx(p => p + 1); } } },
     { id: "back", x: 32, y: 78, w: 14, h: 8, cursor: "pointer", onClick: () => { if (stepIdx > 0) { playClick(); setStepIdx(p => p - 1); } } },
     { id: "cancel", x: 70, y: 78, w: 14, h: 8, cursor: "pointer", onClick: () => { playClick(); onComplete(); } },
-    { id: "interact", x: 18, y: 20, w: 64, h: 50, cursor: "pointer", onClick: stepAction },
   ];
+
+  if (current.key === "name") {
+    stepHotspots.push({
+      id: "browse", x: 72, y: 44, w: 14, h: 6, cursor: "pointer",
+      onClick: () => { playClick(); setIsoSelected(true); },
+    });
+  }
+
+  const stepInputs: { x: number; y: number; w: number; h: number; value: string; onChange: (v: string) => void; placeholder?: string }[] = [];
+  if (current.key === "name") {
+    stepInputs.push({ x: 28, y: 29, w: 44, h: 5.5, value: vmName, onChange: setVmName, placeholder: "VM Name" });
+    stepInputs.push({ x: 28, y: 44, w: 43, h: 5.5, value: isoSelected ? config.iso.filename : "", onChange: () => {}, placeholder: "(empty)" });
+  }
+  if (current.key === "memory") {
+    stepInputs.push({ x: 28, y: 30, w: 44, h: 5.5, value: `${memory} MB`, onChange: () => {} });
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
@@ -93,9 +101,8 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
           <span className="text-[7px] text-gray-400">VirtualBox 7.0.18</span>
         </div>
 
-        {/* Content area with screenshot + hotspots */}
+        {/* Content area with screenshot + hotspots + inputs */}
         <div className="flex-1 flex overflow-hidden">
-          {/* VM list sidebar */}
           <div className="w-40 bg-[#f5f5f5] border-r border-gray-300/40 p-2 hidden sm:block font-sans">
             <div className="text-[7px] text-gray-500 uppercase tracking-wider font-semibold mb-1.5">Virtual Machines</div>
             <div className="rounded bg-gradient-to-r from-[#4a8cff]/10 to-transparent border border-[#4a8cff]/30 px-2 py-1.5 text-[8px] font-medium text-gray-700 flex items-center gap-1.5">
@@ -105,7 +112,6 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
             <div className="mt-1 text-[7px] text-gray-400 px-2 py-1">Powered Off</div>
           </div>
 
-          {/* Screenshot with hotspots */}
           <div className="flex-1 relative bg-[#f0f0f0] overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div key={current.key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -118,6 +124,9 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
               <div key={h.id} onClick={h.onClick}
                 className="absolute z-10"
                 style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%`, cursor: h.cursor }} />
+            ))}
+            {stepInputs.map((inp, i) => (
+              <InvisibleInput key={i} {...inp} />
             ))}
           </div>
         </div>
