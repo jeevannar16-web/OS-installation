@@ -4,6 +4,7 @@ import { Search, Lock, ArrowLeft, ArrowRight, RotateCcw, FileText, CheckCircle2,
 import type { OSConfig } from "../../data/types";
 import GhostCursor from "../shared/GhostCursor";
 import { useSceneAdvance } from "../shared/SceneAdvance";
+import OsIcon from "../shared/OsIcon";
 
 type Phase = "address" | "search" | "download" | "downloading" | "done";
 
@@ -200,7 +201,7 @@ export default function FakeBrowser({
         {/* Tab strip */}
         <div className="flex items-end gap-2 bg-[#202124] px-3 pt-2">
           <div className="flex items-center gap-2 rounded-t-lg bg-[#323639] px-4 py-2 text-sm text-white/80">
-            <span className="text-base">{config.branding.logo}</span>
+            <OsIcon osId={config.id} accent={config.branding.accent} size={16} />
             <span className="max-w-[160px] truncate">
               {phase === "download" ? dp.title : phase === "search" ? "Search" : "New Tab"}
             </span>
@@ -252,8 +253,8 @@ export default function FakeBrowser({
         <div className="relative h-[460px] lg:h-[560px] xl:h-[640px] overflow-hidden bg-[#0d1117] text-[#c9d1d9]">
           {phase === "address" && (
             <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center text-3xl font-bold text-accent">
-                {config.branding.logo}
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+                <OsIcon osId={config.id} accent={config.branding.accent} size={36} />
               </div>
               <div className="text-lg font-semibold text-[#e0e0e0]">{config.branding.name} Download</div>
               <p className="text-sm text-[#8b949e] max-w-sm">
@@ -319,8 +320,8 @@ export default function FakeBrowser({
               className="flex h-full flex-col items-center justify-center gap-6 px-6 text-center"
               style={{ background: `linear-gradient(180deg, ${config.branding.surface}, #0b0b0f)` }}
             >
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/20 flex items-center justify-center text-4xl font-bold text-accent shadow-lg shadow-accent/20">
-                {config.branding.logo}
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/20 flex items-center justify-center shadow-lg shadow-accent/20">
+                <OsIcon osId={config.id} accent={config.branding.accent} size={48} />
               </div>
               <h1 className="text-3xl font-bold text-white">{dp.title}</h1>
               {dp.versions && (

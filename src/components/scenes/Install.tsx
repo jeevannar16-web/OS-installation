@@ -4,6 +4,7 @@ import type { OSConfig } from "../../data/types";
 import { playClick, playKeyClick, playSuccess } from "../shared/sounds";
 import { SparkleBurst } from "../shared/InteractiveEffects";
 import { useSceneAdvance } from "../shared/SceneAdvance";
+import OsIcon from "../shared/OsIcon";
 
 type WizardPhase = "boot" | "wizard" | "installing" | "remove_media" | "done";
 
@@ -45,7 +46,6 @@ export default function Install({ config, speed, onComplete, path }: {
   const accent = config.branding.accent;
   const surface = config.branding.surface;
   const osName = config.branding.name;
-  const logo = config.branding.logo;
   const [phase, setPhase] = useState<WizardPhase>(isWindows ? "installing" : "boot");
   const [bootSplash, setBootSplash] = useState(false);
   const [stepIdx, setStepIdx] = useState(0);
@@ -304,8 +304,8 @@ export default function Install({ config, speed, onComplete, path }: {
         <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
           <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden border border-white/10" style={{ background: surface }}>
             <div className="flex flex-col items-center gap-4">
-              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-4xl">
-                {logo}
+              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}>
+                <OsIcon osId={config.id} accent={accent} size={48} />
               </motion.div>
               <div className="flex gap-1.5">
                 {[0, 1, 2].map(i => (
@@ -325,7 +325,7 @@ export default function Install({ config, speed, onComplete, path }: {
         <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
           style={{ background: `linear-gradient(135deg, ${surface}, ${surface}dd)` }}>
           <div className="text-center space-y-5">
-            <div className="text-4xl mb-2">{logo}</div>
+            <div className="mb-2"><OsIcon osId={config.id} accent={accent} size={48} /></div>
             <div className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: accent }}>{osName}</div>
             <h1 className="text-2xl font-bold text-white">Install {osName}</h1>
             <p className="text-xs text-white/50 max-w-xs mx-auto">Try before installing, or start the installation.</p>

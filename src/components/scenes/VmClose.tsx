@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick, playSuccess } from "../shared/sounds";
 import { useSceneAdvance } from "../shared/SceneAdvance";
+import OsIcon from "../shared/OsIcon";
 
 const OS_VM_IMG: Record<string, string> = {
   ubuntu: "/images/virtualbox/12-ubuntu-running.jpg",
@@ -102,7 +103,7 @@ export default function VmClose({ config, onComplete }: { config: OSConfig; onCo
                   }} />
                   
                   <div className="relative z-10 text-center space-y-4">
-                    <div className="text-4xl">{config.branding.logo}</div>
+                    <div><OsIcon osId={config.id} accent={config.branding.accent} size={36} /></div>
                     <div className="text-sm text-white/50">
                       {config.branding.name} is installed.
                     </div>

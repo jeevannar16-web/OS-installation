@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
+import OsIcon from "../shared/OsIcon";
 
 export default function FileManager({
   config,
@@ -102,7 +103,7 @@ export default function FileManager({
                       className="flex h-20 w-20 items-center justify-center rounded-lg text-3xl font-bold shadow-lg"
                       style={{ background: `${config.branding.accent}22`, border: `1px solid ${config.branding.accent}55`, color: config.branding.accent }}
                     >
-                      {config.branding.logo}
+                      <OsIcon osId={config.id} accent={config.branding.accent} size={28} />
                     </div>
                     <div className="w-24 break-words text-center text-xs text-white/80">
                       {config.iso.filename}

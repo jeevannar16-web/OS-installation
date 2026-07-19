@@ -33,6 +33,7 @@ import PracticalGuide from "../components/scenes/PracticalGuide";
 import { toggleMute, isMuted } from "../components/shared/sounds";
 import { useTheme } from "../components/shared/ThemeProvider";
 import { SceneAdvanceProvider, useSceneAdvance } from "../components/shared/SceneAdvance";
+import OsIcon from "../components/shared/OsIcon";
 
 /* ═══════════════════════════════════════════════════════════════════
    CONSTANTS
@@ -358,7 +359,7 @@ function SimulationPageInner() {
               <Link to="/" className="text-[11px] text-white/40 hover:text-white/70 transition-colors shrink-0">← Home</Link>
               <div className="h-3 w-px bg-white/10 mx-0.5" />
               <div className="flex items-center gap-1.5">
-                <span className="text-xs">{config.branding.logo}</span>
+                <OsIcon osId={config.id} accent={config.branding.accent} size={14} />
                 <span className="text-[11px] font-semibold text-white/60">{config.branding.shortName}</span>
                 <span className="text-[9px] text-white/25">· practical guide</span>
               </div>
@@ -439,7 +440,7 @@ function SimulationPageInner() {
             )}
             <div className="h-3 w-px bg-white/10 mx-0.5" />
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs">{cfg.branding.logo}</span>
+              <OsIcon osId={cfg.id} accent={cfg.branding.accent} size={14} />
               <span className="text-[11px] font-semibold text-white/60 truncate">{cfg.branding.shortName}</span>
               <span className="text-[9px] text-white/25 hidden sm:inline">· {path}</span>
             </div>

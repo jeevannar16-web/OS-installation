@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
 import { useSceneAdvance } from "../shared/SceneAdvance";
+import OsIcon from "../shared/OsIcon";
 
 type TerminalEntry = { cmd: string; output: string };
 type OpenApp = "files" | "browser" | "settings" | "terminal" | null;
@@ -280,7 +281,7 @@ export default function LiveDesktop({
 
       {/* Taskbar */}
       <div className="absolute inset-x-0 bottom-0 z-20 flex h-10 items-center gap-3 border-t border-white/10 bg-black/60 px-4 backdrop-blur">
-        <div className="text-sm font-semibold text-white/80">{config.branding.logo} {name}</div>
+        <div className="flex items-center gap-1 text-sm font-semibold text-white/80"><OsIcon osId={config.id} accent={config.branding.accent} size={16} /> {name}</div>
         <div className="ml-auto text-xs text-white/50 hidden sm:block">
           Live Session — {name} is running from USB
         </div>

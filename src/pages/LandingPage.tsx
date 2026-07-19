@@ -6,6 +6,7 @@ import { OS_LIST } from "../data";
 import Footer from "../components/Footer";
 import BootSequence from "../components/BootSequence";
 import ThemePicker from "../components/shared/ThemePicker";
+import OsIcon from "../components/shared/OsIcon";
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPING EFFECT
@@ -575,7 +576,7 @@ export default function LandingPage() {
             >
               <div className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
                 style={{ background: activeOS?.branding.accent }}>
-                {activeOS?.branding.logo}
+                {activeOS && <OsIcon osId={activeOS.id} accent={activeOS.branding.accent} size={20} />}
               </div>
               <span className="text-[11px] font-semibold" style={{ color: activeOS?.branding.accent }}>
                 {activeOS?.branding.name}
@@ -707,7 +708,7 @@ export default function LandingPage() {
                         className="h-5 w-5 rounded flex items-center justify-center text-[9px] font-bold"
                         style={{ background: disabled ? "rgba(255,255,255,0.03)" : `${o.branding.accent}15`, color: disabled ? "rgba(255,255,255,0.15)" : o.branding.accent }}
                       >
-                        {disabled ? <Lock size={9} /> : o.branding.logo}
+                        {disabled ? <Lock size={9} /> : <OsIcon osId={o.id} accent={o.branding.accent} size={18} />}
                       </div>
                       <span className="font-medium">{o.branding.name}</span>
                       {disabled && <span className="text-[8px] text-white/20 uppercase ml-1">Soon</span>}

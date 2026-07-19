@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { playKeyClick } from "../shared/sounds";
 import { useSceneAdvance } from "../shared/SceneAdvance";
 import type { OSConfig } from "../../data/types";
+import OsIcon from "../shared/OsIcon";
 
 function getBootEntries(osId: string) {
   const osName = osId === "zorin" ? "Zorin OS" : osId === "mint" ? "Linux Mint" : osId === "arch" ? "Arch Linux" : "Ubuntu";
@@ -76,7 +77,7 @@ export default function BootMenu({
       {wrongFakeout && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0a0a1a]">
           <div className="text-center">
-            <div className="text-3xl mb-3">{config.branding.logo}</div>
+            <div className="mb-3"><OsIcon osId={config.id} accent={config.branding.accent} size={28} /></div>
             <div className="text-sm text-white/60">Booting {config.branding.name}…</div>
             <div className="mt-2 text-xs text-white/30">
               (Wrong selection — returning to menu)

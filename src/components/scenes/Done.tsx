@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick, playUsbConnect, playSuccess } from "../shared/sounds";
+import OsIcon from "../shared/OsIcon";
 
 type OpenApp = "files" | "editor" | "settings" | "browser" | "terminal" | null;
 
@@ -276,10 +277,10 @@ function LaptopSidePort3D({ config }: { config: OSConfig }) {
                   transition={{ duration: 3, repeat: Infinity }}
                   className="text-2xl sm:text-3xl"
                 >
-                  {config.branding.logo}
+                  <OsIcon osId={config.id} accent={config.branding.accent} size={28} />
                 </motion.div>
+                <div className="text-[5px] sm:text-[7px] text-white/40 text-center font-semibold">{config.branding.name} Desktop</div>
               </div>
-              <div className="text-[5px] sm:text-[7px] text-white/40 text-center font-semibold">{config.branding.name} Desktop</div>
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-br from-white/4 via-transparent to-transparent pointer-events-none" />
           </div>
@@ -508,7 +509,7 @@ function VmWindow3D({ config }: { config: OSConfig }) {
 
                   {/* VM desktop taskbar */}
                   <div className="absolute bottom-3 inset-x-0 h-4 sm:h-5 bg-black/50 border-t border-white/10 flex items-center px-2 justify-between">
-                    <span className="text-[5px] sm:text-[7px] text-white/50 font-semibold">{config.branding.logo} Activities</span>
+                    <span className="flex items-center gap-0.5 text-[5px] sm:text-[7px] text-white/50 font-semibold"><OsIcon osId={config.id} accent={config.branding.accent} size={10} /> Activities</span>
                     <span className="text-[4px] sm:text-[6px] text-white/30 font-mono">14:32</span>
                   </div>
                 </motion.div>
@@ -669,7 +670,7 @@ function VmWindow3D({ config }: { config: OSConfig }) {
 
                   {/* VM desktop taskbar */}
                   <div className="absolute bottom-3 inset-x-0 h-4 sm:h-5 bg-black/50 border-t border-white/10 flex items-center px-2 justify-between z-30">
-                    <span className="text-[5px] sm:text-[7px] text-white/50 font-semibold">{config.branding.logo} Activities</span>
+                    <span className="flex items-center gap-0.5 text-[5px] sm:text-[7px] text-white/50 font-semibold"><OsIcon osId={config.id} accent={config.branding.accent} size={10} /> Activities</span>
                     <span className="text-[4px] sm:text-[6px] text-white/30 font-mono">14:32</span>
                   </div>
                 </motion.div>
@@ -1076,7 +1077,7 @@ export default function Done({
 
             {/* Taskbar */}
             <div className="absolute bottom-0 inset-x-0 h-7 sm:h-8 bg-black/60 border-t border-white/10 flex items-center px-3 sm:px-4 justify-between backdrop-blur">
-              <span className="text-[9px] sm:text-[10px] lg:text-xs text-white/60 font-semibold">{config.branding.logo} {config.branding.shortName}</span>
+              <span className="flex items-center gap-1 text-[9px] sm:text-[10px] lg:text-xs text-white/60 font-semibold"><OsIcon osId={config.id} accent={config.branding.accent} size={14} /> {config.branding.shortName}</span>
               <span className="text-[8px] sm:text-[9px] lg:text-xs text-white/40 font-mono">{clock}</span>
             </div>
           </div>

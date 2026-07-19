@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick, playError } from "../shared/sounds";
 import { useSceneAdvance } from "../shared/SceneAdvance";
+import OsIcon from "../shared/OsIcon";
 
 type Phase = "off" | "bios" | "loading" | "menu" | "vt_error";
 
@@ -167,7 +168,7 @@ export default function VmBoot({
                 exit={{ opacity: 0 }}
                 className="text-center"
               >
-                <div className="text-5xl mb-3">{config.branding.logo}</div>
+                <div className="mb-3"><OsIcon osId={config.id} accent={config.branding.accent} size={44} /></div>
                 <div className="text-xs text-white/30">Click ▶ Start to power on</div>
               </motion.div>
             )}

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick } from "../shared/sounds";
 import { useState } from "react";
+import OsIcon from "../shared/OsIcon";
 
 export default function LiveWelcome({ config, onTry, onInstall }: {
   config: OSConfig; onTry: () => void; onInstall: () => void;
@@ -12,8 +13,6 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
   const surface = config.branding.surface;
   const accent = config.branding.accent;
   const name = config.branding.name;
-  const logo = config.branding.logo;
-
   function handleAction(action: "try" | "install") {
     if (phase !== "idle") return;
     playClick();
@@ -31,7 +30,7 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
       <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
         style={{ background: `linear-gradient(135deg, ${surface}, #000)` }}>
           <div className="flex flex-col items-center gap-4">
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-3xl">{logo}</motion.div>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><OsIcon osId={config.id} accent={accent} size={40} /></motion.div>
             <div className="text-white/60 text-xs font-medium">
               {transitionTo === "install" ? `Starting ${name} installer…` : "Exploring desktop…"}
             </div>
@@ -56,7 +55,7 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
           style={{ backgroundImage: `radial-gradient(circle at 25% 50%, ${accent} 0%, transparent 50%)` }} />
         <div className="relative text-center space-y-5 px-6 max-w-sm">
           <div className="flex justify-center gap-3 items-center">
-            <span className="text-3xl">{logo}</span>
+            <OsIcon osId={config.id} accent={accent} size={36} />
             <div className="text-left">
               <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: accent }}>{name}</div>
               <div className="text-[9px] text-white/30">Live Session</div>
