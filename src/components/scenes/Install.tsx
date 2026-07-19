@@ -17,22 +17,25 @@ const KEYBOARD_LAYOUTS = [
   "Français", "Deutsch", "Italiano", "Português (Brasil)", "Dvorak", "Colemak",
 ];
 
-function Field({ label, value, onChange, placeholder, type, autoFocus, light }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; autoFocus?: boolean; light?: boolean;
+function Field({ label, value, onChange, placeholder, type, autoFocus }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; autoFocus?: boolean;
 }) {
   return (
     <div className="mb-3">
-      <label className={`block text-xs mb-1 font-medium ${light ? "text-white/70" : "text-gray-700"}`}>{label}</label>
+      <label className="block text-xs mb-1 font-medium text-white/70">{label}</label>
       <input type={type || "text"} value={value} onChange={e => { playKeyClick(); onChange(e.target.value); }}
         placeholder={placeholder || ""} autoFocus={autoFocus}
-        className={`w-full border rounded px-3 py-2 text-sm outline-none transition-colors ${
-          light
-            ? "border-white/20 bg-white/10 text-white placeholder-white/30 focus:border-white/40"
-            : "border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        }`} />
+        className="w-full border border-white/20 bg-white/10 rounded px-3 py-2 text-sm text-white outline-none placeholder-white/30 focus:border-white/40 transition-colors" />
     </div>
   );
 }
+
+const ACCOUNT_KEY_MAP: Record<string, string> = {
+  "Your name": "name",
+  "Your computer's name": "computer_name",
+  "Pick a username": "username",
+  "Choose a password": "password",
+};
 
 export default function Install({ config, speed, onComplete, path }: {
   config: OSConfig; speed: "normal" | "fast"; onComplete: () => void; path?: string;
@@ -42,7 +45,7 @@ export default function Install({ config, speed, onComplete, path }: {
   const accent = config.branding.accent;
   const surface = config.branding.surface;
   const osName = config.branding.name;
-  const isDark = config.id === "zorin";
+  const logo = config.branding.logo;
   const [phase, setPhase] = useState<WizardPhase>(isWindows ? "installing" : "boot");
   const [bootSplash, setBootSplash] = useState(false);
   const [stepIdx, setStepIdx] = useState(0);
@@ -99,6 +102,10 @@ export default function Install({ config, speed, onComplete, path }: {
     }
   }, [phase, restartPhase, speed]);
 
+  function setAccountValue(label: string, val: string) {
+    setValues(p => ({...p, [ACCOUNT_KEY_MAP[label] || label]: val}));
+  }
+
   function canAdvance(): boolean {
     switch (currentStep?.kind) {
       case "language": return !!selectedLang;
@@ -132,14 +139,14 @@ export default function Install({ config, speed, onComplete, path }: {
         const opts = "options" in currentStep ? currentStep.options : LANGUAGES;
         return (
           <div>
-            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
             <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto">
               {opts.map(l => (
                 <button key={l} onClick={() => { playClick(); setSelectedLang(l); }}
                   className={`rounded px-3 py-1.5 text-xs transition-all ${
                     selectedLang === l
                       ? "text-white font-semibold shadow-sm"
-                      : isDark ? "text-white/70 hover:text-white hover:bg-white/10" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
                   }`}
                   style={selectedLang === l ? { background: accent } : {}}>{l}</button>
               ))}
@@ -151,14 +158,14 @@ export default function Install({ config, speed, onComplete, path }: {
         const layouts = "layouts" in currentStep ? currentStep.layouts : KEYBOARD_LAYOUTS;
         return (
           <div>
-            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
             <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto">
               {layouts.map(k => (
                 <button key={k} onClick={() => { playClick(); setSelectedKb(k); }}
                   className={`rounded px-3 py-1.5 text-xs transition-all ${
                     selectedKb === k
                       ? "text-white font-semibold shadow-sm"
-                      : isDark ? "text-white/70 hover:text-white hover:bg-white/10" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
                   }`}
                   style={selectedKb === k ? { background: accent } : {}}>{k}</button>
               ))}
@@ -170,13 +177,13 @@ export default function Install({ config, speed, onComplete, path }: {
         const nets = "interfaces" in currentStep ? currentStep.interfaces : [];
         return (
           <div>
-            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
             <div className="space-y-1.5">
               {nets.map(n => (
                 <button key={n.id} onClick={() => { playClick(); setValues(p => ({...p, network: n.id})); }}
                   className={`block text-xs text-left w-full py-2 px-3 rounded transition-all ${
                     values["network"] === n.id
-                      ? "text-white font-semibold" : isDark ? "text-white/60 hover:text-white/80 hover:bg-white/5" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                      ? "text-white font-semibold" : "text-white/60 hover:text-white/80 hover:bg-white/5"
                   }`}
                   style={values["network"] === n.id ? { background: accent } : {}}>
                   <span className="mr-2">{n.signal && n.signal >= 4 ? "📶" : n.signal ? "📡" : "🔗"}</span>
@@ -185,7 +192,7 @@ export default function Install({ config, speed, onComplete, path }: {
               ))}
               <button onClick={() => { playClick(); setValues(p => ({...p, network: "skip"})); }}
                 className={`block text-xs text-left w-full py-2 px-3 rounded transition-all ${
-                  values["network"] === "skip" ? "text-white font-semibold" : isDark ? "text-white/40 hover:text-white/60" : "text-gray-500 hover:text-gray-700"
+                  values["network"] === "skip" ? "text-white font-semibold" : "text-white/40 hover:text-white/60"
                 }`}
                 style={values["network"] === "skip" ? { background: accent } : {}}>I don't want to connect to a network</button>
             </div>
@@ -196,14 +203,14 @@ export default function Install({ config, speed, onComplete, path }: {
         const zones = "zones" in currentStep ? currentStep.zones : [];
         return (
           <div>
-            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
             <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto">
               {zones.map(tz => (
                 <button key={tz} onClick={() => { playClick(); setValues(p => ({...p, timezone: tz})); }}
                   className={`rounded px-3 py-1.5 text-xs transition-all ${
                     values["timezone"] === tz
                       ? "text-white font-semibold shadow-sm"
-                      : isDark ? "text-white/70 hover:text-white hover:bg-white/10" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
                   }`}
                   style={values["timezone"] === tz ? { background: accent } : {}}>{tz}</button>
               ))}
@@ -215,16 +222,16 @@ export default function Install({ config, speed, onComplete, path }: {
         const choices = "choices" in currentStep ? currentStep.choices : [];
         return (
           <div>
-            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
             <div className="space-y-2">
               {choices.filter(opt => path !== "vm" || opt.id === "erase").map(opt => (
                 <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
                   className={`w-full text-left border-2 rounded-lg p-3 transition-all ${
                     installType === opt.id
-                      ? "border-blue-500 bg-blue-50" : isDark ? "border-white/15 hover:border-white/30 bg-white/5" : "border-gray-200 hover:border-gray-300"
+                      ? "border-blue-500 bg-blue-900/30" : "border-white/15 hover:border-white/30 bg-white/5"
                   }`}>
-                  <div className="text-sm font-medium" style={{ color: isDark ? "#fff" : "#1f2937" }}>{opt.label}</div>
-                  <div className="text-xs mt-0.5" style={{ color: isDark ? "rgba(255,255,255,0.5)" : "#6b7280" }}>{opt.hint}</div>
+                  <div className="text-sm font-medium text-white">{opt.label}</div>
+                  <div className="text-xs mt-0.5 text-white/50">{opt.hint}</div>
                 </button>
               ))}
             </div>
@@ -235,12 +242,11 @@ export default function Install({ config, speed, onComplete, path }: {
         const prompts = "prompts" in currentStep ? currentStep.prompts : [];
         return (
           <div>
-            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
             {prompts.map((p, i) => (
-              <Field key={i} label={p.label} value={values[p.label] || ""}
-                onChange={v => setValues(prev => ({...prev, [p.label]: v}))}
-                placeholder={p.placeholder} type={p.secret ? "password" : "text"}
-                autoFocus={i === 0} light={isDark} />
+              <Field key={i} label={p.label} value={values[ACCOUNT_KEY_MAP[p.label] || p.label] || ""}
+                onChange={v => setAccountValue(p.label, v)}
+                placeholder={p.placeholder} type={p.secret ? "password" : "text"} autoFocus={i === 0} />
             ))}
           </div>
         );
@@ -248,20 +254,20 @@ export default function Install({ config, speed, onComplete, path }: {
       case "confirm":
         return (
           <div>
-            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>{currentStep.title}</h2>
-            <p className={`text-xs mb-4 ${isDark ? "text-white/50" : "text-gray-600"}`}>{"body" in currentStep ? currentStep.body : "Review your choices before proceeding."}</p>
-            <div className={`border rounded-lg p-3 space-y-1.5 ${isDark ? "border-white/10 bg-white/5" : "border-gray-200 bg-gray-50"}`}>
+            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
+            <p className="text-xs mb-4 text-white/50">{"body" in currentStep ? currentStep.body : "Review your choices before proceeding."}</p>
+            <div className="border border-white/10 bg-white/5 rounded-lg p-3 space-y-1.5">
               {[
                 ["Language", selectedLang || "English"],
                 ["Keyboard", selectedKb || "English (US)"],
                 ["Network", values["network"] === "skip" ? "Skipped" : values["network"] || "Wired"],
                 ["Install", installType === "erase" ? "Erase disk" : installType === "alongside" ? "Dual boot" : "Manual"],
                 ["Timezone", values["timezone"] || "UTC"],
-                ["Name", values["Your name"] || "user"],
+                ["Name", values["name"] || "user"],
               ].map(([l, v]) => (
                 <div key={l} className="flex gap-4 text-xs">
-                  <span style={{ color: isDark ? "rgba(255,255,255,0.4)" : "#888", minWidth: 80 }}>{l}</span>
-                  <span className="font-medium" style={{ color: isDark ? "#fff" : "#1f2937" }}>{v}</span>
+                  <span className="text-white/40" style={{ minWidth: 80 }}>{l}</span>
+                  <span className="font-medium text-white">{v}</span>
                 </div>
               ))}
             </div>
@@ -270,12 +276,11 @@ export default function Install({ config, speed, onComplete, path }: {
       case "partition":
         return (
           <div>
-            <h2 className={`text-base font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>Partition disks</h2>
-            <p className={`text-xs mb-3 ${isDark ? "text-white/50" : "text-gray-600"}`}>Configure disk partitions manually.</p>
-            <div className={`border rounded-lg divide-y ${isDark ? "border-white/10 divide-white/10" : "border-gray-200 divide-gray-200"}`}>
+            <h2 className="text-base font-semibold mb-3 text-white">Partition disks</h2>
+            <p className="text-xs mb-3 text-white/50">Configure disk partitions manually.</p>
+            <div className="border border-white/10 divide-y divide-white/10 rounded-lg">
               {["/dev/sda1  ext4  30 GB  /", "/dev/sda2  swap  8 GB  [swap]", "/dev/sda3  ext4  162 GB  /home"].map((row, i) => (
-                <div key={i} className="flex items-center gap-2 px-3 py-2 text-xs font-mono"
-                  style={{ color: isDark ? "rgba(255,255,255,0.7)" : "#4b5563" }}>
+                <div key={i} className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-white/70">
                   <span>{row}</span>
                 </div>
               ))}
@@ -288,7 +293,7 @@ export default function Install({ config, speed, onComplete, path }: {
           </div>
         );
       default:
-        return <p className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>Unknown step</p>;
+        return <p className="text-xs text-white/50">Unknown step</p>;
     }
   }
 
@@ -299,13 +304,8 @@ export default function Install({ config, speed, onComplete, path }: {
         <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
           <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden border border-white/10" style={{ background: surface }}>
             <div className="flex flex-col items-center gap-4">
-              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}>
-                <svg width="60" height="60" viewBox="0 0 32 32" fill="none">
-                  <circle cx="16" cy="16" r="15" stroke={accent} strokeWidth="1.5" fill="none" />
-                  <circle cx="16" cy="5.5" r="2.5" fill={accent} />
-                  <circle cx="7" cy="20.5" r="2.5" fill={accent} />
-                  <circle cx="25" cy="20.5" r="2.5" fill={accent} />
-                </svg>
+              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-4xl">
+                {logo}
               </motion.div>
               <div className="flex gap-1.5">
                 {[0, 1, 2].map(i => (
@@ -325,6 +325,7 @@ export default function Install({ config, speed, onComplete, path }: {
         <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
           style={{ background: `linear-gradient(135deg, ${surface}, ${surface}dd)` }}>
           <div className="text-center space-y-5">
+            <div className="text-4xl mb-2">{logo}</div>
             <div className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: accent }}>{osName}</div>
             <h1 className="text-2xl font-bold text-white">Install {osName}</h1>
             <p className="text-xs text-white/50 max-w-xs mx-auto">Try before installing, or start the installation.</p>
@@ -451,38 +452,31 @@ export default function Install({ config, speed, onComplete, path }: {
   }
 
   // ─── WIZARD ───
-  const bg = isDark ? "#1e1e24" : "#ffffff";
-  const border = isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb";
-  const mutedColor = isDark ? "rgba(255,255,255,0.4)" : "#6b7280";
-
   return (
     <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
       <div className="flex-1 flex items-center justify-center p-4"
         style={{ background: `linear-gradient(135deg, ${surface}, ${surface}dd)`, borderRadius: "1rem" }}>
         <div className="w-full max-w-2xl rounded-xl shadow-2xl flex flex-col overflow-hidden"
-          style={{ background: bg, border: `1px solid ${border}`, maxHeight: "92%" }}>
-          <div className="px-5 py-3 border-b shrink-0 flex items-center justify-between" style={{ borderColor: border }}>
+          style={{ background: "#1e1e24", border: "1px solid rgba(255,255,255,0.08)", maxHeight: "92%" }}>
+          <div className="px-5 py-3 border-b shrink-0 flex items-center justify-between" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
             <span className="text-xs font-semibold tracking-wider" style={{ color: accent }}>{osName}</span>
             <div className="flex items-center gap-1">
               {allSteps.map((s, i) => (
                 <div key={s.kind} className={`h-1.5 rounded-full transition-all ${i <= stepIdx ? "w-3" : "w-1.5"}`}
-                  style={{ background: i <= stepIdx ? accent : isDark ? "rgba(255,255,255,0.15)" : "#d1d5db" }} />
+                  style={{ background: i <= stepIdx ? accent : "rgba(255,255,255,0.15)" }} />
               ))}
             </div>
           </div>
 
           <div className="flex flex-1 min-h-0">
-            <div className={`w-40 shrink-0 p-3 border-r hidden sm:block ${isDark ? "bg-[#25252b] border-white/5" : "bg-gray-50 border-gray-200"}`}>
-              <div className={`text-[7px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-white/30" : "text-gray-400"}`}>Steps</div>
+            <div className="w-40 shrink-0 p-3 border-r border-white/5 bg-[#25252b] hidden sm:block">
+              <div className="text-[7px] font-semibold uppercase tracking-wider mb-2 text-white/30">Steps</div>
               <div className="space-y-0.5">
                 {allSteps.map((s, i) => (
                   <div key={s.kind} className={`flex items-center gap-2 px-2 py-1 rounded text-[10px] transition-all ${
-                    i === stepIdx
-                      ? isDark ? "bg-white/10 text-white" : "bg-blue-50 text-blue-700 font-medium"
-                      : isDark ? "text-white/40" : "text-gray-500"
+                    i === stepIdx ? "bg-white/10 text-white" : "text-white/40"
                   }`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${i <= stepIdx ? "opacity-100" : "opacity-30"}`}
-                      style={{ background: i <= stepIdx ? accent : isDark ? "#fff" : "#9ca3af" }} />
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: i <= stepIdx ? accent : "rgba(255,255,255,0.3)", opacity: i <= stepIdx ? 1 : 0.3 }} />
                     <span className="truncate">{s.title}</span>
                   </div>
                 ))}
@@ -498,10 +492,9 @@ export default function Install({ config, speed, onComplete, path }: {
                 </AnimatePresence>
               </div>
 
-              <div className="flex items-center justify-between px-5 py-3 border-t shrink-0" style={{ borderColor: border }}>
+              <div className="flex items-center justify-between px-5 py-3 border-t shrink-0" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
                 <button onClick={handleBack} disabled={stepIdx === 0}
-                  className="text-xs font-medium px-4 py-1.5 rounded transition-all disabled:opacity-30"
-                  style={{ color: mutedColor }}>
+                  className="text-xs font-medium px-4 py-1.5 rounded transition-all disabled:opacity-30 text-white/40 hover:text-white/70">
                   Back
                 </button>
                 <button onClick={handleNext} disabled={!canAdvance()}

@@ -95,7 +95,7 @@ export default function MountISO({ config, onComplete }: { config: OSConfig; onC
                           <span className="text-green-700 font-medium">{config.iso.filename}</span>
                         ) : (
                           <button onClick={handleBrowseClick}
-                            className="text-[#4a8cff] hover:underline font-medium">Choose a disk file…</button>
+                            className="text-[#4a8cff] hover:underline font-medium cursor-pointer">Click to choose an ISO file…</button>
                         )}
                       </td>
                     </tr>
@@ -176,7 +176,10 @@ export default function MountISO({ config, onComplete }: { config: OSConfig; onC
             <span className="text-[7px] text-gray-400">Settings</span>
           </div>
           <div className="flex-1" />
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
+            <span className="text-[7px] text-gray-500">
+              {phase === "settings" ? "Click 'Choose a disk file' to mount the ISO" : phase === "attached" ? "ISO mounted — click OK to continue" : ""}
+            </span>
             <button onClick={() => { playClick(); onComplete(); }}
               className="text-[7px] text-gray-400 hover:text-white transition-colors">Cancel</button>
             {phase === "attached" && (

@@ -251,7 +251,13 @@ function SimulationPageInner() {
         if (evt) send({ type: evt as never });
         else if (sceneAdvance) sceneAdvance();
       }
-      if (e.key === "n" || e.key === "N") { e.preventDefault(); setShowNavigator((v) => !v); setShowNotes(false); setShowMenu(false); }
+      if (e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        const s = String(state.value);
+        const evt = TRANSITIONS[s];
+        if (evt) send({ type: evt as never });
+        else if (sceneAdvance) sceneAdvance();
+      }
       if (e.key === "b" || e.key === "B") { e.preventDefault(); setShowNotes((v) => !v); setShowNavigator(false); setShowMenu(false); }
       if (e.key === "?" || e.key === "/") { e.preventDefault(); setShowShortcuts((v) => !v); }
       if (e.key === "m" || e.key === "M") { const now = toggleMute(); setMuted(now); }
@@ -522,6 +528,11 @@ function SimulationPageInner() {
                       <span>Keyboard shortcuts</span>
                       <kbd className="ml-auto text-[9px] font-mono text-white/25 bg-white/5 px-1.5 py-0.5 rounded">?</kbd>
                     </button>
+                    <div className="h-px bg-white/[0.06] my-1" />
+                    <div className="px-3 py-2 text-[10px] text-white/30 leading-relaxed">
+                      <kbd className="px-1 py-0.5 rounded bg-white/10 font-mono text-white/50 text-[9px]">ESC</kbd> Exit fullscreen ·{" "}
+                      <kbd className="px-1 py-0.5 rounded bg-white/10 font-mono text-white/50 text-[9px]">N</kbd> Next step
+                    </div>
                   </div>
                 </motion.div>
               )}
