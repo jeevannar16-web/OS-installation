@@ -169,10 +169,146 @@ const ARCH_STEPS: GuideStep[] = [
   },
 ];
 
+/* ─── Fedora — Anaconda + DNF ─── */
+const FEDORA_STEPS: GuideStep[] = [
+  {
+    title: "Download Fedora Workstation",
+    description: "Get the official Fedora Workstation live ISO from the Fedora Project website.",
+    kind: "info",
+    tip: "Verify the checksum (SHA256) after downloading for security.",
+  },
+  {
+    title: "Create Bootable USB",
+    description: "Use Fedora Media Writer (recommended), Rufus, or Ventoy to write the ISO to a USB drive (4GB+).",
+    kind: "info",
+    guiAction: "Fedora Media Writer → Select .iso → Choose USB → Write",
+    tip: "Fedora Media Writer is cross-platform and handles everything automatically.",
+  },
+  {
+    title: "Boot from USB",
+    description: "Restart, enter BIOS (F2/Del/F12), set USB first, save & exit. Select 'Fedora Workstation Live'.",
+    kind: "info",
+    tip: "Disable Secure Boot only if the live USB fails to boot.",
+  },
+  {
+    title: "Live Environment",
+    description: "Fedora boots into the live desktop (GNOME). You can try everything before installing.",
+    kind: "info",
+    tip: "Click 'Install to Hard Drive' from the live session to begin.",
+  },
+  {
+    title: "Launch Anaconda",
+    description: "Fedora's installer is called Anaconda. It guides you through language, storage, and users.",
+    kind: "gui",
+    guiAction: "Activities → Install to Hard Drive → Welcome: Choose language → Continue",
+  },
+  {
+    title: "Installation Destination",
+    description: "Select your target disk. Enable automatic partitioning for a clean install, or 'Custom' for manual layouts.",
+    kind: "gui",
+    guiAction: "Installation Destination → Select disk → Storage Configuration: Automatic → Done",
+    tip: "For dual-boot, choose 'Custom' and shrink Windows, then create ext4 + swap.",
+  },
+  {
+    title: "Network & Time",
+    description: "Connect to a network and set your timezone so package downloads are fast and clock is correct.",
+    kind: "gui",
+    guiAction: "Network & Host Name → Enable Ethernet/WiFi → Done · Time & Date → Pick region → Done",
+  },
+  {
+    title: "User Creation",
+    description: "Create your admin user. Fedora lets you set a root password separately.",
+    kind: "gui",
+    guiAction: "User Creation → Full name → Username → Password → Make admin → Done",
+    tip: "Check 'Make this user administrator' to get sudo access.",
+  },
+  {
+    title: "Begin Installation",
+    description: "Anaconda writes the disk, installs packages, and configures the bootloader (GRUB).",
+    kind: "info",
+    tip: "Do NOT power off during installation. Takes 5-15 minutes.",
+  },
+  {
+    title: "Reboot & First Boot",
+    description: "Remove the USB and reboot. GRUB shows Fedora (and Windows if dual-booted).",
+    kind: "info",
+    tip: "Run 'sudo dnf update' after first login to get the latest packages.",
+  },
+];
+
+/* ─── Debian — Debian Installer + APT ─── */
+const DEBIAN_STEPS: GuideStep[] = [
+  {
+    title: "Download Debian",
+    description: "Get the official Debian netinst or DVD ISO from debian.org.",
+    kind: "info",
+    tip: "The netinst image is small (~0.7 GB) and downloads packages during install.",
+  },
+  {
+    title: "Create Bootable USB",
+    description: "Use Rufus (Windows), Ventoy, or dd to write the ISO to a USB drive (2GB+).",
+    kind: "info",
+    guiAction: "Rufus → Select ISO → GPT → Start   (or: dd if=debian.iso of=/dev/sdX)",
+    tip: "For Ventoy: just copy the ISO onto the Ventoy partition.",
+  },
+  {
+    title: "Boot from USB",
+    description: "Restart, enter BIOS (F2/Del/F12), set USB first, save & exit. Select 'Install' or 'Graphical install'.",
+    kind: "info",
+    tip: "The Debian installer is text-based but very straightforward.",
+  },
+  {
+    title: "Language & Location",
+    description: "Choose your language, country, and keyboard layout in the installer menus.",
+    kind: "gui",
+    guiAction: "Select language: English → Country: your region → Keymap: American English",
+  },
+  {
+    title: "Network & Mirror",
+    description: "Set a hostname, connect to the network, and pick a Debian package mirror near you.",
+    kind: "gui",
+    guiAction: "Hostname: debian → Domain: (leave blank) → Mirror: your country → Proxy: none",
+  },
+  {
+    title: "Partition Disks",
+    description: "Use 'Guided - use entire disk' for a clean install, or 'Manual' for custom partitions.",
+    kind: "gui",
+    guiAction: "Partition disks → Guided - use entire disk → Select disk → All files in one partition → Finish",
+    tip: "For dual-boot, choose 'Manual' and create ext4 (/) + swap alongside Windows.",
+  },
+  {
+    title: "Set Up Users",
+    description: "Create the root password and a regular user account.",
+    kind: "gui",
+    guiAction: "Root password: [set] → Full name: Debian User → Username: debian → Password: [set]",
+    tip: "Debian asks for a separate root password — remember it!",
+  },
+  {
+    title: "Software Selection",
+    description: "Pick a desktop environment (GNOME, KDE, XFCE…) and whether to install the GRUB bootloader.",
+    kind: "gui",
+    guiAction: "Software selection → Debian desktop environment + GNOME → Install GRUB boot loader: Yes",
+    tip: "Leave 'Debian desktop environment' checked unless you want a minimal server.",
+  },
+  {
+    title: "Finish Installation",
+    description: "The installer copies packages, configures the system, and installs GRUB to your disk.",
+    kind: "info",
+    tip: "Remove the USB when prompted, then reboot into your new Debian system.",
+  },
+  {
+    title: "First Boot",
+    description: "GRUB shows Debian (and Windows if dual-booted). Log in with the user you created.",
+    kind: "info",
+    tip: "Run 'sudo apt update && sudo apt full-upgrade' after first login.",
+  },
+];
+
 /* ─── Dynamic installer steps — OS-aware ─── */
 function getInstallerSteps(config: OSConfig): GuideStep[] {
   const os = config.branding.name;
   const short = config.branding.shortName;
+  const downloadUrl = config.branding.officialUrl;
 
   // Each OS has different image naming — map directly to actual files
   const imgs: Record<string, string> = {
@@ -216,6 +352,26 @@ function getInstallerSteps(config: OSConfig): GuideStep[] {
       restart: "/images/win11-setup/17-oobe-new-pc.webp",
       desktop: "/images/win11-setup/17-oobe-new-pc.webp",
     },
+    fedora: {
+      language: "/images/ubuntu/02-language.png",
+      boot: "/images/ubuntu/01-try-or-install.png",
+      network: "/images/ubuntu/04-network.webp",
+      installType: "/images/ubuntu/07-install-type.webp",
+      createUser: "/images/ubuntu/08-create-user.webp",
+      copying: "/images/ubuntu/10-progress.png",
+      restart: "/images/ubuntu/11-restart.png",
+      desktop: "/images/ubuntu/12-welcome-desktop.png",
+    },
+    debian: {
+      language: "/images/ubuntu/02-language.png",
+      boot: "/images/ubuntu/01-try-or-install.png",
+      network: "/images/ubuntu/04-network.webp",
+      installType: "/images/ubuntu/07-install-type.webp",
+      createUser: "/images/ubuntu/08-create-user.webp",
+      copying: "/images/ubuntu/10-progress.png",
+      restart: "/images/ubuntu/11-restart.png",
+      desktop: "/images/ubuntu/12-welcome-desktop.png",
+    },
   }[config.id] || {
     language: "/images/ubuntu/02-language.png",
     boot: "/images/ubuntu/01-try-or-install.png",
@@ -232,7 +388,7 @@ function getInstallerSteps(config: OSConfig): GuideStep[] {
   return [
     {
       title: `Download ${short}`,
-      description: `Get the desktop ISO from ${short.toLowerCase()}.com.`,
+      description: `Get the desktop ISO from the official site: ${downloadUrl}`,
       kind: "info",
       image: imgs.language,
       tip: config.id === "ubuntu" ? "Choose the LTS (Long Term Support) version for stability." : undefined,
@@ -338,7 +494,11 @@ export default function PracticalGuide({
   const [stepIdx, setStepIdx] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const steps = config.id === "arch" ? ARCH_STEPS : getInstallerSteps(config);
+  const steps =
+    config.id === "arch" ? ARCH_STEPS :
+    config.id === "fedora" ? FEDORA_STEPS :
+    config.id === "debian" ? DEBIAN_STEPS :
+    getInstallerSteps(config);
   const currentStep = steps[stepIdx];
   const isLast = stepIdx >= steps.length - 1;
 

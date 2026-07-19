@@ -8,7 +8,7 @@ export const mint: OSConfig = {
     accent: "#88C999",
     surface: "#1a1a2e",
     logo: "M",
-    logoImg: "/mint-logo.png",
+    logoImg: "/logos/mint.png",
     officialUrl: "https://linuxmint.com/download.php",
   },
   downloadPage: {

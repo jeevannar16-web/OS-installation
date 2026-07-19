@@ -636,8 +636,14 @@ export default function LandingPage() {
         {/* ── Header ─────────────────────────────────────────── */}
         <header className="w-full px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img src="/logo.svg" alt="Logo" className="h-7 w-7" />
-            <span className="font-semibold text-sm text-white/80 tracking-tight">OS Install Simulator</span>
+            <button
+              onClick={() => window.location.reload()}
+              title="OS Install Simulator — click to refresh"
+              className="flex items-center gap-2.5 rounded-lg hover:bg-white/5 transition-colors px-1 py-0.5 cursor-pointer"
+            >
+              <img src="/logo.png" alt="OS Install Simulator" className="h-9 w-auto" />
+              <span className="font-semibold text-sm text-white/80 tracking-tight">OS Install Simulator</span>
+            </button>
           </div>
           <div className="flex items-center gap-2">
             {/* How it works — dropdown */}

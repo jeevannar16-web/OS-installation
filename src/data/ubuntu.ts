@@ -8,7 +8,7 @@ export const ubuntu: OSConfig = {
     accent: "#E95420",
     surface: "#2c001e",
     logo: "U",
-    logoImg: "/ubuntu-logo.png",
+    logoImg: "/logos/ubuntu.png",
     officialUrl: "https://ubuntu.com/download/desktop",
   },
   downloadPage: {
