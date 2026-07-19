@@ -75,9 +75,9 @@ export default function Partition({
 
   const zones = [
     { id: "add", x: 5, y: 5, w: 25, h: 15, onClick: () => { playClick(); setEditIdx(null); setForm({ sizeGB: Math.min(50, Math.floor(freeGB || 50)), fs: "ext4", mount: "/" }); setShowDialog(true); } },
-    { id: "confirm", x: 65, y: 80, w: 28, h: 15, onClick: () => { if (canConfirm) { playClick(); onComplete(); } } },
-    { id: "back", x: 5, y: 80, w: 25, h: 15, onClick: () => { playClick(); onRebootWindows(); } },
-    { id: "interact", x: 5, y: 22, w: 70, h: 50, onClick: () => { playClick(); if (partitions.length > 0) { const p = partitions[0]; setForm({ sizeGB: p.sizeGB, fs: p.fs || "ext4", mount: p.mount || "/" }); setEditIdx(0); setShowDialog(true); } } },
+    { id: "confirm", x: 60, y: 78, w: 32, h: 16, onClick: () => { if (canConfirm) { playClick(); onComplete(); } } },
+    { id: "back", x: 5, y: 78, w: 25, h: 16, onClick: () => { playClick(); onRebootWindows(); } },
+    { id: "interact", x: 5, y: 22, w: 70, h: 50, onClick: () => { playClick(); } },
   ];
 
   return (

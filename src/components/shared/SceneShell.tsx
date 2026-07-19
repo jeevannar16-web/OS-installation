@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, type ReactNode, type CSSProperties } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Zone {
   id: string;
@@ -32,6 +33,7 @@ export default function SceneShell({
 }) {
   const [fs, setFs] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [clickPos, setClickPos] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     function onFsChange() { setFs(!!document.fullscreenElement); }
@@ -54,25 +56,19 @@ export default function SceneShell({
     }
   }
 
-  const defaultInputStyle: CSSProperties = globalInput ? {
-    left: "18%",
-    top: "30%",
-    width: "55%",
-    height: "7%",
-    background: "transparent",
-    border: "none",
-    outline: "none",
-    color: "#fff",
-    fontSize: "14px",
-    fontFamily: "Segoe UI, system-ui, sans-serif",
-    caretColor: "#fff",
-    ...(globalInput.style || {}),
-  } : {};
+  function handleZoneClick(z: Zone, e: React.MouseEvent) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setClickPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    setTimeout(() => setClickPos(null), 400);
+    z.onClick();
+  }
+
+  const inputPos = globalInput?.style || {};
 
   return (
     <div className={`absolute inset-0 ${className}`}>
       <img src={src} alt={alt}
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover select-none"
         draggable={false} />
 
       <button onClick={toggleFs}
@@ -82,7 +78,7 @@ export default function SceneShell({
       </button>
 
       {zones.map(z => (
-        <div key={z.id} onClick={z.onClick}
+        <div key={z.id} onClick={e => handleZoneClick(z, e)}
           className="absolute z-10"
           style={{
             left: `${z.x}%`, top: `${z.y}%`,
@@ -91,17 +87,32 @@ export default function SceneShell({
           }} />
       ))}
 
+      {/* Click ripple feedback */}
+      <AnimatePresence>
+        {clickPos && (
+          <motion.div
+            initial={{ opacity: 0.6, scale: 0.5 }}
+            animate={{ opacity: 0, scale: 2.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="absolute z-20 w-12 h-12 rounded-full bg-white/30 pointer-events-none"
+            style={{ left: clickPos.x - 24, top: clickPos.y - 24 }} />
+        )}
+      </AnimatePresence>
+
       {globalInput && (
         <input ref={inputRef} type={globalInput.type || "text"}
           value={globalInput.value} onChange={e => globalInput.onChange(e.target.value)}
           placeholder={globalInput.placeholder || ""}
           className="absolute z-20 cursor-text"
-          style={defaultInputStyle} />
+          style={{
+            left: "18%", top: "32%", width: "50%", height: "7%",
+            background: "transparent", border: "none", outline: "none",
+            color: "#fff", fontSize: "14px", fontFamily: "Segoe UI, system-ui, sans-serif",
+            caretColor: "#fff",
+            ...inputPos,
+          }} />
       )}
-
-      <div className="absolute bottom-1.5 left-1.5 z-20 text-[7px] text-white/20 font-mono select-none pointer-events-none">
-        Tab↵ Enter⏎ Esc↩
-      </div>
 
       {children}
     </div>

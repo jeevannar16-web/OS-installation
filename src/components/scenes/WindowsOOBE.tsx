@@ -149,8 +149,8 @@ export default function WindowsOOBE({ onComplete }: { osName: string; onComplete
   }
 
   const zones = [
-    { id: "next", x: 55, y: 78, w: 35, h: 16, onClick: handleNext },
-    { id: "interact", x: 5, y: 5, w: 65, h: 68, onClick: handleInteract },
+    { id: "next", x: 60, y: 78, w: 32, h: 16, onClick: handleNext },
+    { id: "interact", x: 5, y: 5, w: 60, h: 68, onClick: handleInteract },
     ...(["keyboard", "second_keyboard", "computer_name", "setup_type", "account", "pin", "privacy", "backup", "customize", "phone_link", "edge"].includes(step)
       ? [{ id: "back", x: 5, y: 78, w: 25, h: 16, onClick: handleBack }] : []),
   ];

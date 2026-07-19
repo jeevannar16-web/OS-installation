@@ -249,8 +249,8 @@ export default function Install({ config, speed, onComplete, path }: {
 
   function bootZones() {
     return [
-      { id: "install", x: 10, y: 50, w: 40, h: 25, onClick: () => { playClick(); setBootSplash(true); } },
-      { id: "try", x: 10, y: 75, w: 40, h: 20, onClick: () => { playClick(); setBootSplash(true); } },
+      { id: "install", x: 5, y: 45, w: 50, h: 22, onClick: () => { playClick(); setBootSplash(true); } },
+      { id: "try", x: 5, y: 68, w: 50, h: 20, onClick: () => { playClick(); setBootSplash(true); } },
     ];
   }
 

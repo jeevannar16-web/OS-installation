@@ -21,14 +21,14 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
   const isLast = stepIdx === STEPS.length - 1;
 
   const zones = [
-    { id: "next", x: 50, y: 75, w: 25, h: 18,
+    { id: "next", x: 45, y: 65, w: 22, h: 18,
       onClick: () => { if (isLast) { playSuccess(); onComplete(); } else { playClick(); setStepIdx(p => p + 1); } } },
-    { id: "back", x: 5, y: 75, w: 20, h: 18,
+    { id: "back", x: 18, y: 65, w: 22, h: 18,
       onClick: () => { if (stepIdx > 0) { playClick(); setStepIdx(p => p - 1); } } },
-    { id: "cancel", x: 77, y: 75, w: 18, h: 18,
+    { id: "cancel", x: 70, y: 65, w: 18, h: 18,
       onClick: () => { playClick(); onComplete(); } },
-    { id: "interact", x: 15, y: 15, w: 70, h: 55,
-      onClick: () => { if (current.key === "summary") { playSuccess(); onComplete(); } else { playClick(); setStepIdx(p => Math.min(STEPS.length - 1, p + 1)); } } },
+    { id: "interact", x: 15, y: 10, w: 70, h: 50,
+      onClick: () => { playClick(); } },
   ];
 
   return (

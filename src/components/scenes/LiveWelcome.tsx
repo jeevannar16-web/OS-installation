@@ -19,8 +19,8 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
   const [phase, setPhase] = useState<"idle" | "install" | "try">("idle");
 
   const zones = phase === "idle" ? [
-    { id: "install", x: 5, y: 5, w: 30, h: 40, onClick: () => { playClick(); setPhase("install"); setTimeout(onInstall, 400); } },
-    { id: "try", x: 5, y: 50, w: 30, h: 40, onClick: () => { playClick(); setPhase("try"); setTimeout(onTry, 400); } },
+    { id: "install", x: 5, y: 5, w: 35, h: 50, onClick: () => { playClick(); setPhase("install"); setTimeout(onInstall, 400); } },
+    { id: "try", x: 5, y: 56, w: 35, h: 38, onClick: () => { playClick(); setPhase("try"); setTimeout(onTry, 400); } },
   ] : [];
 
   return (

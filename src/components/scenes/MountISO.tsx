@@ -18,13 +18,13 @@ export default function MountISO({ config, onComplete }: { config: OSConfig; onC
 
   const zones = phase === "settings"
     ? [
-        { id: "browse", x: 30, y: 35, w: 50, h: 25, onClick: handleBrowse },
-        { id: "cancel", x: 60, y: 78, w: 30, h: 16, onClick: () => { playClick(); onComplete(); } },
+        { id: "browse", x: 20, y: 30, w: 60, h: 30, onClick: handleBrowse },
+        { id: "cancel", x: 60, y: 75, w: 30, h: 18, onClick: () => { playClick(); onComplete(); } },
       ]
     : phase === "attached"
     ? [
-        { id: "ok", x: 45, y: 78, w: 25, h: 16, onClick: () => { playClick(); onComplete(); } },
-        { id: "cancel", x: 72, y: 78, w: 22, h: 16, onClick: () => { playClick(); onComplete(); } },
+        { id: "ok", x: 40, y: 75, w: 28, h: 18, onClick: () => { playClick(); onComplete(); } },
+        { id: "cancel", x: 70, y: 75, w: 24, h: 18, onClick: () => { playClick(); onComplete(); } },
       ]
     : [];
 
