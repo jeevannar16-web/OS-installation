@@ -821,14 +821,7 @@ export default function Install({ config, speed, onComplete, path }: {
                 Try {config.id === "mint" ? "Linux Mint" : config.id === "zorin" ? "Zorin OS" : osName}
               </motion.button>
             </div>
-            <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}
-              className="flex items-center gap-2 text-xs text-white/40">
-              <select onChange={e => { playClick(); setSelectedLang(e.target.value); }} value={selectedLang}
-                className="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white/70 text-sm outline-none cursor-pointer">
-                <option value="">Language</option>
-                {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </motion.div>
+
           </div>
         </div>
       </div>
