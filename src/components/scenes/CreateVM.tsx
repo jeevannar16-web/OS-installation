@@ -55,7 +55,7 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+    <div className="mx-auto w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
       <div className="flex-1 flex flex-col rounded-2xl border border-gray-600/30 bg-[#3c3c3c] shadow-2xl font-sans overflow-hidden">
         <div className="flex items-center gap-2 bg-gradient-to-b from-[#e8e8e8] to-[#d4d4d4] px-3 py-1.5 select-none shrink-0">
           <div className="flex gap-1.5">

@@ -32,7 +32,7 @@ export default function VmClose({ config, onComplete }: { config: OSConfig; onCo
 
   if (phase === "done") {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+      <div className="mx-auto w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
         <div className="flex-1 relative overflow-hidden rounded-t-2xl border border-white/10 border-b-0 bg-black cursor-pointer" onClick={() => { playClick(); onComplete(); }}>
           <img src={OS_VM_IMG[config.id] || OS_VM_IMG.ubuntu} alt={`${config.branding.name} running in VirtualBox`}
             className="absolute inset-0 w-full h-full object-cover bg-[#2a2a2b]" />
@@ -56,7 +56,7 @@ export default function VmClose({ config, onComplete }: { config: OSConfig; onCo
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
+    <div className="mx-auto w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl flex flex-col" style={{ height: "min(600px, 70vh)" }}>
       <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10 bg-black"
         onClick={() => !ejecting && registerAdvance(() => onComplete())}>
         {/* VirtualBox VM Window */}

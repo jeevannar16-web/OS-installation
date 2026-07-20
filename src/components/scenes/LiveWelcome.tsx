@@ -26,7 +26,7 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
 
   if (phase === "transition") {
     return (
-    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+    <div className="mx-auto w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
       <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
         style={{ background: `linear-gradient(135deg, ${surface}, #000)` }}>
           <div className="flex flex-col items-center gap-4">
@@ -48,7 +48,7 @@ export default function LiveWelcome({ config, onTry, onInstall }: {
   }
 
   return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+      <div className="mx-auto w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
         <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10 relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, ${surface} 0%, #000 100%)` }}>
         <div className="absolute inset-0 opacity-[0.03]"

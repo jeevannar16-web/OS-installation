@@ -18,6 +18,23 @@ const KEYBOARD_LAYOUTS = [
   "Français", "Deutsch", "Italiano", "Português (Brasil)", "Dvorak", "Colemak",
 ];
 
+const SLIDES: { title: string; body: string; icon: string }[] = [
+  { title: "Fast and feature-rich", body: "The desktop experience is packed with productivity tools, developer environments, and built-in apps for everyday use.", icon: "🚀" },
+  { title: "Great for developers", body: "Built-in terminal, package manager, and support for all major programming languages and frameworks.", icon: "💻" },
+  { title: "Full productivity suite", body: "Includes LibreOffice, Thunderbird, Firefox, and thousands of free apps in the software center.", icon: "📝" },
+  { title: "Gaming ready", body: "Steam, Lutris, and Proton bring thousands of Windows games to your desktop.", icon: "🎮" },
+  { title: "Accessibility built-in", body: "Screen reader, magnifier, high-contrast themes, and on-screen keyboard are included out of the box.", icon: "♿" },
+];
+
+const OS_WELCOME_STYLES: Record<string, { gradient: string; }> = {
+  ubuntu: { gradient: "linear-gradient(135deg, #2c001e 0%, #481c34 40%, #1a1a2e 100%)" },
+  zorin: { gradient: "linear-gradient(135deg, #0a2647 0%, #0c6cf5 40%, #144272 100%)" },
+  mint: { gradient: "linear-gradient(135deg, #0d2818 0%, #3c8d2f 40%, #0a1f12 100%)" },
+  debian: { gradient: "linear-gradient(135deg, #1a0000 0%, #6b0000 40%, #0d0000 100%)" },
+  fedora: { gradient: "linear-gradient(135deg, #1a1a2e 0%, #2b5797 40%, #16213e 100%)" },
+  arch: { gradient: "linear-gradient(135deg, #0a0a1a 0%, #1793d1 40%, #0a0a1a 100%)" },
+};
+
 function Field({ label, value, onChange, placeholder, type, autoFocus }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; autoFocus?: boolean;
 }) {
@@ -41,6 +58,25 @@ const ACCOUNT_KEY_MAP: Record<string, string> = {
   "Password": "password",
 };
 
+const UBIQUITY_ICONS: Record<string, string> = {
+  language: "🌐",
+  keyboard: "⌨️",
+  network: "📶",
+  timezone: "🌍",
+  disk: "💾",
+  account: "👤",
+  confirm: "✅",
+  partition: "🔧",
+};
+
+const INSTALL_TIPS: Record<string, string> = {
+  ubuntu: "Ubuntu 24.04 LTS brings a refreshed installer with accessibility options and improved provisioning support.",
+  zorin: "Zorin OS 17 features a redesigned desktop with enhanced productivity and gaming features.",
+  mint: "Linux Mint 22 features the Cinnamon desktop with a focus on simplicity and stability.",
+  debian: "Debian 12 'Bookworm' — the universal operating system, now with non-free firmware included.",
+  windows: "Windows 11 combines the productivity and security you can rely on with the features you want.",
+};
+
 export default function Install({ config, speed, onComplete, path }: {
   config: OSConfig; speed: "normal" | "fast"; onComplete: () => void; path?: string;
 }) {
@@ -60,6 +96,7 @@ export default function Install({ config, speed, onComplete, path }: {
   const [restartPhase, setRestartPhase] = useState<"countdown" | "done">("countdown");
   const [selectedLang, setSelectedLang] = useState("");
   const [selectedKb, setSelectedKb] = useState("");
+  const [slideIdx, setSlideIdx] = useState(0);
 
   const wizard = config.wizard;
   const hasPartition = installType === "something";
@@ -67,6 +104,8 @@ export default function Install({ config, speed, onComplete, path }: {
     ? [...wizard.slice(0, wizard.findIndex(s => s.kind === "disk") + 1), { kind: "partition" as const, title: "Partition disks" }, ...wizard.slice(wizard.findIndex(s => s.kind === "disk") + 1)]
     : wizard;
   const currentStep = allSteps[stepIdx];
+  const welcomeStyle = OS_WELCOME_STYLES[config.id] || { gradient: `linear-gradient(135deg, ${surface}, #000)` };
+  const installTip = INSTALL_TIPS[config.id] || `Installing ${osName}…`;
 
   const installDuration = speed === "fast" ? 2000 : 12000;
 
@@ -90,6 +129,12 @@ export default function Install({ config, speed, onComplete, path }: {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [phase, installDuration, config.installFiles]);
+
+  useEffect(() => {
+    if (phase !== "installing" || isWindows) return;
+    const t = setInterval(() => setSlideIdx(p => (p + 1) % SLIDES.length), 3000);
+    return () => clearInterval(t);
+  }, [phase, isWindows]);
 
   useEffect(() => {
     if (bootSplash) {
@@ -147,16 +192,20 @@ export default function Install({ config, speed, onComplete, path }: {
         const opts = "options" in currentStep ? currentStep.options : LANGUAGES;
         return (
           <div>
-            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-1 text-white">{currentStep.title}</h2>
+            <p className="text-xs mb-3 text-white/50">Choose your language to begin the installation.</p>
             <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto">
               {opts.map(l => (
                 <button key={l} onClick={() => { playClick(); setSelectedLang(l); }}
-                  className={`rounded px-3 py-1.5 text-xs transition-all ${
+                  className={`rounded px-3 py-1.5 text-xs transition-all flex items-center gap-2 ${
                     selectedLang === l
-                      ? "text-white font-semibold shadow-sm"
-                      : "text-white/70 hover:text-white hover:bg-white/10"
+                      ? "text-white font-semibold shadow-sm ring-1 ring-white/20"
+                      : "text-white/70 hover:text-white hover:bg-white/10 border border-transparent"
                   }`}
-                  style={selectedLang === l ? { background: accent } : {}}>{l}</button>
+                  style={selectedLang === l ? { background: accent } : {}}>
+                  <span>{l === "English" ? "🇬🇧" : l === "Español" ? "🇪🇸" : l === "Français" ? "🇫🇷" : l === "Deutsch" ? "🇩🇪" : l === "Português (Brasil)" ? "🇧🇷" : l === "Italiano" ? "🇮🇹" : l === "中文 (简体)" ? "🇨🇳" : l === "日本語" ? "🇯🇵" : l === "한국어" ? "🇰🇷" : l === "Русский" ? "🇷🇺" : "🌐"}</span>
+                  {l}
+                </button>
               ))}
             </div>
           </div>
@@ -166,17 +215,22 @@ export default function Install({ config, speed, onComplete, path }: {
         const layouts = "layouts" in currentStep ? currentStep.layouts : KEYBOARD_LAYOUTS;
         return (
           <div>
-            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-1 text-white">{currentStep.title}</h2>
+            <p className="text-xs mb-3 text-white/50">Select the layout that matches your keyboard.</p>
             <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto">
               {layouts.map(k => (
                 <button key={k} onClick={() => { playClick(); setSelectedKb(k); }}
                   className={`rounded px-3 py-1.5 text-xs transition-all ${
                     selectedKb === k
-                      ? "text-white font-semibold shadow-sm"
+                      ? "text-white font-semibold shadow-sm ring-1 ring-white/20"
                       : "text-white/70 hover:text-white hover:bg-white/10"
                   }`}
                   style={selectedKb === k ? { background: accent } : {}}>{k}</button>
               ))}
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-[10px] text-white/40">
+              <span>⌨️</span>
+              <span className="italic">Type here to test your keyboard layout</span>
             </div>
           </div>
         );
@@ -185,22 +239,24 @@ export default function Install({ config, speed, onComplete, path }: {
         const nets = "interfaces" in currentStep ? currentStep.interfaces : [];
         return (
           <div>
-            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-1 text-white">{currentStep.title}</h2>
+            <p className="text-xs mb-3 text-white/50">Connect to the internet? Updates and third-party software may be downloaded.</p>
             <div className="space-y-1.5">
               {nets.map(n => (
                 <button key={n.id} onClick={() => { playClick(); setValues(p => ({...p, network: n.id})); }}
-                  className={`block text-xs text-left w-full py-2 px-3 rounded transition-all ${
+                  className={`block text-xs text-left w-full py-2.5 px-3 rounded transition-all flex items-center gap-2 ${
                     values["network"] === n.id
-                      ? "text-white font-semibold" : "text-white/60 hover:text-white/80 hover:bg-white/5"
+                      ? "text-white font-semibold ring-1 ring-white/20" : "text-white/60 hover:text-white/80 hover:bg-white/5"
                   }`}
                   style={values["network"] === n.id ? { background: accent } : {}}>
-                  <span className="mr-2">{n.signal && n.signal >= 4 ? "📶" : n.signal ? "📡" : "🔗"}</span>
-                  {n.label}
+                  <span>{n.signal && n.signal >= 4 ? "📶" : n.signal ? "📡" : "🔗"}</span>
+                  <span className="flex-1">{n.label}</span>
+                  {n.signal && <span className="text-white/30 text-[8px]">{n.signal}/5</span>}
                 </button>
               ))}
               <button onClick={() => { playClick(); setValues(p => ({...p, network: "skip"})); }}
-                className={`block text-xs text-left w-full py-2 px-3 rounded transition-all ${
-                  values["network"] === "skip" ? "text-white font-semibold" : "text-white/40 hover:text-white/60"
+                className={`block text-xs text-left w-full py-2.5 px-3 rounded transition-all ${
+                  values["network"] === "skip" ? "text-white font-semibold ring-1 ring-white/20" : "text-white/40 hover:text-white/60"
                 }`}
                 style={values["network"] === "skip" ? { background: accent } : {}}>I don't want to connect to a network</button>
             </div>
@@ -211,13 +267,14 @@ export default function Install({ config, speed, onComplete, path }: {
         const zones = "zones" in currentStep ? currentStep.zones : [];
         return (
           <div>
-            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-1 text-white">{currentStep.title}</h2>
+            <p className="text-xs mb-3 text-white/50">Select your timezone so the system clock is accurate.</p>
             <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto">
               {zones.map(tz => (
                 <button key={tz} onClick={() => { playClick(); setValues(p => ({...p, timezone: tz})); }}
                   className={`rounded px-3 py-1.5 text-xs transition-all ${
                     values["timezone"] === tz
-                      ? "text-white font-semibold shadow-sm"
+                      ? "text-white font-semibold shadow-sm ring-1 ring-white/20"
                       : "text-white/70 hover:text-white hover:bg-white/10"
                   }`}
                   style={values["timezone"] === tz ? { background: accent } : {}}>{tz}</button>
@@ -230,14 +287,16 @@ export default function Install({ config, speed, onComplete, path }: {
         const choices = "choices" in currentStep ? currentStep.choices : [];
         return (
           <div>
-            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-1 text-white">{currentStep.title}</h2>
+            <p className="text-xs mb-3 text-white/50">Choose how you want to install the system.</p>
             <div className="space-y-2">
               {choices.filter(opt => path !== "vm" || opt.id === "erase").map(opt => (
                 <button key={opt.id} onClick={() => { playClick(); setInstallType(opt.id); }}
                   className={`w-full text-left border-2 rounded-lg p-3 transition-all ${
                     installType === opt.id
-                      ? "border-blue-500 bg-blue-900/30" : "border-white/15 hover:border-white/30 bg-white/5"
-                  }`}>
+                      ? "ring-1 ring-white/20" : "border-white/15 hover:border-white/30 bg-white/5"
+                  }`}
+                  style={installType === opt.id ? { borderColor: accent, background: `${accent}15` } : {}}>
                   <div className="text-sm font-medium text-white">{opt.label}</div>
                   <div className="text-xs mt-0.5 text-white/50">{opt.hint}</div>
                 </button>
@@ -250,7 +309,8 @@ export default function Install({ config, speed, onComplete, path }: {
         const prompts = "prompts" in currentStep ? currentStep.prompts : [];
         return (
           <div>
-            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-1 text-white">{currentStep.title}</h2>
+            <p className="text-xs mb-3 text-white/50">Create a user account for daily use of {osName}.</p>
             {prompts.map((p, i) => (
               <Field key={i} label={p.label} value={values[ACCOUNT_KEY_MAP[p.label] || p.label] || ""}
                 onChange={v => setAccountValue(p.label, v)}
@@ -262,7 +322,7 @@ export default function Install({ config, speed, onComplete, path }: {
       case "confirm":
         return (
           <div>
-            <h2 className="text-base font-semibold mb-3 text-white">{currentStep.title}</h2>
+            <h2 className="text-base font-semibold mb-1 text-white">{currentStep.title}</h2>
             <p className="text-xs mb-4 text-white/50">{"body" in currentStep ? currentStep.body : "Review your choices before proceeding."}</p>
             <div className="border border-white/10 bg-white/5 rounded-lg p-3 space-y-1.5">
               {[
@@ -284,7 +344,7 @@ export default function Install({ config, speed, onComplete, path }: {
       case "partition":
         return (
           <div>
-            <h2 className="text-base font-semibold mb-3 text-white">Partition disks</h2>
+            <h2 className="text-base font-semibold mb-1 text-white">Partition disks</h2>
             <p className="text-xs mb-3 text-white/50">Configure disk partitions manually.</p>
             <div className="border border-white/10 divide-y divide-white/10 rounded-lg">
               {["/dev/sda1  ext4  30 GB  /", "/dev/sda2  swap  8 GB  [swap]", "/dev/sda3  ext4  162 GB  /home"].map((row, i) => (
@@ -305,49 +365,73 @@ export default function Install({ config, speed, onComplete, path }: {
     }
   }
 
-  // ─── BOOT ───
-  if (phase === "boot") {
-    if (bootSplash) {
-      return (
-        <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
-          <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden border border-white/10" style={{ background: surface }}>
-            <div className="flex flex-col items-center gap-4">
-              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}>
-                <OsIcon osId={config.id} accent={accent} size={48} />
-              </motion.div>
-              <div className="flex gap-1.5">
-                {[0, 1, 2].map(i => (
-                  <motion.div key={i} className="h-2 w-2 rounded-full" style={{ background: accent }}
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
-                ))}
-              </div>
-              <div className="text-xs text-white/40 font-mono">Starting installer…</div>
+  // ─── BOOT SPLASH ───
+  if (phase === "boot" && bootSplash) {
+    return (
+      <div className="mx-auto w-full flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+        <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden border border-white/10" style={{ background: surface }}>
+          <div className="flex flex-col items-center gap-4">
+            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}>
+              <OsIcon osId={config.id} accent={accent} size={48} />
+            </motion.div>
+            <div className="flex gap-1.5">
+              {[0, 1, 2].map(i => (
+                <motion.div key={i} className="h-2 w-2 rounded-full" style={{ background: accent }}
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
+              ))}
             </div>
+            <div className="text-xs text-white/40 font-mono">Starting installer…</div>
           </div>
         </div>
-      );
-    }
+      </div>
+    );
+  }
+
+  // ─── WELCOME / TRY-INSTALL ───
+  if (phase === "boot") {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
-        <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
-          style={{ background: `linear-gradient(135deg, ${surface}, ${surface}dd)` }}>
-          <div className="text-center space-y-5">
-            <div className="mb-2"><OsIcon osId={config.id} accent={accent} size={48} /></div>
-            <div className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: accent }}>{osName}</div>
-            <h1 className="text-2xl font-bold text-white">Install {osName}</h1>
-            <p className="text-xs text-white/50 max-w-xs mx-auto">Try before installing, or start the installation.</p>
-            <div className="space-y-2 max-w-[180px] mx-auto">
-              <button onClick={() => { playClick(); setBootSplash(true); }}
-                className="w-full rounded-lg py-2.5 text-sm font-bold text-white shadow-lg hover:brightness-110 transition-all"
+      <div className="mx-auto w-full flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+        <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden border border-white/10 relative"
+          style={{ background: welcomeStyle.gradient }}>
+          <div className="absolute inset-0 opacity-5" style={{
+            background: `radial-gradient(circle at 50% 30%, ${accent} 0%, transparent 60%)`
+          }} />
+          <div className="relative z-10 w-full max-w-3xl mx-auto px-6 py-8 flex flex-col items-center text-center">
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-4">
+              <OsIcon osId={config.id} accent={accent} size={56} />
+            </motion.div>
+            <motion.h1 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
+              className="text-2xl sm:text-3xl font-bold text-white mb-1">
+              {config.id === "ubuntu" ? `Welcome to ${osName}` : config.id === "mint" ? `Welcome to ${osName}` : config.id === "zorin" ? `Welcome to ${osName} 17` : `Install ${osName}`}
+            </motion.h1>
+            <motion.p initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
+              className="text-sm text-white/60 mb-6 max-w-md">
+              {config.id === "ubuntu" ? "Try Ubuntu before you install it, or start the installation right away." :
+               config.id === "mint" ? "You can try Linux Mint without making any changes to your computer." :
+               config.id === "zorin" ? "Try Zorin OS or install it directly on your computer." :
+               `Try ${osName} or install it on your computer.`}
+            </motion.p>
+            <div className="flex items-center gap-3 mb-6">
+              <motion.button onClick={handleNext} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
+                className="rounded-lg px-6 py-2.5 text-sm font-bold text-white shadow-lg hover:brightness-110 transition-all"
                 style={{ background: accent }}>
                 Install {osName}
-              </button>
-              <button onClick={() => { playClick(); setBootSplash(true); }}
-                className="w-full rounded-lg border border-white/20 bg-white/5 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-all">
+              </motion.button>
+              <motion.button onClick={handleNext} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35 }}
+                className="rounded-lg border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-medium text-white/80 hover:bg-white/20 transition-all">
                 Try {osName}
-              </button>
+              </motion.button>
             </div>
+            <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}
+              className="flex items-center gap-2 text-[10px] text-white/40">
+              <span>🌐</span>
+              <select onChange={e => { playClick(); setSelectedLang(e.target.value); }} value={selectedLang}
+                className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white/70 text-[10px] outline-none">
+                <option value="">Language</option>
+                {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -358,7 +442,7 @@ export default function Install({ config, speed, onComplete, path }: {
   if (phase === "installing") {
     if (isWindows) {
       return (
-        <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+        <div className="mx-auto w-full flex flex-col" style={{ height: "min(700px, 90vh)" }}>
           <div className="flex-1 relative overflow-hidden rounded-2xl border border-white/10"
             style={{ background: "linear-gradient(180deg, #0a0a0f 0%, #0d1117 40%, #0a0a0f 100%)" }}>
             <div className="absolute top-[18%] inset-x-0 flex justify-center">
@@ -393,21 +477,36 @@ export default function Install({ config, speed, onComplete, path }: {
         </div>
       );
     }
+    // Linux installing — slideshow
+    const slide = SLIDES[slideIdx];
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+      <div className="mx-auto w-full flex flex-col" style={{ height: "min(700px, 90vh)" }}>
         <SparkleBurst trigger={showSparkle} />
-        <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
-          style={{ background: `linear-gradient(135deg, ${surface}, #000)` }}>
-          <div className="text-center space-y-4 max-w-xs">
-            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-              className="w-10 h-10 mx-auto rounded-full border-2 border-t-transparent"
-              style={{ borderColor: `${accent}40`, borderTopColor: accent }} />
-            <p className="text-sm text-white/80 font-medium">Installing {osName}…</p>
-            <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
-              <motion.div className="h-full rounded-full" style={{ background: accent }}
-                animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }} />
+        <div className="flex-1 rounded-2xl overflow-hidden border border-white/10 flex flex-col"
+          style={{ background: `linear-gradient(180deg, ${surface}, #000)` }}>
+          <div className="flex-1 flex flex-col lg:flex-row items-stretch">
+            <div className="flex-1 flex items-center justify-center p-6 lg:p-10">
+              <AnimatePresence mode="wait">
+                <motion.div key={slideIdx} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                  className="text-center lg:text-left max-w-md">
+                  <div className="text-4xl mb-3">{slide.icon}</div>
+                  <h3 className="text-lg font-bold text-white mb-2">{slide.title}</h3>
+                  <p className="text-sm text-white/60 leading-relaxed">{slide.body}</p>
+                </motion.div>
+              </AnimatePresence>
             </div>
-            <p className="text-[10px] text-white/30 font-mono">{Math.floor(progress)}%</p>
+            <div className="lg:w-64 shrink-0 flex flex-col items-center justify-center p-6 lg:p-8 lg:border-l border-white/10 gap-3">
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                className="w-10 h-10 rounded-full border-2 border-t-transparent"
+                style={{ borderColor: `${accent}40`, borderTopColor: accent }} />
+              <p className="text-sm text-white/70 font-medium">Installing…</p>
+              <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <motion.div className="h-full rounded-full" style={{ background: accent }}
+                  animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }} />
+              </div>
+              <p className="text-[10px] text-white/30 font-mono">{Math.floor(progress)}%</p>
+              <p className="text-[9px] text-white/20 text-center italic max-w-[180px] leading-relaxed">{installTip}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -417,13 +516,20 @@ export default function Install({ config, speed, onComplete, path }: {
   // ─── REMOVE MEDIA ───
   if (phase === "remove_media") {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
-        <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10" style={{ background: surface }}>
-          <div className="text-center space-y-4">
-            <div className="text-lg font-bold text-white">Installation Complete</div>
-            <p className="text-xs text-white/50">Please remove the installation media, then click Restart.</p>
+      <div className="mx-auto w-full flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+        <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
+          style={{ background: `linear-gradient(135deg, ${surface}, #000)` }}>
+          <div className="text-center space-y-5">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><OsIcon osId={config.id} accent={accent} size={56} /></motion.div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Installation Complete</h2>
+              <p className="text-xs text-white/50 mt-1">You may now restart your computer.</p>
+            </div>
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-2 text-[10px] text-yellow-400/80 max-w-[260px] mx-auto">
+              Please remove the installation media before restarting.
+            </div>
             <button onClick={() => { playClick(); setPhase("done"); }}
-              className="rounded-lg px-6 py-2.5 text-sm font-bold text-white shadow-lg hover:brightness-110 transition-all"
+              className="rounded-lg px-8 py-2.5 text-sm font-bold text-white shadow-lg hover:brightness-110 transition-all"
               style={{ background: accent }}>
               Restart Now
             </button>
@@ -436,22 +542,28 @@ export default function Install({ config, speed, onComplete, path }: {
   // ─── DONE ───
   if (phase === "done") {
     return (
-      <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+      <div className="mx-auto w-full flex flex-col" style={{ height: "min(700px, 90vh)" }}>
         <div className="flex-1 flex items-center justify-center rounded-2xl border border-white/10"
           style={{ background: `linear-gradient(135deg, ${surface}, #000)` }}>
           <div className="text-center space-y-4">
             {restartPhase === "done" ? (
               <>
-                <div className="text-lg font-bold text-white">Restart to {osName}</div>
-                <p className="text-xs text-white/50">Your new system is ready.</p>
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><OsIcon osId={config.id} accent={accent} size={56} /></motion.div>
+                <h2 className="text-lg font-bold text-white">Welcome to {osName}</h2>
+                <p className="text-xs text-white/50 max-w-xs mx-auto">Your new system is ready. Please restart to begin using {osName}.</p>
                 <button onClick={() => { playSuccess(); onComplete(); }}
-                  className="rounded-lg px-6 py-2.5 text-sm font-bold text-white shadow-lg hover:brightness-110 transition-all"
+                  className="rounded-lg px-8 py-2.5 text-sm font-bold text-white shadow-lg hover:brightness-110 transition-all"
                   style={{ background: accent }}>
                   Restart Now
                 </button>
               </>
             ) : (
-              <div className="text-sm text-white/40 font-mono">Restarting…</div>
+              <div className="flex flex-col items-center gap-3">
+                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                  className="w-8 h-8 rounded-full border-2 border-t-transparent"
+                  style={{ borderColor: `${accent}40`, borderTopColor: accent }} />
+                <div className="text-sm text-white/40 font-mono">Restarting…</div>
+              </div>
             )}
           </div>
         </div>
@@ -461,38 +573,45 @@ export default function Install({ config, speed, onComplete, path }: {
 
   // ─── WIZARD ───
   return (
-    <div className="mx-auto w-full max-w-5xl flex flex-col" style={{ height: "min(700px, 90vh)" }}>
+    <div className="mx-auto w-full flex flex-col" style={{ height: "min(700px, 90vh)" }}>
       <div className="flex-1 flex items-center justify-center p-4"
         style={{ background: `linear-gradient(135deg, ${surface}, ${surface}dd)`, borderRadius: "1rem" }}>
         <div className="w-full max-w-2xl rounded-xl shadow-2xl flex flex-col overflow-hidden"
           style={{ background: "#1e1e24", border: "1px solid rgba(255,255,255,0.08)", maxHeight: "92%" }}>
-          <div className="px-5 py-3 border-b shrink-0 flex items-center justify-between" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+          <div className="px-5 py-3 border-b shrink-0 flex items-center gap-3" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+            <OsIcon osId={config.id} accent={accent} size={16} />
             <span className="text-xs font-semibold tracking-wider" style={{ color: accent }}>{osName}</span>
-            <div className="flex items-center gap-1">
-              {allSteps.map((s, i) => (
-                <div key={s.kind} className={`h-1.5 rounded-full transition-all ${i <= stepIdx ? "w-3" : "w-1.5"}`}
-                  style={{ background: i <= stepIdx ? accent : "rgba(255,255,255,0.15)" }} />
-              ))}
-            </div>
+            <span className="text-[9px] text-white/25 ml-auto">Step {stepIdx + 1} of {allSteps.length}</span>
           </div>
 
           <div className="flex flex-1 min-h-0">
-            <div className="w-40 shrink-0 p-3 border-r border-white/5 bg-[#25252b] hidden sm:block">
-              <div className="text-[7px] font-semibold uppercase tracking-wider mb-2 text-white/30">Steps</div>
-              <div className="space-y-0.5">
-                {allSteps.map((s, i) => (
-                  <div key={s.kind} className={`flex items-center gap-2 px-2 py-1 rounded text-[10px] transition-all ${
-                    i === stepIdx ? "bg-white/10 text-white" : "text-white/40"
-                  }`}>
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: i <= stepIdx ? accent : "rgba(255,255,255,0.3)", opacity: i <= stepIdx ? 1 : 0.3 }} />
-                    <span className="truncate">{s.title}</span>
+            <div className="w-44 shrink-0 p-4 border-r border-white/5 bg-[#25252b] hidden sm:flex flex-col gap-1"
+              style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+              {allSteps.map((s, i) => {
+                const isActive = i === stepIdx;
+                const isDone = i < stepIdx;
+                return (
+                  <div key={s.kind} className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[11px] transition-all ${
+                    isActive ? "text-white shadow-sm" : isDone ? "text-white/50" : "text-white/30"
+                  }`}
+                    style={isActive ? { background: `${accent}20` } : {}}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 transition-all ${
+                      isDone ? "text-white" : isActive ? "text-white" : "text-white/30 bg-white/10"
+                    }`}
+                      style={isDone || isActive ? { background: accent } : {}}>
+                      {isDone ? "✓" : i + 1}
+                    </div>
+                    <span className="truncate font-medium">{s.title}</span>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
 
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="flex-1 overflow-y-auto px-5 py-4">
+              <div className="flex-1 overflow-y-auto px-6 py-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm">{UBIQUITY_ICONS[currentStep?.kind || ""] || "📋"}</span>
+                </div>
                 <AnimatePresence mode="wait">
                   <motion.div key={stepIdx} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}>
                     {renderStepContent()}
@@ -500,7 +619,7 @@ export default function Install({ config, speed, onComplete, path }: {
                 </AnimatePresence>
               </div>
 
-              <div className="flex items-center justify-between px-5 py-3 border-t shrink-0" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+              <div className="flex items-center justify-between px-6 py-3 border-t shrink-0" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
                 <button onClick={handleBack} disabled={stepIdx === 0}
                   className="text-xs font-medium px-4 py-1.5 rounded transition-all disabled:opacity-30 text-white/40 hover:text-white/70">
                   Back
