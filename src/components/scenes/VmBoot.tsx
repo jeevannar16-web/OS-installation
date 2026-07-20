@@ -5,11 +5,11 @@ import { playClick } from "../shared/sounds";
 import { useSceneAdvance } from "../shared/SceneAdvance";
 
 const VM_SCREENSHOTS: Record<string, string> = {
-  ubuntu: "/images/vm/ubuntu/installer.jpg",
+  ubuntu: "/images/vm/ubuntu/installer.png",
   windows: "/images/vm/windows/install-now.jpg",
   fedora: "/images/vm/fedora/installer.jpg",
-  mint: "/images/vm/mint/installer.jpg",
-  zorin: "/images/vm/zorin/installer.jpg",
+  mint: "/images/vm/mint/installer.png",
+  zorin: "/images/vm/zorin/installer.webp",
   debian: "/images/vm/debian/grub.jpg",
 };
 
