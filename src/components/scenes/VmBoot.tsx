@@ -6,11 +6,11 @@ import { useSceneAdvance } from "../shared/SceneAdvance";
 
 const VM_SCREENSHOTS: Record<string, string> = {
   ubuntu: "/images/vm/ubuntu/installer.jpg",
-  windows: "/images/vm/windows/installer.jpg",
+  windows: "/images/vm/windows/install-now.jpg",
   fedora: "/images/vm/fedora/installer.jpg",
   mint: "/images/vm/mint/installer.jpg",
   zorin: "/images/vm/zorin/installer.jpg",
-  debian: "/images/vm/debian/installer.jpg",
+  debian: "/images/vm/debian/grub.jpg",
 };
 
 const MENU_ITEMS = [
@@ -22,43 +22,28 @@ const MENU_ITEMS = [
 ];
 
 function OsFallback({ osId }: { osId: string }) {
-  switch (osId) {
-    case "windows":
-      return (
-        <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-b from-[#1a2b6b] to-[#0d1b4a]">
-          <div className="text-5xl mb-4 text-white/90 font-bold tracking-tight" style={{ fontFamily: "'Segoe UI',sans-serif" }}>Windows</div>
-          <div className="text-[10px] text-blue-200/60 mb-8 tracking-widest uppercase">Setup</div>
-          <div className="bg-white/10 backdrop-blur rounded-lg px-8 py-4 border border-white/20 text-center">
-            <div className="text-blue-200 text-xs mb-2">Language to install</div>
-            <div className="bg-white/20 rounded px-4 py-1 text-white text-[11px] mb-3">English (United States)</div>
-            <div className="flex gap-2 justify-center">
-              <span className="bg-blue-600 text-white text-[10px] px-6 py-1.5 rounded">Install now</span>
-              <span className="bg-white/10 text-blue-200 text-[10px] px-4 py-1.5 rounded border border-white/20">Repair your computer</span>
-            </div>
-          </div>
-          <div className="mt-6 text-[8px] text-blue-300/40">© Microsoft Corporation. All rights reserved.</div>
+  const theme: Record<string, { bg: string; logo: string; sub: string }> = {
+    windows: { bg: "from-[#1a2b6b] to-[#0d1b4a]", logo: "Windows",     sub: "Setup" },
+    debian:  { bg: "from-[#d63333] to-[#8a1a1a]", logo: "Debian",       sub: "GNU/Linux 12 · installer" },
+    ubuntu:  { bg: "from-[#e95420] to-[#a64020]", logo: "Ubuntu",       sub: "24.04 LTS · installer" },
+    fedora:  { bg: "from-[#2b5e8c] to-[#183550]", logo: "Fedora",       sub: "Workstation 40 · installer" },
+    mint:    { bg: "from-[#5a8c3e] to-[#35682a]", logo: "Linux Mint",   sub: "22 · installer" },
+    zorin:   { bg: "from-[#1a6ba0] to-[#0d4670]", logo: "Zorin OS",     sub: "17.3 Core · installer" },
+  };
+  const s = theme[osId] || theme.ubuntu;
+  return (
+    <div className={`flex flex-col items-center justify-center w-full h-full bg-gradient-to-b ${s.bg}`}>
+      <div className="text-4xl sm:text-5xl mb-2 text-white/90 font-bold tracking-tight">{s.logo}</div>
+      <div className="text-[9px] text-white/50 mb-6 tracking-wider uppercase">{s.sub}</div>
+      <div className="bg-white/10 backdrop-blur rounded-lg px-8 py-4 border border-white/20 text-center">
+        <div className="text-white/70 text-xs mb-2">Welcome to the {s.logo} installer</div>
+        <div className="flex gap-2 justify-center mt-3">
+          <span className="bg-white/20 text-white text-[10px] px-6 py-1.5 rounded hover:bg-white/30 cursor-default">Install {s.logo}</span>
+          <span className="bg-white/10 text-white/60 text-[10px] px-4 py-1.5 rounded border border-white/20">Try {s.logo}</span>
         </div>
-      );
-    case "debian":
-      return (
-        <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-b from-[#d63333] to-[#8a1a1a]">
-          <div className="text-white font-bold text-3xl mb-1 tracking-tight">Debian</div>
-          <div className="text-rose-200/60 text-[9px] mb-4">GNU/Linux 12 · installer</div>
-          <div className="bg-white/10 backdrop-blur rounded px-6 py-3 border border-white/20 text-center max-w-[240px]">
-            <div className="text-rose-100 text-[10px] mb-2">Select a language</div>
-            <div className="bg-white/20 rounded px-3 py-0.5 text-white text-[10px] mb-2">English</div>
-            <div className="bg-rose-600 text-white text-[10px] px-5 py-1 rounded inline-block">Continue</div>
-          </div>
-          <div className="mt-4 flex gap-1">
-            <div className="w-2 h-2 rounded-full bg-white/30" />
-            <div className="w-2 h-2 rounded-full bg-white/60" />
-            <div className="w-2 h-2 rounded-full bg-white/30" />
-          </div>
-        </div>
-      );
-    default:
-      return null;
-  }
+      </div>
+    </div>
+  );
 }
 
 export default function VmBoot({
