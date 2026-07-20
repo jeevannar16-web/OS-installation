@@ -6,8 +6,8 @@ import { useSceneAdvance } from "../shared/SceneAdvance";
 
 const VM_SCREENSHOTS: Record<string, string> = {
   ubuntu: "/images/vm/ubuntu/installer.jpg",
-  windows: "/images/vm/windows/setup.jpg",
-  fedora: "/images/vm/fedora/boot.jpg",
+  windows: "/images/vm/windows/installer.jpg",
+  fedora: "/images/vm/fedora/installer.jpg",
   mint: "/images/vm/mint/installer.jpg",
   zorin: "/images/vm/zorin/installer.jpg",
   debian: "/images/vm/debian/installer.jpg",
@@ -20,6 +20,46 @@ const MENU_ITEMS = [
   { label: "Devices", items: ["Optical Drives", "USB", "Shared Folders", "Network"] },
   { label: "Help", items: ["About VirtualBox"] },
 ];
+
+function OsFallback({ osId }: { osId: string }) {
+  switch (osId) {
+    case "windows":
+      return (
+        <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-b from-[#1a2b6b] to-[#0d1b4a]">
+          <div className="text-5xl mb-4 text-white/90 font-bold tracking-tight" style={{ fontFamily: "'Segoe UI',sans-serif" }}>Windows</div>
+          <div className="text-[10px] text-blue-200/60 mb-8 tracking-widest uppercase">Setup</div>
+          <div className="bg-white/10 backdrop-blur rounded-lg px-8 py-4 border border-white/20 text-center">
+            <div className="text-blue-200 text-xs mb-2">Language to install</div>
+            <div className="bg-white/20 rounded px-4 py-1 text-white text-[11px] mb-3">English (United States)</div>
+            <div className="flex gap-2 justify-center">
+              <span className="bg-blue-600 text-white text-[10px] px-6 py-1.5 rounded">Install now</span>
+              <span className="bg-white/10 text-blue-200 text-[10px] px-4 py-1.5 rounded border border-white/20">Repair your computer</span>
+            </div>
+          </div>
+          <div className="mt-6 text-[8px] text-blue-300/40">© Microsoft Corporation. All rights reserved.</div>
+        </div>
+      );
+    case "debian":
+      return (
+        <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-b from-[#d63333] to-[#8a1a1a]">
+          <div className="text-white font-bold text-3xl mb-1 tracking-tight">Debian</div>
+          <div className="text-rose-200/60 text-[9px] mb-4">GNU/Linux 12 · installer</div>
+          <div className="bg-white/10 backdrop-blur rounded px-6 py-3 border border-white/20 text-center max-w-[240px]">
+            <div className="text-rose-100 text-[10px] mb-2">Select a language</div>
+            <div className="bg-white/20 rounded px-3 py-0.5 text-white text-[10px] mb-2">English</div>
+            <div className="bg-rose-600 text-white text-[10px] px-5 py-1 rounded inline-block">Continue</div>
+          </div>
+          <div className="mt-4 flex gap-1">
+            <div className="w-2 h-2 rounded-full bg-white/30" />
+            <div className="w-2 h-2 rounded-full bg-white/60" />
+            <div className="w-2 h-2 rounded-full bg-white/30" />
+          </div>
+        </div>
+      );
+    default:
+      return null;
+  }
+}
 
 export default function VmBoot({
   config,
@@ -37,6 +77,7 @@ export default function VmBoot({
   const { register: registerAdvance } = useSceneAdvance();
   const [poweredOn, setPoweredOn] = useState(false);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
   const screenshot = VM_SCREENSHOTS[config.id] || VM_SCREENSHOTS.ubuntu;
 
   useEffect(() => {
@@ -123,11 +164,16 @@ export default function VmBoot({
               <motion.div key="screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="absolute inset-0 flex items-center justify-center bg-black cursor-pointer"
                 onClick={() => { playClick(); onComplete(); }}>
-                <img src={screenshot} alt={`${config.branding.name} VM`}
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }} />
+                {!imageError && (
+                  <img src={screenshot} alt={`${config.branding.name} VM`}
+                    className="w-full h-full object-contain"
+                    onError={() => setImageError(true)} />
+                )}
+                {imageError && (
+                  <div className="w-full h-full">
+                    <OsFallback osId={config.id} />
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
