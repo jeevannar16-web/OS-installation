@@ -41,11 +41,7 @@ export const mint: OSConfig = {
         { id: "ethernet", label: "Wired Ethernet", signal: 5 },
       ],
     },
-    {
-      kind: "timezone",
-      title: "Select your timezone",
-      zones: ["UTC (London)", "EST (New York)", "CST (Chicago)", "MST (Denver)", "PST (Los Angeles)", "IST (Mumbai)", "JST (Tokyo)", "AEST (Sydney)"],
-    },
+    { kind: "updates", title: "Installation options", hasExtended: true, hasThirdParty: true },
     {
       kind: "disk",
       title: "Installation type",
@@ -54,6 +50,11 @@ export const mint: OSConfig = {
         { id: "alongside", label: "Install Linux Mint alongside", hint: "Shrinks Windows and dual-boots." },
         { id: "something", label: "Something else", hint: "Manual partitions (advanced)." },
       ],
+    },
+    {
+      kind: "timezone",
+      title: "Select your timezone",
+      zones: ["UTC (London)", "EST (New York)", "CST (Chicago)", "MST (Denver)", "PST (Los Angeles)", "IST (Mumbai)", "JST (Tokyo)", "AEST (Sydney)"],
     },
     {
       kind: "account",
@@ -68,7 +69,7 @@ export const mint: OSConfig = {
     {
       kind: "confirm",
       title: "Ready to install",
-      body: "You will be able to review your choices before the installation begins.",
+      body: "Review your choices before the installation begins.",
     },
   ],
   installTips: [

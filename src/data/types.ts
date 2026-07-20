@@ -53,6 +53,7 @@ export type WizardStep =
       choices: { id: string; label: string; hint: string }[];
     }
   | { kind: "account"; title: string; prompts: { label: string; placeholder: string; secret?: boolean }[] }
+  | { kind: "updates"; title: string; hasExtended: boolean; hasThirdParty: boolean }
   | { kind: "confirm"; title: string; body: string };
 
 export type VMConfig = {

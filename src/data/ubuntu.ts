@@ -41,11 +41,7 @@ export const ubuntu: OSConfig = {
         { id: "ethernet", label: "Wired Ethernet", signal: 5 },
       ],
     },
-    {
-      kind: "timezone",
-      title: "Select your timezone",
-      zones: ["UTC (London)", "EST (New York)", "CST (Chicago)", "MST (Denver)", "PST (Los Angeles)", "IST (Mumbai)", "JST (Tokyo)", "AEST (Sydney)"],
-    },
+    { kind: "updates", title: "Installation options", hasExtended: true, hasThirdParty: true },
     {
       kind: "disk",
       title: "Installation type",
@@ -66,9 +62,14 @@ export const ubuntu: OSConfig = {
       ],
     },
     {
+      kind: "timezone",
+      title: "Select your timezone",
+      zones: ["UTC (London)", "EST (New York)", "CST (Chicago)", "MST (Denver)", "PST (Los Angeles)", "IST (Mumbai)", "JST (Tokyo)", "AEST (Sydney)"],
+    },
+    {
       kind: "confirm",
       title: "Ready to install",
-      body: "You will be able to review your choices before the installation begins.",
+      body: "Review your choices before the installation begins.",
     },
   ],
   installTips: [
