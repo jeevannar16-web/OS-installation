@@ -68,7 +68,7 @@ export default function Install({ config, speed, onComplete, path }: {
   const [installThirdParty, setInstallThirdParty] = useState(true);
   const [installCodecs, setInstallCodecs] = useState(true);
   const [logLines, setLogLines] = useState<string[]>([]);
-  const logEndRef = useRef<HTMLDivElement>(null);
+  const termContainerRef = useRef<HTMLDivElement>(null);
 
   const wizard = config.wizard;
   const hasPartition = installType === "something";
@@ -157,7 +157,9 @@ export default function Install({ config, speed, onComplete, path }: {
   }, [phase, speed, config.installFiles, osName]);
 
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (termContainerRef.current) {
+      termContainerRef.current.scrollTop = termContainerRef.current.scrollHeight;
+    }
   }, [logLines]);
 
   useEffect(() => {
@@ -848,7 +850,7 @@ export default function Install({ config, speed, onComplete, path }: {
                 <span>{osName} Installer</span>
                 <span className="text-white/20 ml-auto text-[10px] font-mono">{Math.floor(progress)}%</span>
               </div>
-              <div className="flex-1 overflow-y-auto font-mono text-xs leading-relaxed bg-black/30 rounded-xl p-4 border border-white/5" style={{ scrollbarWidth: "thin" }}>
+              <div ref={termContainerRef} className="flex-1 overflow-y-auto font-mono text-xs leading-relaxed bg-black/30 rounded-xl p-4 border border-white/5" style={{ scrollbarWidth: "thin" }}>
                 {logLines.length === 0 ? (
                   <div className="text-white/30 animate-pulse">Preparing installation...</div>
                 ) : (
@@ -866,7 +868,6 @@ export default function Install({ config, speed, onComplete, path }: {
                     );
                   })
                 )}
-                <div ref={logEndRef} />
               </div>
             </div>
             <div className="lg:w-64 shrink-0 flex flex-col items-center justify-center p-6 lg:p-8 lg:border-l border-white/10 gap-3 bg-black/20">
