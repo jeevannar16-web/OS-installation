@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OSConfig } from "../../data/types";
 import { playClick, playKeyClick, playSuccess } from "../shared/sounds";
@@ -16,14 +16,6 @@ const LANGUAGES = [
 const KEYBOARD_LAYOUTS = [
   "English (US)", "English (UK)", "English (India)", "Español (Latinoamérica)",
   "Français", "Deutsch", "Italiano", "Português (Brasil)", "Dvorak", "Colemak",
-];
-
-const SLIDES: { title: string; body: string; icon: string }[] = [
-  { title: "Fast and feature-rich", body: "The desktop experience is packed with productivity tools, developer environments, and built-in apps for everyday use.", icon: "🚀" },
-  { title: "Great for developers", body: "Built-in terminal, package manager, and support for all major programming languages and frameworks.", icon: "💻" },
-  { title: "Full productivity suite", body: "Includes LibreOffice, Thunderbird, Firefox, and thousands of free apps in the software center.", icon: "📝" },
-  { title: "Gaming ready", body: "Steam, Lutris, and Proton bring thousands of Windows games to your desktop.", icon: "🎮" },
-  { title: "Accessibility built-in", body: "Screen reader, magnifier, high-contrast themes, and on-screen keyboard are included out of the box.", icon: "♿" },
 ];
 
 const ACCOUNT_KEY_MAP: Record<string, string> = {
@@ -72,10 +64,11 @@ export default function Install({ config, speed, onComplete, path }: {
   const [selectedLang, setSelectedLang] = useState("");
   const [selectedKb, setSelectedKb] = useState("");
   const [selectedKbFamily, setSelectedKbFamily] = useState("");
-  const [slideIdx, setSlideIdx] = useState(0);
   const [installExtended, setInstallExtended] = useState(true);
   const [installThirdParty, setInstallThirdParty] = useState(true);
   const [installCodecs, setInstallCodecs] = useState(true);
+  const [logLines, setLogLines] = useState<string[]>([]);
+  const logEndRef = useRef<HTMLDivElement>(null);
 
   const wizard = config.wizard;
   const hasPartition = installType === "something";
@@ -108,10 +101,64 @@ export default function Install({ config, speed, onComplete, path }: {
   }, [phase, installDuration, config.installFiles]);
 
   useEffect(() => {
-    if (phase !== "installing" || isWindows) return;
-    const t = setInterval(() => setSlideIdx(p => (p + 1) % SLIDES.length), 3000);
+    if (phase !== "installing") { setLogLines([]); return; }
+    const steps = [
+      "Starting installation process...",
+      "Preparing target disk...",
+      `Creating ext4 filesystem on /dev/sda... [OK]`,
+      `Installing base system: ${osName} core...`,
+      ...config.installFiles.slice(0, 8).map(f => `  Extracting ${f.replace(/^…\s*/, "").substring(0, 50)}...`),
+      "Configuring package manager...",
+      `  Setting up apt sources for ${osName}... done.`,
+      "Installing linux kernel...",
+      "  vmlinuz-6.8.0-41-generic: OK",
+      "  initrd.img-6.8.0-41-generic: OK",
+      "Installing system packages...",
+      "  libc6 (2.35-0ubuntu3.8): OK",
+      "  systemd (255.4-1): OK",
+      "  network-manager (1.48.0-1): OK",
+      "  grub-pc (2.12-1): OK",
+      "  desktop-base: OK",
+      `  ${osName.toLowerCase()}-desktop: OK`,
+      "  language-pack-en: OK",
+      "Configuring GRUB boot loader...",
+      "  Installing for i386-pc platform.",
+      "  grub-install: info: Installing to /dev/sda... done.",
+      "  update-grub: Generating grub configuration file...",
+      "    Found linux image: /boot/vmlinuz-6.8.0-41-generic",
+      "    Found initrd image: /boot/initrd.img-6.8.0-41-generic",
+      "Configuring networking...",
+      "  NetworkManager: [OK]",
+      "Setting up user accounts...",
+      `  Creating user '${["user", "admin", osName.toLowerCase(), "live"].sort(() => Math.random() - 0.5)[0]}'... done.`,
+      "Configuring console-setup...",
+      "  Setting keyboard layout... [OK]",
+      "Configuring locales...",
+      "  en_US.UTF-8: generated",
+      "Installing language packs...",
+      "  Language pack support: complete",
+      "Running post-installation hooks...",
+      "  update-initramfs: Generating /boot/initrd.img-6.8.0-41-generic",
+      "  Cleaning up temporary files... done.",
+      `Installation of ${osName} complete.`,
+      "Preparing for first boot...",
+    ];
+    let i = 0;
+    const interval = speed === "fast" ? 30 : 100;
+    const t = setInterval(() => {
+      if (i < steps.length) {
+        setLogLines(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${steps[i]}`]);
+        i++;
+      } else {
+        clearInterval(t);
+      }
+    }, interval);
     return () => clearInterval(t);
-  }, [phase, isWindows]);
+  }, [phase, speed, config.installFiles, osName]);
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [logLines]);
 
   useEffect(() => {
     if (bootSplash) {
@@ -788,35 +835,61 @@ export default function Install({ config, speed, onComplete, path }: {
 
   // ─── INSTALLING ───
   if (phase === "installing") {
-    const slide = SLIDES[slideIdx];
     return (
       <div className="flex-1 flex flex-col">
         <SparkleBurst trigger={showSparkle} />
         <div className="flex-1 flex flex-col rounded-2xl overflow-hidden border border-white/10"
           style={{ background: `linear-gradient(180deg, ${config.branding.surface}, #000)` }}>
-          <div className="flex-1 flex flex-col lg:flex-row items-stretch">
-            <div className="flex-1 flex items-center justify-center p-8 lg:p-12">
-              <AnimatePresence mode="wait">
-                <motion.div key={slideIdx} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                  className="text-center lg:text-left max-w-lg">
-                  <div className="text-5xl mb-4">{slide.icon}</div>
-                  <h3 className="text-2xl font-bold text-white mb-3">{slide.title}</h3>
-                  <p className="text-base text-white/60 leading-relaxed">{slide.body}</p>
-                </motion.div>
-              </AnimatePresence>
+          {/* Terminal-like install output */}
+          <div className="flex-1 flex flex-col lg:flex-row items-stretch min-h-0">
+            <div className="flex-1 flex flex-col min-w-0 p-4 lg:p-6 overflow-hidden">
+              <div className="flex items-center gap-2 mb-3 text-xs font-semibold" style={{ color: `${accent}cc` }}>
+                <span className="text-sm">{isUbuntu ? "⬢" : config.id === "mint" ? "⬢" : "▶"}</span>
+                <span>{osName} Installer</span>
+                <span className="text-white/20 ml-auto text-[10px] font-mono">{Math.floor(progress)}%</span>
+              </div>
+              <div className="flex-1 overflow-y-auto font-mono text-xs leading-relaxed bg-black/30 rounded-xl p-4 border border-white/5" style={{ scrollbarWidth: "thin" }}>
+                {logLines.length === 0 ? (
+                  <div className="text-white/30 animate-pulse">Preparing installation...</div>
+                ) : (
+                  logLines.map((line, i) => {
+                    const isOk = line.includes("[OK]") || line.includes("done.") || line.includes("complete") || line.includes("generated");
+                    const isWarn = line.includes("warning") || line.includes("info:");
+                    const isFile = line.includes("Extracting") || line.includes("vmlinuz") || line.includes("initrd");
+                    const isHeader = line.includes("Installing") || line.includes("Configuring") || line.includes("Starting") || line.includes("Setting") || line.includes("Running");
+                    return (
+                      <div key={i} className={`mb-0.5 ${
+                        isOk ? "text-green-400" : isWarn ? "text-yellow-400" : isFile ? "text-blue-300" : isHeader ? "text-white/80 font-semibold" : "text-white/50"
+                      }`}>
+                        {line}
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={logEndRef} />
+              </div>
             </div>
-            <div className="lg:w-72 shrink-0 flex flex-col items-center justify-center p-8 lg:p-10 lg:border-l border-white/10 gap-4">
+            <div className="lg:w-64 shrink-0 flex flex-col items-center justify-center p-6 lg:p-8 lg:border-l border-white/10 gap-3 bg-black/20">
               <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-                className="w-12 h-12 rounded-full border-[3px] border-t-transparent"
-                style={{ borderColor: `${accent}40`, borderTopColor: accent }} />
-              <p className="text-base text-white/70 font-medium">Installing {osName}…</p>
+                className="w-14 h-14 rounded-full border-[3px] border-t-transparent"
+                style={{ borderColor: `${accent}30`, borderTopColor: accent }} />
+              <p className="text-sm text-white/70 font-medium">Installing {osName}…</p>
               <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
                 <motion.div className="h-full rounded-full" style={{ background: accent }}
                   animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }} />
               </div>
-              <p className="text-xs text-white/30 font-mono">{Math.floor(progress)}%</p>
+              <div className="flex items-center gap-2 text-xs text-white/30 font-mono">
+                <span className={`inline-block w-2 h-2 rounded-full ${progress < 100 ? "bg-green-400 animate-pulse" : "bg-green-500"}`} />
+                {Math.floor(progress)}%
+              </div>
               {fileIdx < config.installFiles.length && (
-                <p className="text-[9px] text-white/20 text-center max-w-[200px] truncate">{config.installFiles[fileIdx]}</p>
+                <div className="text-[9px] text-white/20 max-w-[180px] truncate text-center">{config.installFiles[fileIdx]}</div>
+              )}
+              {progress >= 100 && (
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                  className="text-xs text-green-400 font-semibold bg-green-500/10 px-4 py-2 rounded-lg border border-green-500/20">
+                  ✓ Installation complete
+                </motion.div>
               )}
             </div>
           </div>
