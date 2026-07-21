@@ -113,7 +113,6 @@ const PHYSICAL_ONLY = new Set(["flashing_usb", "disk_prep", "bios_setup", "reboo
 const TRANSITIONS: Record<string, string> = {
   searching: "SEARCH_DONE",
   downloading: "DOWNLOAD_DONE",
-  flashing_usb: "FLASH_DONE",
   disk_prep: "DISK_PREPPED",
   bios_setup: "BIOS_DONE",
   rebooting: "REBOOT_DONE",
@@ -160,8 +159,6 @@ function SimulationPageInner() {
   const [showNotes, setShowNotes] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [showEscHint, setShowEscHint] = useState(false);
-  const autoFullscreenRef = useRef(false);
   const jumpRef = useRef<string | null>(null);
   const historyRef = useRef<string[]>([]);
 
@@ -203,20 +200,10 @@ function SimulationPageInner() {
 
   /* ── Auto-enter fullscreen on first non-idle state ── */
   useEffect(() => {
-    if (current !== "idle" && !autoFullscreenRef.current) {
-      autoFullscreenRef.current = true;
-      setPresentationMode(true);
+    if (current !== "idle") {
       document.documentElement.requestFullscreen?.().catch(() => {});
-      setShowEscHint(true);
     }
   }, [current]);
-
-  /* ── Hide ESC hint after 4s ── */
-  useEffect(() => {
-    if (!showEscHint) return;
-    const t = setTimeout(() => setShowEscHint(false), 4000);
-    return () => clearTimeout(t);
-  }, [showEscHint]);
 
   /* ── Keyboard shortcuts (single handler) ── */
   useEffect(() => {
@@ -248,6 +235,7 @@ function SimulationPageInner() {
         else if (sceneAdvance) sceneAdvance();
       }
       if (e.key === "n" || e.key === "N") {
+        if ((e.target as HTMLElement).closest("[data-no-auto-advance]")) return;
         e.preventDefault();
         const s = String(state.value);
         const evt = TRANSITIONS[s];
@@ -257,7 +245,15 @@ function SimulationPageInner() {
       if (e.key === "b" || e.key === "B") { e.preventDefault(); setShowNotes((v) => !v); setShowNavigator(false); setShowMenu(false); }
       if (e.key === "?" || e.key === "/") { e.preventDefault(); setShowShortcuts((v) => !v); }
       if (e.key === "m" || e.key === "M") { const now = toggleMute(); setMuted(now); }
-      if (e.key === "s" || e.key === "S") { send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" }); }
+      if (e.key === "s" || e.key === "S") {
+        if ((e.target as HTMLElement).closest("[data-no-auto-advance]")) return;
+        // Toggle speed AND advance one scene
+        send({ type: "SET_SPEED", speed: speed === "fast" ? "normal" : "fast" });
+        const s = String(state.value);
+        const evt = TRANSITIONS[s];
+        if (evt) send({ type: evt as never });
+        else if (sceneAdvance) sceneAdvance();
+      }
       if (e.key === "t" || e.key === "T") { cycleTheme(); }
     }
     window.addEventListener("keydown", handleKey);
@@ -707,31 +703,7 @@ function SimulationPageInner() {
           )}
         </AnimatePresence>
 
-        {/* ═══════════════════════════════════════════════════════════
-           ESC HINT — shown when auto-entering fullscreen
-           ═══════════════════════════════════════════════════════════ */}
-        <AnimatePresence>
-          {showEscHint && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.4 }}
-              className="fixed top-16 right-4 z-[60] flex items-center gap-3 rounded-2xl border border-white/10 bg-[#12121a]/95 backdrop-blur-xl px-5 py-3.5 shadow-2xl max-w-[260px]"
-            >
-              <div className="h-9 w-9 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0">
-                <span className="text-accent text-base font-bold">⛶</span>
-              </div>
-              <div>
-                <p className="text-[13px] text-white/80 font-semibold leading-tight">Fullscreen mode</p>
-                <p className="text-[10px] text-white/40 mt-0.5 leading-snug">
-                  Press <kbd className="px-1 py-0.5 rounded bg-white/10 font-mono text-white/60 text-[9px]">ESC</kbd> to exit · {" "}
-                  <kbd className="px-1 py-0.5 rounded bg-white/10 font-mono text-white/60 text-[9px]">Enter</kbd> for next step
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
 
         {/* Footer */}
         <div className="w-full px-4 py-2 text-center text-[10px] text-white/20 border-t border-white/[0.03]">

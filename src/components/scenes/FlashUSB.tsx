@@ -699,7 +699,7 @@ export default function FlashUSB({
 
   if (phase === "plug_in") {
     return (
-      <div className="mx-auto w-full max-w-4xl lg:max-w-5xl relative">
+      <div data-no-auto-advance className="mx-auto w-full max-w-4xl lg:max-w-5xl relative">
         <div className="relative overflow-hidden rounded-2xl">
           <div className="absolute inset-0 bg-gradient-to-b from-[#2a2218] via-[#1e1812] to-[#151010] rounded-2xl" />
           <div className="absolute inset-0 opacity-[0.04]"
@@ -774,7 +774,7 @@ export default function FlashUSB({
 
   if (phase === "eject") {
     return (
-      <div className="mx-auto w-full max-w-lg relative">
+      <div data-no-auto-advance className="mx-auto w-full max-w-lg relative">
         <div className="relative overflow-hidden rounded-2xl">
           <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a24] via-[#12121a] to-[#0a0a10] rounded-2xl" />
           <div className="relative z-10 p-8 lg:p-10">
