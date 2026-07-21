@@ -10,7 +10,6 @@ import Showcase from "../components/shared/Showcase";
 import FakeBrowser from "../components/scenes/FakeBrowser";
 import FileManager from "../components/scenes/FileManager";
 import FlashUSB from "../components/scenes/FlashUSB";
-import UsbReinsert from "../components/scenes/UsbReinsert";
 import Reboot from "../components/scenes/Reboot";
 import BootMenu from "../components/scenes/BootMenu";
 import LiveWelcome from "../components/scenes/LiveWelcome";
@@ -44,7 +43,6 @@ const SCENE_LABELS: Record<string, string> = {
   searching: "Search & Download",
   downloading: "Locate ISO",
   flashing_usb: "Flash USB",
-  usb_reinsert: "Insert USB",
   disk_prep: "Disk Prep",
   bios_setup: "BIOS Setup",
   rebooting: "Reboot",
@@ -68,7 +66,6 @@ const STATUS_TEXT: Record<string, string> = {
   searching: "Searching for the official download page…",
   downloading: "Locating the ISO file in your Downloads folder…",
   flashing_usb: "Flashing the ISO image to your USB drive…",
-  usb_reinsert: "Insert the USB into the target machine…",
   disk_prep: "Shrink Windows partition to create space…",
   bios_setup: "Configuring BIOS/UEFI settings…",
   rebooting: "Restarting and entering BIOS…",
@@ -93,7 +90,6 @@ const SPEAKER_NOTES: Record<string, string> = {
   searching: "This is the browser search step. Explain that you always go to the official website to download — never third-party sites. Point out the URL bar and search results.",
   downloading: "Show the file manager with the downloaded ISO. Explain that ISO files are disk images — like a perfect copy of a DVD. They're typically 2-4 GB.",
   flashing_usb: "Walk through Rufus/Ventoy/BalenaEtcher. Explain that 'flashing' writes the ISO to USB sector-by-sector — it's not just copying files. The USB will become bootable.",
-  usb_reinsert: "This simulates physically removing the USB and plugging it into the target machine. On real hardware, you'd move the USB from your current PC to the one you want to install on.",
   disk_prep: "Open Disk Management in Windows to shrink the existing partition. Right-click the C: drive, select Shrink Volume, and enter the amount of space to free up for the new OS.",
   bios_setup: "Enter BIOS/UEFI setup. Show the different tabs (Main, Advanced, Boot, Exit). Explain Secure Boot, USB Boot priority, and boot order. F10 to save and exit.",
   rebooting: "Explain POST (Power-On Self-Test) and how to enter BIOS. Different brands use different keys: F2, F12, Del, Esc. Show the BIOS splash screen.",
@@ -112,13 +108,12 @@ const SPEAKER_NOTES: Record<string, string> = {
 };
 
 const VM_ONLY = new Set(["select_host_os", "create_vm", "mount_iso", "vm_boot"]);
-const PHYSICAL_ONLY = new Set(["flashing_usb", "usb_reinsert", "disk_prep", "bios_setup", "rebooting", "boot_prompt", "boot_menu"]);
+const PHYSICAL_ONLY = new Set(["flashing_usb", "disk_prep", "bios_setup", "rebooting", "boot_prompt", "boot_menu"]);
 
 const TRANSITIONS: Record<string, string> = {
   searching: "SEARCH_DONE",
   downloading: "DOWNLOAD_DONE",
   flashing_usb: "FLASH_DONE",
-  usb_reinsert: "USB_INSERTED",
   disk_prep: "DISK_PREPPED",
   bios_setup: "BIOS_DONE",
   rebooting: "REBOOT_DONE",
@@ -325,7 +320,6 @@ function SimulationPageInner() {
     }
     if (VM_ONLY.has(s)) return false;
     if (s === "vm_close") return false;
-    if (s === "usb_reinsert" && path === "live-usb") return false;
     if (s === "disk_prep" && path !== "dual-boot") return false;
     if (s === "windows_setup" && (path === "live-usb" || cfg.id !== "windows")) return false;
     if (s === "oobe" && cfg.id !== "windows") return false;
@@ -387,7 +381,6 @@ function SimulationPageInner() {
       case "searching": return <FakeBrowser config={cfg} speed={speed} onComplete={() => send({ type: "SEARCH_DONE" })} />;
       case "downloading": return <FileManager config={cfg} onComplete={() => send({ type: "DOWNLOAD_DONE" })} />;
       case "flashing_usb": return <FlashUSB config={cfg} speed={speed} onComplete={() => send({ type: "FLASH_DONE" })} setRufusPartitionScheme={setRufusPartitionScheme} />;
-      case "usb_reinsert": return <UsbReinsert onComplete={() => send({ type: "USB_INSERTED" })} />;
       case "disk_prep": return <DiskManagement onComplete={() => send({ type: "DISK_PREPPED" })} setDiskShrunk={setDiskShrunk} />;
       case "bios_setup": return <BiosSetup onComplete={() => send({ type: "BIOS_DONE" })} secureBoot={secureBoot} setSecureBoot={setSecureBoot} osId={cfg.id} />;
       case "rebooting": return <Reboot speed={speed} onComplete={() => send({ type: "REBOOT_DONE" })} secureBoot={secureBoot} setSecureBoot={setSecureBoot} vtEnabled={vtEnabled} setVtEnabled={setVtEnabled} bootOrderUSB={bootOrderUSB} setBootOrderUSB={setBootOrderUSB} />;

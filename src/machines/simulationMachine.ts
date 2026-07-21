@@ -4,23 +4,23 @@ import type { InstallPath, HostOS } from "../data/types";
 /**
  * OS simulation state machine — realistic installation flows:
  *
- * Physical dual-boot (Ubuntu):
- *   idle → searching → downloading → flashing_usb → usb_reinsert → bios_setup
- *        → rebooting → boot_prompt → boot_menu → installing
+ * Physical dual-boot:
+ *   idle → searching → downloading → flashing_usb → disk_prep
+ *        → bios_setup → rebooting → boot_prompt → boot_menu → installing
  *        → grub_menu → complete
  *   (Partitioning is handled INSIDE the Install.tsx wizard when "Something else" is selected)
  *
  * Physical dual-boot (Windows):
- *   idle → searching → downloading → flashing_usb → usb_reinsert → disk_prep
+ *   idle → searching → downloading → flashing_usb → disk_prep
  *        → bios_setup → rebooting → boot_prompt → boot_menu → windows_setup
  *        → installing → grub_menu → oobe → complete
  *
- * Physical live-usb (Ubuntu):
+ * Physical live-usb:
  *   idle → searching → downloading → flashing_usb → bios_setup
  *        → rebooting → boot_prompt → boot_menu → live_welcome → live_desktop
  *        → installing → grub_menu → complete
  *
- * VM (Ubuntu):
+ * VM:
  *   idle → select_host_os → searching → downloading → create_vm → mount_iso
  *        → vm_boot → installing → complete
  *
@@ -35,7 +35,6 @@ export type SimEvent =
   | { type: "SEARCH_DONE" }
   | { type: "DOWNLOAD_DONE" }
   | { type: "FLASH_DONE" }
-  | { type: "USB_INSERTED" }
   | { type: "BIOS_DONE" }
   | { type: "BOOT_KEY_PRESSED" }
   | { type: "BOOT_KEY_TIMEOUT" }
@@ -146,17 +145,6 @@ export const simulationMachine = setup({
     flashing_usb: {
       on: {
         FLASH_DONE: [
-          // Live-usb: USB stays connected, skip reinsert
-          { guard: "isLiveUsb", target: "bios_setup" },
-          // Dual-boot / other: USB must be moved to target machine
-          { target: "usb_reinsert" },
-        ],
-      },
-    },
-
-    usb_reinsert: {
-      on: {
-        USB_INSERTED: [
           { guard: "isDualBoot", target: "disk_prep" },
           { target: "bios_setup" },
         ],
@@ -294,7 +282,6 @@ export const SIM_SCENES = [
   "searching",
   "downloading",
   "flashing_usb",
-  "usb_reinsert",
   "disk_prep",
   "bios_setup",
   "rebooting",

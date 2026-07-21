@@ -682,14 +682,19 @@ export default function FlashUSB({
   onComplete: () => void;
   setRufusPartitionScheme: (v: "GPT" | "MBR") => void;
 }) {
-  const [phase, setPhase] = useState<"plug_in" | "tool_select">("plug_in");
+  const [phase, setPhase] = useState<"plug_in" | "tool_select" | "eject">("plug_in");
   const [tool, setTool] = useState<"select" | "rufus" | "ventoy" | "balena" | "unsupported">("select");
   const [overPort, setOverPort] = useState(false);
+  const [ejectPhase, setEjectPhase] = useState<"idle" | "ejecting" | "done">("idle");
 
   const handlePlugIn = useCallback(() => {
     setOverPort(false);
     playUsbConnect();
     setPhase("tool_select");
+  }, []);
+
+  const handleFlashDone = useCallback(() => {
+    setPhase("eject");
   }, []);
 
   if (phase === "plug_in") {
@@ -767,11 +772,123 @@ export default function FlashUSB({
     );
   }
 
+  if (phase === "eject") {
+    return (
+      <div className="mx-auto w-full max-w-lg relative">
+        <div className="relative overflow-hidden rounded-2xl">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a24] via-[#12121a] to-[#0a0a10] rounded-2xl" />
+          <div className="relative z-10 p-8 lg:p-10">
+            <div className="text-center mb-6">
+              <div className="text-xs lg:text-sm uppercase tracking-widest text-amber-300/40 font-medium">Step 3</div>
+              <h2 className="mt-2 text-xl lg:text-2xl font-bold text-white">
+                Safely remove USB
+              </h2>
+              <p className="mt-2 text-sm text-white/40">
+                Always eject the USB safely before unplugging to avoid data corruption.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-6 py-4">
+              {/* System tray eject icon */}
+              <motion.div
+                animate={ejectPhase === "ejecting" ? { x: [0, 0, -60], opacity: [1, 1, 0], scale: [1, 1.1, 0.8] } : {}}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
+                className="relative"
+              >
+                <div className="w-28 h-28 rounded-2xl border border-white/10 bg-white/[0.04] flex items-center justify-center">
+                  <svg viewBox="0 0 60 120" className="w-16 h-32" fill="none">
+                    <rect x="8" y="30" width="44" height="80" rx="4" fill="url(#ejectUsbBody)" stroke="#555" strokeWidth="1" />
+                    <rect x="16" y="6" width="28" height="28" rx="2" fill="url(#ejectUsbMetal)" stroke="#999" strokeWidth="1" />
+                    <circle cx="30" cy="42" r="3" fill={ejectPhase === "done" ? "transparent" : "#22c55e"} opacity="0.9" />
+                    {ejectPhase === "done" && (
+                      <circle cx="30" cy="42" r="3" fill="#ef4444" opacity="0.6">
+                        <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1s" repeatCount="indefinite" />
+                      </circle>
+                    )}
+                    <rect x="14" y="55" width="32" height="16" rx="2" fill="rgba(0,0,0,0.2)" />
+                    <text x="30" y="65" textAnchor="middle" fontSize="6" fontWeight="bold" fill="rgba(255,255,255,0.3)">USB</text>
+                    <defs>
+                      <linearGradient id="ejectUsbBody" x1="8" y1="30" x2="52" y2="110" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stopColor="#4a4a52" /><stop offset="1" stopColor="#1a1a20" />
+                      </linearGradient>
+                      <linearGradient id="ejectUsbMetal" x1="16" y1="6" x2="44" y2="34" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stopColor="#c0c0c0" /><stop offset="1" stopColor="#808080" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </motion.div>
+
+              {/* Windows-style safe eject popup */}
+              <div className="w-full max-w-sm rounded-xl border border-white/10 bg-white/[0.04] p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg">
+                    {ejectPhase === "done" ? "✓" : "💾"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-white/90">Safely Remove Hardware</div>
+                    <div className="text-[11px] text-white/50 truncate">
+                      {ejectPhase === "idle" ? "USB Drive (E:) — Generic Flash Disk" : ejectPhase === "ejecting" ? "Stopping device…" : "'USB Drive' can now be safely removed"}
+                    </div>
+                  </div>
+                </div>
+
+                {ejectPhase === "idle" && (
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={() => { playClick(); setEjectPhase("ejecting"); setTimeout(() => { playUsbConnect(); setEjectPhase("done"); }, 1200); }}
+                      className="flex-1 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity">
+                      Eject
+                    </button>
+                    <button onClick={() => { playClick(); onComplete(); }}
+                      className="rounded-lg border border-white/10 px-4 py-2 text-xs text-white/50 hover:text-white hover:border-white/20 transition-colors">
+                      Skip
+                    </button>
+                  </div>
+                )}
+
+                {ejectPhase === "ejecting" && (
+                  <div className="pt-1">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                      <motion.div initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 1.2, ease: "easeInOut" }}
+                        className="h-full rounded-full bg-amber-400" />
+                    </div>
+                    <div className="mt-1 text-[10px] text-amber-400/60">Safely removing hardware…</div>
+                  </div>
+                )}
+
+                {ejectPhase === "done" && (
+                  <div className="pt-1">
+                    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+                      USB safely ejected. You can now remove it.
+                    </div>
+                    <button onClick={() => { playClick(); onComplete(); }}
+                      className="mt-2 w-full rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity">
+                      Continue →
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* System tray indicator */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                <div className={`h-2 w-2 rounded-full ${ejectPhase === "done" ? "bg-red-400" : "bg-emerald-400"}`} />
+                <span className="text-[10px] text-white/40">
+                  {ejectPhase === "idle" ? "USB connected" : ejectPhase === "ejecting" ? "Ejecting…" : "Safe to remove"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-4xl lg:max-w-5xl space-y-4">
       {tool === "select" && (
         <div className="space-y-4">
           <div className="text-center mb-4">
+            <div className="text-xs lg:text-sm uppercase tracking-widest text-amber-300/40 font-medium">Step 2</div>
             <h2 className="mt-1 text-xl lg:text-2xl xl:text-3xl font-bold text-white text-center">Choose your flashing tool</h2>
             <p className="mt-2 text-sm text-white/40 text-center">Select a tool to write the ISO to your USB drive.</p>
           </div>
@@ -803,19 +920,19 @@ export default function FlashUSB({
       {tool === "rufus" && (
         <div className="space-y-4">
           <button onClick={() => { playClick(); setTool("select"); }} className="text-sm text-white/50 hover:text-white">← Back to tools</button>
-          <RufusTool config={config} speed={speed} onComplete={onComplete} setRufusPartitionScheme={setRufusPartitionScheme} />
+          <RufusTool config={config} speed={speed} onComplete={handleFlashDone} setRufusPartitionScheme={setRufusPartitionScheme} />
         </div>
       )}
       {tool === "ventoy" && (
         <div className="space-y-4">
           <button onClick={() => { playClick(); setTool("select"); }} className="text-sm text-white/50 hover:text-white">← Back to tools</button>
-          <VentoyTool config={config} speed={speed} onComplete={onComplete} />
+          <VentoyTool config={config} speed={speed} onComplete={handleFlashDone} />
         </div>
       )}
       {tool === "balena" && (
         <div className="space-y-4">
           <button onClick={() => { playClick(); setTool("select"); }} className="text-sm text-white/50 hover:text-white">← Back to tools</button>
-          <EtcherTool config={config} speed={speed} onComplete={onComplete} />
+          <EtcherTool config={config} speed={speed} onComplete={handleFlashDone} />
         </div>
       )}
       {tool === "unsupported" && (
