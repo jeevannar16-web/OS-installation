@@ -6,6 +6,11 @@ import { useSceneAdvance } from "../shared/SceneAdvance";
 
 const SUPPORTED_TOOLS = new Set(["rufus", "ventoy", "balena"]);
 
+const USB_DEVICES = [
+  { id: "usb-e", label: "(E:) USB Drive — 32 GB", short: "USB Drive (E:)" },
+  { id: "usb-f", label: "(F:) USB Drive — 16 GB", short: "USB Drive (F:)" },
+];
+
 /* ── Shared progress hook ── */
 function useFlashProgress(phase: string, dur: number, onDone: () => void) {
   const [progress, setProgress] = useState(0);
@@ -28,7 +33,7 @@ function useFlashProgress(phase: string, dur: number, onDone: () => void) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   TOOL BASE — screenshot-based tool UI with progress overlay
+   TOOL BASE — screenshot-based tool UI with target + progress
    ═══════════════════════════════════════════════════════════════ */
 function ToolScreenshot({
   image,
@@ -44,7 +49,8 @@ function ToolScreenshot({
   onComplete: () => void;
 }) {
   const { register: registerAdvance } = useSceneAdvance();
-  const [phase, setPhase] = useState<"idle" | "flashing" | "done">("idle");
+  const [phase, setPhase] = useState<"target" | "flashing" | "done">("target");
+  const [target, setTarget] = useState<string | null>(null);
   const dur = speed === "fast" ? 1500 : 4000;
   const progress = useFlashProgress(phase, dur, () => setPhase("done"));
 
@@ -52,13 +58,47 @@ function ToolScreenshot({
     if (phase === "done") registerAdvance(() => onComplete());
   }, [phase, registerAdvance, onComplete]);
 
+  if (phase === "target") {
+    return (
+      <div className="mx-auto w-full max-w-md rounded-xl border border-white/10 bg-white/5 p-6 space-y-4">
+        <h3 className="text-lg font-bold text-white text-center">Select target USB drive</h3>
+        <p className="text-sm text-white/50 text-center">Choose the USB drive to flash {config.iso.filename} to.</p>
+        <div className="space-y-2">
+          {USB_DEVICES.map((d) => (
+            <button
+              key={d.id}
+              onClick={() => { playClick(); setTarget(d.id); }}
+              className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${
+                target === d.id
+                  ? "border-accent bg-accent/20 text-white"
+                  : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>🔌</span>
+                <span className="font-medium">{d.label}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+        <button
+          disabled={!target}
+          onClick={() => { playClick(); setPhase("flashing"); }}
+          className="w-full rounded-lg bg-accent py-2.5 text-sm font-bold text-white hover:bg-accent-soft transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Flash to {USB_DEVICES.find((d) => d.id === target)?.short ?? "USB"} →
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-3xl rounded-lg overflow-hidden shadow-2xl shadow-black/50 relative">
       <img src={image} alt={name} className="w-full h-auto" />
 
-      {/* Overlay for flashing */}
       {phase === "flashing" && (
         <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-4">
+          <div className="text-white/70 text-sm">{USB_DEVICES.find((d) => d.id === target)?.label}</div>
           <div className="w-64 h-3 rounded-full bg-white/20 overflow-hidden">
             <div className="h-full rounded-full bg-gradient-to-r from-accent to-emerald-400 transition-all duration-100" style={{ width: `${progress}%` }} />
           </div>
@@ -66,30 +106,18 @@ function ToolScreenshot({
         </div>
       )}
 
-      {/* Done overlay */}
       {phase === "done" && (
         <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-4">
           <div className="h-16 w-16 rounded-full bg-emerald-500/30 border-2 border-emerald-400 flex items-center justify-center">
             <span className="text-3xl text-emerald-400">✓</span>
           </div>
           <div className="text-white text-lg font-bold">Flash Complete!</div>
+          <div className="text-white/60 text-sm">{USB_DEVICES.find((d) => d.id === target)?.label}</div>
           <button
             onClick={() => { playClick(); onComplete(); }}
             className="rounded-lg bg-emerald-500 px-6 py-2 text-sm font-bold text-white hover:bg-emerald-600 transition-colors"
           >
             Continue →
-          </button>
-        </div>
-      )}
-
-      {/* START button overlay */}
-      {phase === "idle" && (
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 flex justify-center">
-          <button
-            onClick={() => { playClick(); setPhase("flashing"); }}
-            className="rounded-lg bg-accent px-8 py-2.5 text-sm font-bold text-white hover:bg-accent-soft transition-colors shadow-lg"
-          >
-            START — Flash {config.iso.filename}
           </button>
         </div>
       )}
