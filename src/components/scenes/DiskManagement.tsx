@@ -16,10 +16,11 @@ export default function DiskManagement({
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [showModal, setShowModal] = useState(false);
-  const [shrinkAmount, setShrinkAmount] = useState("30720"); // 30 GB in MB
+  const [shrinkAmount, setShrinkAmount] = useState("30720");
   const [progress, setProgress] = useState(0);
 
   const cDriveRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef(0);
 
   useEffect(() => {
     if (phase === "shrunk") {
@@ -64,7 +65,6 @@ export default function DiskManagement({
 
     const duration = 2500;
     const start = performance.now();
-    let raf = 0;
 
     const tick = (now: number) => {
       const elapsed = now - start;
@@ -72,17 +72,19 @@ export default function DiskManagement({
       setProgress(pct);
 
       if (pct < 100) {
-        raf = requestAnimationFrame(tick);
+        rafRef.current = requestAnimationFrame(tick);
       } else {
         playSuccess();
         setPhase("shrunk");
         setDiskShrunk(true);
       }
     };
-    raf = requestAnimationFrame(tick);
-
-    return () => cancelAnimationFrame(raf);
+    rafRef.current = requestAnimationFrame(tick);
   }
+
+  useEffect(() => {
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">

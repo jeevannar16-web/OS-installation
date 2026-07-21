@@ -18,7 +18,7 @@ const LOADING_TEXTS = [
   "Welcome to Windows 11",
 ];
 
-export default function WindowsOOBE({ onComplete }: { osName: string; onComplete: () => void }) {
+export default function WindowsOOBE({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState<OobeStep>("region");
   const [region, setRegion] = useState("United States");
   const [kbLayout, setKbLayout] = useState("US");

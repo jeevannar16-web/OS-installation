@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playClick } from "../shared/sounds";
-import type { OSConfig } from "../../data/types";
+
 
 type SetupStep = "language" | "keyboard" | "option" | "product_key" | "edition" | "license" | "drive" | "summary" | "installing";
 
@@ -34,7 +34,7 @@ function StepDots({ count, current }: { count: number; current: number }) {
   );
 }
 
-export default function WindowsSetup({ onComplete }: { config: OSConfig; onComplete: () => void }) {
+export default function WindowsSetup({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState<SetupStep>("language");
   const [lang, setLang] = useState("English (United States)");
   const [keyboard, setKeyboard] = useState("US");

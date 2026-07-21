@@ -393,7 +393,7 @@ function SimulationPageInner() {
       case "rebooting": return <Reboot speed={speed} onComplete={() => send({ type: "REBOOT_DONE" })} secureBoot={secureBoot} setSecureBoot={setSecureBoot} vtEnabled={vtEnabled} setVtEnabled={setVtEnabled} bootOrderUSB={bootOrderUSB} setBootOrderUSB={setBootOrderUSB} />;
       case "boot_prompt": return <BootPrompt onComplete={() => send({ type: "BOOT_KEY_PRESSED" })} onError={() => send({ type: "BOOT_KEY_TIMEOUT" })} />;
       case "boot_menu": return <BootMenu config={cfg} onComplete={() => send({ type: path === "live-usb" ? "LIVE_TRY" : "BOOT_SELECTED" })} />;
-      case "windows_setup": return <WindowsSetup config={cfg} onComplete={() => send({ type: "SETUP_DONE" })} />;
+      case "windows_setup": return <WindowsSetup onComplete={() => send({ type: "SETUP_DONE" })} />;
       case "live_welcome": return <LiveWelcome config={cfg} onTry={() => send({ type: "LIVE_TRY" })} onInstall={() => send({ type: "LIVE_INSTALL" })} />;
       case "live_desktop": return <LiveDesktop config={cfg} onInstallClick={() => send({ type: "LIVE_INSTALL" })} />;
       case "create_vm": return <CreateVM config={cfg} onComplete={() => send({ type: "VM_CREATED" })} />;
@@ -404,7 +404,7 @@ function SimulationPageInner() {
         : <Install config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} path={path} />;
       case "grub_menu": return <GrubMenu config={cfg} onComplete={() => send({ type: "GRUB_DONE" })} />;
       case "oobe": return cfg.id === "windows"
-        ? <WindowsOOBE osName={cfg.branding.name} onComplete={() => send({ type: "OOBE_DONE" })} />
+        ? <WindowsOOBE onComplete={() => send({ type: "OOBE_DONE" })} />
         : <Done config={cfg} path={path ?? ""} onBack={goBack} />;
       case "vm_close": return <VmClose config={cfg} onComplete={() => send({ type: "VM_CLOSED" })} />;
       case "complete": return <Done config={cfg} path={path ?? ""} onBack={goBack} />;
