@@ -735,35 +735,32 @@ function SimulationPageInner() {
         </AnimatePresence>
 
         {/* ═══════════════════════════════════════════════════════════
-            PANELS — Step Guide (inline bar)
+            PANELS — Step Guide (floating overlay)
             ═══════════════════════════════════════════════════════════ */}
         <AnimatePresence>
           {showNotes && getGuide(current) && (() => {
             const guide = getGuide(current)!;
             return (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="w-full px-4 py-3 bg-[#1a1a2e]/80 border-t border-[#7c5cff]/20 shrink-0 overflow-hidden"
+                initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.97 }}
+                className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-lg rounded-xl border border-[#7c5cff]/20 bg-[#12121a]/95 backdrop-blur-xl shadow-2xl p-4"
               >
-                <div className="max-w-6xl mx-auto space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#7c5cff] text-sm">◉</span>
-                    <span className="text-[11px] font-bold text-white/90">What to do:</span>
-                    <span className="text-[11px] text-white/70">{guide.instruction}</span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] uppercase tracking-widest text-[#7c5cff] font-semibold">Step Guide</span>
+                  <button onClick={() => setShowNotes(false)} className="text-white/30 hover:text-white/50 text-xs">✕</button>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-[12px] font-bold text-white/90">{guide.instruction}</div>
+                  <div className="text-[11px] text-white/50 leading-relaxed">{guide.description}</div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-emerald-400 text-[10px] mt-0.5">▶</span>
+                    <span className="text-[11px] text-white/60"><span className="text-emerald-400 font-semibold">Do:</span> {guide.action}</span>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-[#7c5cff] text-sm mt-0.5">◆</span>
-                    <span className="text-[11px] text-white/50 leading-relaxed">{guide.description}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-emerald-400 text-sm mt-0.5">▶</span>
-                    <span className="text-[11px] text-white/60 leading-relaxed"><span className="text-emerald-400 font-semibold">Action:</span> {guide.action}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-cyan-400 text-sm mt-0.5">→</span>
-                    <span className="text-[11px] text-white/40 leading-relaxed"><span className="text-cyan-400 font-semibold">Next:</span> {guide.next}</span>
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-cyan-400 text-[10px] mt-0.5">→</span>
+                    <span className="text-[11px] text-white/40"><span className="text-cyan-400 font-semibold">Next:</span> {guide.next}</span>
                   </div>
                 </div>
               </motion.div>
