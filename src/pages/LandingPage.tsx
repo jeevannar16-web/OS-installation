@@ -577,6 +577,7 @@ export default function LandingPage() {
   const [selectedOS, setSelectedOS] = useState<SelectedOS>("ubuntu");
   const [showHelp, setShowHelp] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+
   const [bootSkipped, setBootSkipped] = useState(() => !!sessionStorage.getItem("boot_skipped"));
   const guideRef = useRef<HTMLDivElement>(null);
 
@@ -601,6 +602,21 @@ export default function LandingPage() {
 
   const activeOS = OS_LIST.find((o) => o.id === selectedOS);
   const outcomes = OS_OUTCOMES[selectedOS];
+
+  /* ── S key skips landing page ── */
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "s" || e.key === "S") {
+        if ((e.target as HTMLElement).closest("input, textarea, [contenteditable]")) return;
+        e.preventDefault();
+        const os = selectedOS;
+        const path = selected || outcomes?.[0]?.id;
+        if (path) navigate(`/${os}/${path}`);
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [selectedOS, selected, navigate, outcomes]);
 
   function start() {
     if (!selected || !activeOS) return;

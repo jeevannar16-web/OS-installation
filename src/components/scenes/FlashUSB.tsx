@@ -637,7 +637,7 @@ function PcTower({ glowing }: { glowing: boolean }) {
           className="absolute -inset-6 rounded-2xl bg-accent/20 blur-xl pointer-events-none"
         />
       )}
-      <svg viewBox="0 0 120 160" className="w-28 h-36 sm:w-36 sm:h-44 lg:w-44 lg:h-52 xl:w-52 xl:h-60" fill="none">
+      <svg viewBox="0 0 120 160" className="w-20 h-26 sm:w-24 sm:h-32 lg:w-28 lg:h-36 xl:w-32 xl:h-40" fill="none">
         <rect x="10" y="5" width="100" height="150" rx="6" fill="url(#plugTowerBody)" stroke="#444" strokeWidth="1.5" />
         <rect x="16" y="10" width="88" height="140" rx="3" fill="#1a1a1e" />
         <circle cx="60" cy="20" r="4" fill="none" stroke="#555" strokeWidth="1" />
@@ -682,9 +682,10 @@ export default function FlashUSB({
   onComplete: () => void;
   setRufusPartitionScheme: (v: "GPT" | "MBR") => void;
 }) {
-  const [phase, setPhase] = useState<"plug_in" | "tool_select" | "eject" | "reinsert">("plug_in");
+  const [phase, setPhase] = useState<"plug_in" | "tool_select" | "eject" | "disconnected" | "reinsert">("plug_in");
   const [tool, setTool] = useState<"select" | "rufus" | "ventoy" | "balena" | "unsupported">("select");
   const [overPort, setOverPort] = useState(false);
+  const [plugging, setPlugging] = useState(false);
   const [ejectPhase, setEjectPhase] = useState<"idle" | "ejecting" | "done">("idle");
 
   const handlePlugIn = useCallback(() => {
@@ -707,18 +708,18 @@ export default function FlashUSB({
               backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255,220,160,0.1) 3px, rgba(255,220,160,0.1) 4px), repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(255,220,160,0.05) 8px, rgba(255,220,160,0.05) 9px)"
             }}
           />
-          <div className="relative z-10 p-8 lg:p-10">
-            <div className="text-center mb-8">
-              <div className="text-xs lg:text-sm uppercase tracking-widest text-amber-300/40 font-medium">Step 1</div>
-              <h2 className="mt-2 text-xl lg:text-2xl xl:text-3xl font-bold text-white">
+          <div className="relative z-10 p-4 sm:p-6 lg:p-8">
+            <div className="text-center mb-4">
+              <div className="text-xs uppercase tracking-widest text-amber-300/40 font-medium">Step 1</div>
+              <h2 className="mt-1 text-lg sm:text-xl lg:text-2xl font-bold text-white">
                 Plug a USB drive into your computer
               </h2>
-              <p className="mt-2 text-sm lg:text-base text-white/40">
+              <p className="mt-1 text-xs sm:text-sm text-white/40">
                 You need a USB drive with at least {config.iso.size} of space to flash the ISO onto.
               </p>
             </div>
 
-            <div className="relative flex flex-col sm:flex-row items-center justify-center gap-12 sm:gap-24 py-8">
+            <div className="relative flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 lg:gap-16 py-4">
               <motion.div
                 draggable
                 onDragStart={() => {}}
@@ -728,8 +729,8 @@ export default function FlashUSB({
                 whileDrag={{ scale: 1.08, rotate: -8, zIndex: 50, filter: "drop-shadow(0 8px 24px rgba(124,92,255,0.4))" }}
                 className="cursor-grab active:cursor-grabbing select-none"
               >
-                <UsbStickSvg className="w-20 h-32 sm:w-24 sm:h-40 lg:w-28 lg:h-48 xl:w-32 xl:h-56 drop-shadow-lg" />
-                <div className="text-center mt-2 text-xs lg:text-sm xl:text-base text-amber-200/40 font-semibold">drag me →</div>
+                <UsbStickSvg className="w-14 h-24 sm:w-16 sm:h-28 lg:w-20 lg:h-32 xl:w-24 xl:h-36 drop-shadow-lg" />
+                <div className="text-center mt-1 text-xs text-amber-200/40 font-semibold">drag me →</div>
               </motion.div>
 
               <div
@@ -738,7 +739,7 @@ export default function FlashUSB({
                 onDrop={(e) => { e.preventDefault(); handlePlugIn(); }}
               >
                 <PcTower glowing={overPort} />
-                <div className="text-center mt-2">
+                <div className="text-center mt-1">
                   <div className={`text-xs font-medium ${overPort ? "text-accent" : "text-white/30"}`}>
                     {overPort ? "Release to insert" : "Drop USB here"}
                   </div>
@@ -761,11 +762,39 @@ export default function FlashUSB({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="text-center text-sm text-accent font-medium"
+                className="text-center text-xs text-accent font-medium"
               >
                 Release to connect
               </motion.div>
             )}
+
+            <div className="mt-4 flex items-center gap-3">
+              <div className="h-px flex-1 bg-white/[0.06]" />
+              <span className="text-[9px] text-white/20 uppercase tracking-wider">or</span>
+              <div className="h-px flex-1 bg-white/[0.06]" />
+            </div>
+
+            <div className="mt-3 max-w-xs mx-auto">
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3 space-y-2">
+                <div className="text-[10px] text-white/50">Select a USB port:</div>
+                {[
+                  { id: "front", label: "Front USB 2.0" },
+                  { id: "front-3", label: "Front USB 3.0" },
+                  { id: "rear", label: "Rear USB 3.0 (Recommended)" },
+                ].map((port) => (
+                  <button key={port.id} onClick={() => { if (!plugging) { playClick(); setPlugging(true); setTimeout(() => { playUsbConnect(); setPhase("tool_select"); }, 600); } }}
+                    disabled={plugging}
+                    className={`w-full rounded-lg border px-3 py-2 text-left text-xs transition-all ${plugging ? "border-accent/30 bg-accent/10 text-accent" : "border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:border-white/20"}`}>
+                    <div className="flex items-center gap-2">
+                      <span>{plugging ? "⏳" : "🔌"}</span>
+                      <span>{port.label}</span>
+                      {port.id === "rear" && !plugging && <span className="ml-auto text-[9px] text-emerald-400/60">best</span>}
+                      {plugging && <span className="ml-auto text-[9px] text-accent/60">connecting…</span>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -777,26 +806,26 @@ export default function FlashUSB({
       <div data-no-auto-advance className="mx-auto w-full max-w-lg relative">
         <div className="relative overflow-hidden rounded-2xl">
           <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a24] via-[#12121a] to-[#0a0a10] rounded-2xl" />
-          <div className="relative z-10 p-8 lg:p-10">
-            <div className="text-center mb-6">
-              <div className="text-xs lg:text-sm uppercase tracking-widest text-amber-300/40 font-medium">Step 3 — Safely Eject</div>
-              <h2 className="mt-2 text-xl lg:text-2xl font-bold text-white">
+          <div className="relative z-10 p-4 sm:p-6 lg:p-8">
+            <div className="text-center mb-4">
+              <div className="text-xs uppercase tracking-widest text-amber-300/40 font-medium">Step 3 — Safely Eject</div>
+              <h2 className="mt-1 text-lg sm:text-xl lg:text-2xl font-bold text-white">
                 Safely remove the USB drive
               </h2>
-              <p className="mt-2 text-sm text-white/40">
-                Before unplugging, you must safely eject the USB through the system tray. This ensures all cached write operations are flushed to the drive and prevents file system corruption. On Windows, click the "Safely Remove Hardware" icon in the notification area and select "Eject".
+              <p className="mt-1 text-xs sm:text-sm text-white/40">
+                Before unplugging, you must safely eject the USB through the system tray. Data is still being written in the background even after the tool says "Done" — ejecting flushes the write cache and prevents corruption. If you skip this step, the USB may not be recognized as bootable and you won't see it in the boot menu. After ejection, you'll reconnect the drive so the system detects it fresh.
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-6 py-4">
+            <div className="flex flex-col items-center gap-3 py-2">
               {/* System tray eject icon */}
               <motion.div
                 animate={ejectPhase === "ejecting" ? { x: [0, 0, -60], opacity: [1, 1, 0], scale: [1, 1.1, 0.8] } : {}}
                 transition={{ duration: 0.8, ease: "easeInOut" }}
                 className="relative"
               >
-                <div className="w-28 h-28 rounded-2xl border border-white/10 bg-white/[0.04] flex items-center justify-center">
-                  <svg viewBox="0 0 60 120" className="w-16 h-32" fill="none">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-white/10 bg-white/[0.04] flex items-center justify-center">
+                  <svg viewBox="0 0 60 120" className="w-10 h-20 sm:w-12 sm:h-24" fill="none">
                     <rect x="8" y="30" width="44" height="80" rx="4" fill="url(#ejectUsbBody)" stroke="#555" strokeWidth="1" />
                     <rect x="16" y="6" width="28" height="28" rx="2" fill="url(#ejectUsbMetal)" stroke="#999" strokeWidth="1" />
                     <circle cx="30" cy="42" r="3" fill={ejectPhase === "done" ? "transparent" : "#22c55e"} opacity="0.9" />
@@ -820,49 +849,49 @@ export default function FlashUSB({
               </motion.div>
 
               {/* Windows-style safe eject popup */}
-              <div className="w-full max-w-sm rounded-xl border border-white/10 bg-white/[0.04] p-4 space-y-3">
+              <div className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] p-3 space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">
                     {ejectPhase === "done" ? "✓" : "💾"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-white/90">Safely Remove Hardware</div>
-                    <div className="text-[11px] text-white/50 truncate">
+                    <div className="text-xs font-semibold text-white/90">Safely Remove Hardware</div>
+                    <div className="text-[10px] text-white/50 truncate">
                       {ejectPhase === "idle" ? "USB Drive (E:) — Generic Flash Disk" : ejectPhase === "ejecting" ? "Stopping device…" : "'USB Drive' can now be safely removed"}
                     </div>
                   </div>
                 </div>
 
                 {ejectPhase === "idle" && (
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex gap-2">
                     <button onClick={() => { playClick(); setEjectPhase("ejecting"); setTimeout(() => { playUsbConnect(); setEjectPhase("done"); }, 1200); }}
-                      className="flex-1 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity">
+                      className="flex-1 rounded-lg bg-accent px-3 py-1.5 text-[10px] font-semibold text-white hover:opacity-90 transition-opacity">
                       Eject
                     </button>
                     <button onClick={() => { playClick(); onComplete(); }}
-                      className="rounded-lg border border-white/10 px-4 py-2 text-xs text-white/50 hover:text-white hover:border-white/20 transition-colors">
+                      className="rounded-lg border border-white/10 px-3 py-1.5 text-[10px] text-white/50 hover:text-white hover:border-white/20 transition-colors">
                       Skip
                     </button>
                   </div>
                 )}
 
                 {ejectPhase === "ejecting" && (
-                  <div className="pt-1">
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                  <div>
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
                       <motion.div initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 1.2, ease: "easeInOut" }}
                         className="h-full rounded-full bg-amber-400" />
                     </div>
-                    <div className="mt-1 text-[10px] text-amber-400/60">Safely removing hardware…</div>
+                    <div className="mt-0.5 text-[9px] text-amber-400/60">Safely removing hardware…</div>
                   </div>
                 )}
 
                 {ejectPhase === "done" && (
-                  <div className="pt-1">
-                    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+                  <div>
+                    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2 py-1.5 text-[10px] text-emerald-400">
                       'USB Drive (E:)' has been safely ejected. All data has been flushed and it is now safe to unplug the device from your computer.
                     </div>
-                    <button onClick={() => { playClick(); setPhase("reinsert"); }}
-                      className="mt-2 w-full rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-colors">
+                    <button onClick={() => { playClick(); setPhase("disconnected"); }}
+                      className="mt-1.5 w-full rounded-lg bg-accent px-3 py-1.5 text-[10px] font-semibold text-white hover:opacity-90 transition-colors">
                       Continue →
                     </button>
                   </div>
@@ -870,9 +899,9 @@ export default function FlashUSB({
               </div>
 
               {/* System tray indicator */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                <div className={`h-2 w-2 rounded-full ${ejectPhase === "done" ? "bg-red-400" : "bg-emerald-400"}`} />
-                <span className="text-[10px] text-white/40">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                <div className={`h-1.5 w-1.5 rounded-full ${ejectPhase === "done" ? "bg-red-400" : "bg-emerald-400"}`} />
+                <span className="text-[9px] text-white/40">
                   {ejectPhase === "idle" ? "USB Drive (E:) — Connected" : ejectPhase === "ejecting" ? "Stopping device — do not unplug yet…" : "Safe to remove hardware"}
                 </span>
               </div>
@@ -883,70 +912,105 @@ export default function FlashUSB({
     );
   }
 
-  if (phase === "reinsert") {
+  if (phase === "disconnected") {
     return (
-      <div data-no-auto-advance className="mx-auto w-full max-w-4xl lg:max-w-5xl relative">
+      <div data-no-auto-advance className="mx-auto w-full max-w-lg relative">
+        <div className="relative overflow-hidden rounded-2xl">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a24] via-[#12121a] to-[#0a0a10] rounded-2xl" />
+          <div className="relative z-10 p-4 sm:p-6 lg:p-8 text-center">
+            <div className="text-xs uppercase tracking-widest text-red-300/40 font-medium">Step 4 — Disconnected</div>
+            <h2 className="mt-1 text-lg sm:text-xl lg:text-2xl font-bold text-white">
+              USB drive disconnected
+            </h2>
+            <p className="mt-1 text-xs sm:text-sm text-white/40 max-w-md mx-auto">
+              The USB has been safely ejected and unplugged. The drive is now physically removed from your computer. To continue, reconnect the USB so the system can detect the bootable media.
+            </p>
+
+            <div className="flex flex-col items-center gap-4 py-6">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-red-500/20 bg-red-500/[0.06] flex items-center justify-center">
+                <svg viewBox="0 0 60 120" className="w-10 h-20 sm:w-12 sm:h-24 opacity-40" fill="none">
+                  <rect x="8" y="30" width="44" height="80" rx="4" fill="#4a4a52" stroke="#555" strokeWidth="1" />
+                  <rect x="16" y="6" width="28" height="28" rx="2" fill="#808080" stroke="#999" strokeWidth="1" />
+                  <circle cx="30" cy="42" r="3" fill="#ef4444" opacity="0.5" />
+                  <rect x="14" y="55" width="32" height="16" rx="2" fill="rgba(0,0,0,0.2)" />
+                  <text x="30" y="65" textAnchor="middle" fontSize="6" fontWeight="bold" fill="rgba(255,255,255,0.15)">USB</text>
+                </svg>
+              </div>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                <div className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                <span className="text-[9px] text-white/40">USB Drive (E:) — Disconnected</span>
+              </div>
+              <button onClick={() => { playClick(); setPhase("reinsert"); }}
+                className="mt-2 rounded-lg bg-accent px-6 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity">
+                Reconnect USB →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "reinsert") {
+    const [connecting, setConnecting] = useState(false);
+    return (
+      <div data-no-auto-advance className="mx-auto w-full max-w-lg relative">
         <div className="relative overflow-hidden rounded-2xl">
           <div className="absolute inset-0 bg-gradient-to-b from-[#1a2420] via-[#121a16] to-[#0a100e] rounded-2xl" />
-          <div className="relative z-10 p-8 lg:p-10">
-            <div className="text-center mb-8">
-              <div className="text-xs lg:text-sm uppercase tracking-widest text-emerald-300/40 font-medium">Step 4 — Reconnect</div>
-              <h2 className="mt-2 text-xl lg:text-2xl xl:text-3xl font-bold text-white">
+          <div className="relative z-10 p-4 sm:p-6 lg:p-8">
+            <div className="text-center mb-4">
+              <div className="text-xs uppercase tracking-widest text-emerald-300/40 font-medium">Step 5 — Reconnect</div>
+              <h2 className="mt-1 text-lg sm:text-xl lg:text-2xl font-bold text-white">
                 Reconnect the USB drive
               </h2>
-              <p className="mt-2 text-sm lg:text-base text-white/40">
-                Now plug the USB back into your computer. Windows will detect it as a bootable removable device. The ISO has been written successfully and your USB drive is now ready to boot the installer on any compatible system.
+              <p className="mt-1 text-xs sm:text-sm text-white/40">
+                Now plug the USB back into your computer. The ISO has been written successfully and your USB drive is now ready to boot the installer on any compatible system.
               </p>
             </div>
 
-            <div className="relative flex flex-col sm:flex-row items-center justify-center gap-12 sm:gap-24 py-8">
-              <motion.div
-                draggable
-                onDragStart={() => {}}
-                onDragEnd={() => { if (!overPort) setOverPort(false); }}
-                animate={{ y: [0, -6, 0] }}
-                transition={{ y: { repeat: Infinity, duration: 2.5, ease: "easeInOut" } }}
-                whileDrag={{ scale: 1.08, rotate: -8, zIndex: 50, filter: "drop-shadow(0 8px 24px rgba(16,185,129,0.4))" }}
-                className="cursor-grab active:cursor-grabbing select-none"
-              >
-                <UsbStickSvg className="w-20 h-32 sm:w-24 sm:h-40 lg:w-28 lg:h-48 xl:w-32 xl:h-56 drop-shadow-lg" />
-                <div className="text-center mt-2 text-xs lg:text-sm xl:text-base text-emerald-200/40 font-semibold">reconnect →</div>
-              </motion.div>
-
-              <div
-                onDragOver={(e) => { e.preventDefault(); setOverPort(true); }}
-                onDragLeave={() => setOverPort(false)}
-                onDrop={(e) => { e.preventDefault(); setOverPort(false); playUsbConnect(); onComplete(); }}
-              >
-                <PcTower glowing={overPort} />
-                <div className="text-center mt-2">
-                  <div className={`text-xs font-medium ${overPort ? "text-emerald-400" : "text-white/30"}`}>
-                    {overPort ? "Release to connect bootable USB" : "Drag USB to the PC"}
-                  </div>
+            <div className="flex flex-col items-center gap-3 py-4">
+              <div className="flex items-center justify-center gap-6 sm:gap-10">
+                <div className="w-14 h-24 sm:w-16 sm:h-28 lg:w-20 lg:h-32 drop-shadow-lg">
+                  <UsbStickSvg className="w-full h-full" />
+                </div>
+                <div className="text-white/20 text-lg">→</div>
+                <div className="relative">
+                  <PcTower glowing={connecting} />
                 </div>
               </div>
 
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden sm:block">
-                {overPort && (
-                  <motion.div
-                    initial={{ scaleX: 0, opacity: 0 }}
-                    animate={{ scaleX: 1, opacity: 0.3 }}
-                    className="w-24 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent origin-left"
-                  />
-                )}
+              <div className="w-full max-w-xs space-y-2 mt-2">
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3 space-y-2">
+                  <div className="text-[10px] text-white/50">Select a USB port:</div>
+                  {[
+                    { id: "front-1", label: "Front USB 2.0" },
+                    { id: "front-2", label: "Front USB 3.0" },
+                    { id: "rear", label: "Rear USB 3.0 (Recommended)" },
+                  ].map((port) => (
+                    <button key={port.id} onClick={() => { if (!connecting) { playClick(); setConnecting(true); setTimeout(() => { playUsbConnect(); onComplete(); }, 800); } }}
+                      disabled={connecting}
+                      className={`w-full rounded-lg border px-3 py-2 text-left text-xs transition-all ${connecting ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" : "border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:border-white/20"}`}>
+                      <div className="flex items-center gap-2">
+                        <span>{connecting ? "⏳" : "🔌"}</span>
+                        <span>{port.label}</span>
+                        {port.id === "rear" && !connecting && <span className="ml-auto text-[9px] text-emerald-400/60">best</span>}
+                        {connecting && <span className="ml-auto text-[9px] text-emerald-400/60">detecting…</span>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {overPort && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="text-center text-sm text-emerald-400 font-medium"
-              >
-                Release to connect
-              </motion.div>
-            )}
+              {connecting && (
+                <div className="w-full max-w-xs">
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
+                    <motion.div initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 0.8, ease: "easeInOut" }}
+                      className="h-full rounded-full bg-emerald-400" />
+                  </div>
+                  <div className="mt-0.5 text-[9px] text-emerald-400/60">Connecting…</div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -956,13 +1020,13 @@ export default function FlashUSB({
   return (
     <div className="mx-auto w-full max-w-4xl lg:max-w-5xl space-y-4">
       {tool === "select" && (
-        <div className="space-y-4">
-          <div className="text-center mb-4">
-            <div className="text-xs lg:text-sm uppercase tracking-widest text-amber-300/40 font-medium">Step 2</div>
-            <h2 className="mt-1 text-xl lg:text-2xl xl:text-3xl font-bold text-white text-center">Choose your flashing tool</h2>
-            <p className="mt-2 text-sm text-white/40 text-center">Select a tool to write the ISO to your USB drive.</p>
+        <div className="space-y-2">
+          <div className="text-center">
+            <div className="text-xs uppercase tracking-widest text-amber-300/40 font-medium">Step 2</div>
+            <h2 className="mt-1 text-lg sm:text-xl font-bold text-white text-center">Choose your flashing tool</h2>
+            <p className="mt-1 text-xs text-white/40 text-center">Select a tool to write the ISO to your USB drive.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-3">
             {config.flashers.map((t) => {
               const ok = SUPPORTED_TOOLS.has(t.id);
               const isRufus = t.id === "rufus";
@@ -970,16 +1034,16 @@ export default function FlashUSB({
               const isEtcher = t.id === "balena";
               return (
                 <button key={t.id} onClick={() => { playClick(); setTool(t.id === "rufus" || t.id === "ventoy" || t.id === "balena" ? t.id : "unsupported"); }}
-                  className="rounded-xl border border-white/10 bg-white/5 p-4 lg:p-6 text-center transition-all hover:bg-white/10 group">
-                  <div className="w-16 h-16 mx-auto mb-3 rounded-lg overflow-hidden border border-white/10 group-hover:border-white/20 transition-colors">
+                  className="rounded-xl border border-white/10 bg-white/5 p-3 text-center transition-all hover:bg-white/10 group">
+                  <div className="w-12 h-12 mx-auto mb-2 rounded-lg overflow-hidden border border-white/10 group-hover:border-white/20 transition-colors">
                     {isRufus && <img src="/images/flash-tools/rufus-screenshot.png" alt="Rufus" className="w-full h-full object-cover" />}
                     {isVentoy && <img src="/images/flash-tools/ventoy-screenshot.png" alt="Ventoy" className="w-full h-full object-cover" />}
                     {isEtcher && <img src="/images/flash-tools/etcher-screenshot.png" alt="BalenaEtcher" className="w-full h-full object-cover" />}
                     {!isRufus && !isVentoy && !isEtcher && <div className="w-full h-full flex items-center justify-center text-2xl bg-white/5">🔧</div>}
                   </div>
-                  <div className="text-sm lg:text-base font-bold text-white/90">{t.name}</div>
-                  <div className="mt-1 text-xs lg:text-sm text-white/50">{t.note}</div>
-                  {!ok && <div className="mt-2 text-xs lg:text-sm text-amber-400/80 font-medium">Coming soon</div>}
+                  <div className="text-xs font-bold text-white/90">{t.name}</div>
+                  <div className="mt-0.5 text-[10px] text-white/50">{t.note}</div>
+                  {!ok && <div className="mt-1 text-[10px] text-amber-400/80 font-medium">Coming soon</div>}
                 </button>
               );
             })}
