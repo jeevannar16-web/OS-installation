@@ -11,21 +11,9 @@ type BiosTab = "main" | "advanced" | "security" | "boot" | "exit";
 export default function Reboot({
   speed,
   onComplete,
-  secureBoot,
-  setSecureBoot,
-  vtEnabled,
-  setVtEnabled,
-  bootOrderUSB,
-  setBootOrderUSB,
 }: {
   speed: "normal" | "fast";
   onComplete: () => void;
-  secureBoot: boolean;
-  setSecureBoot: (v: boolean) => void;
-  vtEnabled: boolean;
-  setVtEnabled: (v: boolean) => void;
-  bootOrderUSB: boolean;
-  setBootOrderUSB: (v: boolean) => void;
 }) {
   const { register: registerAdvance } = useSceneAdvance();
   const bios = useMemo(() => getRandomBios(), []);
@@ -35,34 +23,13 @@ export default function Reboot({
   const [selectedRow, setSelectedRow] = useState(0);
 
   // Local values for BIOS that are saved only on Exit & Save
-  const [localSecureBoot, setLocalSecureBoot] = useState(secureBoot);
-  const [localVtEnabled, setLocalVtEnabled] = useState(vtEnabled);
+  const [localSecureBoot, setLocalSecureBoot] = useState(true);
+  const [localVtEnabled, setLocalVtEnabled] = useState(false);
   const [localBootOrder, setLocalBootOrder] = useState<string[]>([
     "SATA HDD: Windows Boot Manager",
     "USB Key: Generic Flash Disk",
     "Network Boot: PXE IP4",
   ]);
-
-  useEffect(() => {
-    // Synchronize local states when entering BIOS
-    if (phase === "bios") {
-      setLocalSecureBoot(secureBoot);
-      setLocalVtEnabled(vtEnabled);
-      if (bootOrderUSB) {
-        setLocalBootOrder([
-          "USB Key: Generic Flash Disk",
-          "SATA HDD: Windows Boot Manager",
-          "Network Boot: PXE IP4",
-        ]);
-      } else {
-        setLocalBootOrder([
-          "SATA HDD: Windows Boot Manager",
-          "USB Key: Generic Flash Disk",
-          "Network Boot: PXE IP4",
-        ]);
-      }
-    }
-  }, [phase, secureBoot, vtEnabled, bootOrderUSB]);
 
   const flickerDur = 200;
   const memDur = speed === "fast" ? 400 : 1000;
@@ -126,9 +93,6 @@ export default function Reboot({
           } else if (activeTab === "exit") {
             if (selectedRow === 0) {
               // Save and Exit
-              setSecureBoot(localSecureBoot);
-              setVtEnabled(localVtEnabled);
-              setBootOrderUSB(localBootOrder[0].includes("USB Key"));
               setMemCount(0);
               setPhase("post");
               playPostBeep();
@@ -150,9 +114,6 @@ export default function Reboot({
       localVtEnabled,
       localBootOrder,
       onComplete,
-      setSecureBoot,
-      setVtEnabled,
-      setBootOrderUSB,
     ]
   );
 
@@ -448,9 +409,6 @@ export default function Reboot({
                     onClick={() => {
                       playClick();
                       // Save and Exit
-                      setSecureBoot(localSecureBoot);
-                      setVtEnabled(localVtEnabled);
-                      setBootOrderUSB(localBootOrder[0].includes("USB Key"));
                       setMemCount(0);
                       setPhase("post");
                       playPostBeep();

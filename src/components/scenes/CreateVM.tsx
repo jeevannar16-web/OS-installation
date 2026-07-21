@@ -66,21 +66,21 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
   return (
     <div className="flex-1 flex items-center justify-center p-4 select-none">
       <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+        className="w-full max-w-2xl bg-[#1a1a24] rounded-xl shadow-2xl border border-white/[0.08] overflow-hidden flex flex-col">
         {/* Title bar */}
-        <div className="flex items-center bg-gradient-to-b from-[#e8e8e8] to-[#d4d4d4] px-4 py-2 border-b border-gray-200 shrink-0">
+        <div className="flex items-center bg-gradient-to-b from-[#2a2a3a] to-[#1e1e2e] px-4 py-2 border-b border-white/[0.06] shrink-0">
           <div className="flex gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57] border border-[#e0443e]" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e] border border-[#d9a01e]" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#28c840] border border-[#1aab29]" />
           </div>
-          <span className="flex-1 text-center text-[11px] text-gray-600 font-bold tracking-tight">Create Virtual Machine</span>
-          <span className="text-gray-400 text-xs cursor-default hover:text-gray-600">✕</span>
+          <span className="flex-1 text-center text-[11px] text-white/70 font-bold tracking-tight">Create Virtual Machine</span>
+          <span className="text-white/30 text-xs cursor-default hover:text-white/50">✕</span>
         </div>
 
         <div className="flex flex-1 min-h-[360px]">
           {/* Left sidebar — step indicator */}
-          <div className="w-44 bg-[#f5f5f5] border-r border-gray-200 p-4 shrink-0">
+          <div className="w-44 bg-[#14141e] border-r border-white/[0.06] p-4 shrink-0">
             {STEPS.map((s, i) => {
               const isActive = i === currentIdx;
               const isPast = i < currentIdx;
@@ -88,11 +88,11 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                 <div key={s.key} className="flex items-start gap-3 mb-4">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 transition-all ${
                     isActive ? "bg-[#4a8cff] text-white shadow-sm" :
-                    isPast ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"
+                    isPast ? "bg-green-500/80 text-white" : "bg-white/[0.08] text-white/40"
                   }`}>{isPast ? "✓" : s.num}</div>
                   <div className="flex flex-col">
                     <span className={`text-[9px] font-semibold leading-tight ${
-                      isActive ? "text-[#4a8cff]" : isPast ? "text-green-700" : "text-gray-400"
+                      isActive ? "text-[#4a8cff]" : isPast ? "text-green-400" : "text-white/40"
                     }`}>{s.label}</span>
                   </div>
                 </div>
@@ -108,41 +108,41 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                   {step === "name" && (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">Name:</label>
+                        <label className="block text-[11px] font-semibold text-white/50 mb-1">Name:</label>
                         <input type="text" value={vmName} onChange={e => setVmName(e.target.value)} autoFocus
-                          className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 bg-white outline-none focus:border-[#4a8cff] focus:ring-1 focus:ring-[#4a8cff] transition-colors" />
+                          className="w-full border border-white/[0.12] rounded px-3 py-2 text-sm text-white/80 bg-white/[0.06] outline-none focus:border-[#4a8cff] focus:ring-1 focus:ring-[#4a8cff] transition-colors" />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">Machine Folder:</label>
+                        <label className="block text-[11px] font-semibold text-white/50 mb-1">Machine Folder:</label>
                         <div className="flex items-center gap-1">
                           <input type="text" value={machineFolder} readOnly
-                            className="flex-1 border border-gray-300 rounded px-3 py-2 text-[11px] text-gray-500 bg-gray-50 outline-none font-mono" />
-                          <button className="px-3 py-2 border border-gray-300 rounded bg-white hover:bg-gray-100 text-gray-500 text-xs transition-all">📁</button>
+                            className="flex-1 border border-white/[0.12] rounded px-3 py-2 text-[11px] text-white/40 bg-white/[0.04] outline-none font-mono" />
+                          <button className="px-3 py-2 border border-white/[0.12] rounded bg-white/[0.06] hover:bg-white/[0.1] text-white/40 text-xs transition-all">📁</button>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">ISO Image:</label>
+                        <label className="block text-[11px] font-semibold text-white/50 mb-1">ISO Image:</label>
                         <div className="flex items-center gap-1">
                           <select value={osVersion} onChange={() => { playClick(); }}
-                            className="flex-1 border border-gray-300 rounded px-3 py-2 text-[11px] text-gray-800 bg-white outline-none cursor-pointer">
+                            className="flex-1 border border-white/[0.12] rounded px-3 py-2 text-[11px] text-white/80 bg-white/[0.06] outline-none cursor-pointer">
                             <option value="">Not selected</option>
                             <option value={osVersion}>{config.iso.filename} ({config.iso.size})</option>
                           </select>
-                          <button className="px-3 py-2 border border-gray-300 rounded bg-white hover:bg-gray-100 text-gray-500 text-xs transition-all">📂</button>
+                          <button className="px-3 py-2 border border-white/[0.12] rounded bg-white/[0.06] hover:bg-white/[0.1] text-white/40 text-xs transition-all">📂</button>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[11px] font-semibold text-gray-600 mb-1">Type:</label>
+                          <label className="block text-[11px] font-semibold text-white/50 mb-1">Type:</label>
                           <select value={osType} onChange={e => { playClick(); setOsType(e.target.value); setOsVersion(OS_VERSION_OPTIONS[e.target.value][0]); }}
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 bg-white outline-none focus:border-[#4a8cff] cursor-pointer">
+                            className="w-full border border-white/[0.12] rounded px-3 py-2 text-sm text-white/80 bg-white/[0.06] outline-none focus:border-[#4a8cff] cursor-pointer">
                             {OS_TYPE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[11px] font-semibold text-gray-600 mb-1">Version:</label>
+                          <label className="block text-[11px] font-semibold text-white/50 mb-1">Version:</label>
                           <select value={osVersion} onChange={e => { playClick(); setOsVersion(e.target.value); }}
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 bg-white outline-none focus:border-[#4a8cff] cursor-pointer">
+                            className="w-full border border-white/[0.12] rounded px-3 py-2 text-sm text-white/80 bg-white/[0.06] outline-none focus:border-[#4a8cff] cursor-pointer">
                             {OS_VERSION_OPTIONS[osType]?.map(v => <option key={v} value={v}>{v}</option>)}
                           </select>
                         </div>
@@ -150,7 +150,7 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" defaultChecked onChange={() => { playClick(); }}
                           className="accent-[#4a8cff] w-4 h-4" />
-                        <span className="text-[10px] text-gray-500">Skip Unattended Installation</span>
+                        <span className="text-[10px] text-white/40">Skip Unattended Installation</span>
                       </label>
                     </div>
                   )}
@@ -158,31 +158,31 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                   {step === "hardware" && (
                     <div className="space-y-5">
                       <div>
-                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                          Base Memory: <span className="text-gray-800 ml-1">{memoryMB >= 1024 ? `${(memoryMB / 1024).toFixed(1)} GB` : `${memoryMB} MB`}</span>
+                        <label className="block text-[11px] font-semibold text-white/50 mb-1">
+                          Base Memory: <span className="text-white/80 ml-1">{memoryMB >= 1024 ? `${(memoryMB / 1024).toFixed(1)} GB` : `${memoryMB} MB`}</span>
                         </label>
                         <input type="range" min={512} max={16384} step={256} value={memoryMB}
                           onChange={e => setMemoryMB(Number(e.target.value))}
                           className="w-full accent-[#4a8cff] h-2" />
-                        <div className="flex justify-between text-[9px] text-gray-400 px-1 mt-0.5">
+                        <div className="flex justify-between text-[9px] text-white/30 px-1 mt-0.5">
                           <span>512 MB</span><span>16 GB</span>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                          Processors: <span className="text-gray-800 ml-1">{cpuCores} CPU{cpuCores > 1 ? "s" : ""}</span>
+                        <label className="block text-[11px] font-semibold text-white/50 mb-1">
+                          Processors: <span className="text-white/80 ml-1">{cpuCores} CPU{cpuCores > 1 ? "s" : ""}</span>
                         </label>
                         <input type="range" min={1} max={8} step={1} value={cpuCores}
                           onChange={e => setCpuCores(Number(e.target.value))}
                           className="w-full accent-[#4a8cff] h-2" />
-                        <div className="flex justify-between text-[9px] text-gray-400 px-1 mt-0.5">
+                        <div className="flex justify-between text-[9px] text-white/30 px-1 mt-0.5">
                           <span>1 CPU</span><span>8 CPUs</span>
                         </div>
                       </div>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" checked={enableEFI} onChange={() => { playClick(); setEnableEFI(!enableEFI); }}
                           className="accent-[#4a8cff] w-4 h-4" />
-                        <span className="text-[10px] text-gray-500">Enable EFI (special OSes only)</span>
+                        <span className="text-[10px] text-white/40">Enable EFI (special OSes only)</span>
                       </label>
                     </div>
                   )}
@@ -190,53 +190,53 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                   {step === "disk" && (
                     <div className="space-y-4">
                       <label className={`flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                        createDisk ? "border-[#4a8cff] bg-blue-50/50" : "border-gray-200 hover:border-gray-300"
+                        createDisk ? "border-[#4a8cff] bg-[#1e3a5f]/40" : "border-white/[0.1] hover:border-white/[0.2]"
                       }`}>
                         <input type="radio" name="disk" checked={createDisk} onChange={() => setCreateDisk(true)}
                           className="accent-[#4a8cff] mt-0.5" />
                         <div className="flex-1">
-                          <div className="text-sm font-semibold text-gray-800">Create a virtual hard disk now</div>
-                          <div className="text-[10px] text-gray-500 mt-0.5">A dynamically allocated VDI file will be created in the machine folder.</div>
+                          <div className="text-sm font-semibold text-white/80">Create a virtual hard disk now</div>
+                          <div className="text-[10px] text-white/40 mt-0.5">A dynamically allocated VDI file will be created in the machine folder.</div>
                         </div>
                       </label>
                       <label className={`flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                        !createDisk ? "border-[#4a8cff] bg-blue-50/50" : "border-gray-200 hover:border-gray-300"
+                        !createDisk ? "border-[#4a8cff] bg-[#1e3a5f]/40" : "border-white/[0.1] hover:border-white/[0.2]"
                       }`}>
                         <input type="radio" name="disk" checked={!createDisk} onChange={() => setCreateDisk(false)}
                           className="accent-[#4a8cff] mt-0.5" />
                         <div className="flex-1">
-                          <div className="text-sm font-semibold text-gray-800">Use an existing virtual hard disk file</div>
-                          <div className="text-[10px] text-gray-500 mt-0.5">Attach a pre-existing disk image (VDI, VHD, VMDK).</div>
+                          <div className="text-sm font-semibold text-white/80">Use an existing virtual hard disk file</div>
+                          <div className="text-[10px] text-white/40 mt-0.5">Attach a pre-existing disk image (VDI, VHD, VMDK).</div>
                         </div>
                       </label>
 
                       {createDisk && (
                         <div className="space-y-4 pl-1">
                           <div>
-                            <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                              Disk size: <span className="text-gray-800 ml-1">{diskGB} GB</span>
+                            <label className="block text-[11px] font-semibold text-white/50 mb-1">
+                              Disk size: <span className="text-white/80 ml-1">{diskGB} GB</span>
                             </label>
                             <input type="range" min={4} max={256} step={1} value={diskGB}
                               onChange={e => setDiskGB(Number(e.target.value))}
                               className="w-full accent-[#4a8cff] h-2" />
-                            <div className="flex justify-between text-[9px] text-gray-400 px-1 mt-0.5">
+                            <div className="flex justify-between text-[9px] text-white/30 px-1 mt-0.5">
                               <span>4 GB</span><span>256 GB</span>
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-[11px] font-semibold text-gray-600 mb-1">Hard disk file type:</label>
+                              <label className="block text-[11px] font-semibold text-white/50 mb-1">Hard disk file type:</label>
                               <select value={diskType} onChange={e => { playClick(); setDiskType(e.target.value as any); }}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 bg-white outline-none focus:border-[#4a8cff] cursor-pointer">
+                                className="w-full border border-white/[0.12] rounded px-3 py-2 text-sm text-white/80 bg-white/[0.06] outline-none focus:border-[#4a8cff] cursor-pointer">
                                 <option value="VDI">VDI (VirtualBox Disk Image)</option>
                                 <option value="VHD">VHD (Virtual Hard Disk)</option>
                                 <option value="VMDK">VMDK (Virtual Machine Disk)</option>
                               </select>
                             </div>
                             <div>
-                              <label className="block text-[11px] font-semibold text-gray-600 mb-1">Storage on physical disk:</label>
+                              <label className="block text-[11px] font-semibold text-white/50 mb-1">Storage on physical disk:</label>
                               <select value={diskAlloc} onChange={e => { playClick(); setDiskAlloc(e.target.value as any); }}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 bg-white outline-none focus:border-[#4a8cff] cursor-pointer">
+                                className="w-full border border-white/[0.12] rounded px-3 py-2 text-sm text-white/80 bg-white/[0.06] outline-none focus:border-[#4a8cff] cursor-pointer">
                                 <option value="dyn">Dynamically allocated</option>
                                 <option value="fixed">Fixed size</option>
                               </select>
@@ -249,7 +249,7 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
 
                   {step === "summary" && (
                     <div className="space-y-3">
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg divide-y divide-gray-100">
+                      <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg divide-y divide-white/[0.06]">
                         {[
                           ["Name", vmName],
                           ["Machine Folder", machineFolder],
@@ -259,26 +259,26 @@ export default function CreateVM({ config, onComplete }: { config: OSConfig; onC
                           ["Processors", `${cpuCores} CPU${cpuCores > 1 ? "s" : ""}`],
                           ["EFI", enableEFI ? "Enabled" : "Disabled"],
                           ["Disk", createDisk ? `${diskGB} GB ${diskType} (${diskAlloc === "dyn" ? "Dynamic" : "Fixed"})` : "Existing file"],
-                        ].map(([l, v]) => (
-                          <div key={l} className="flex justify-between px-4 py-2 text-xs">
-                            <span className="text-gray-500">{l}</span>
-                            <span className="text-gray-800 font-semibold ml-4 text-right truncate max-w-[55%]">{v}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 text-[10px] text-amber-800/70">
-                        Once created, you can change VM settings later from the Manager.
-                      </div>
-                    </div>
-                  )}
+        ].map(([l, v]) => (
+          <div key={l} className="flex justify-between px-4 py-2 text-xs">
+            <span className="text-white/40">{l}</span>
+            <span className="text-white/80 font-semibold ml-4 text-right truncate max-w-[55%]">{v}</span>
+          </div>
+        ))}
+      </div>
+      <div className="bg-[#2a2510]/60 border border-[#4a3d1a]/50 rounded-lg p-3 text-[10px] text-amber-400/70">
+        Once created, you can change VM settings later from the Manager.
+      </div>
+    </div>
+  )}
                 </motion.div>
               </AnimatePresence>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50 shrink-0">
+            <div className="flex items-center justify-between px-5 py-3 border-t border-white/[0.06] bg-[#14141e] shrink-0">
               <button onClick={handleBack} disabled={currentIdx === 0}
-                className="text-xs font-medium px-4 py-1.5 rounded text-gray-600 hover:bg-gray-200 disabled:opacity-30 transition-all">
+                className="text-xs font-medium px-4 py-1.5 rounded text-white/50 hover:bg-white/[0.08] disabled:opacity-30 transition-all">
                 Back
               </button>
               <button onClick={handleNext}

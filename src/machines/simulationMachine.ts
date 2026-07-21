@@ -6,18 +6,18 @@ import type { InstallPath, HostOS } from "../data/types";
  *
  * Physical dual-boot:
  *   idle → searching → downloading → flashing_usb → disk_prep
- *        → bios_setup → rebooting → boot_prompt → boot_menu → installing
+ *        → rebooting → boot_prompt → boot_menu → installing
  *        → grub_menu → complete
  *   (Partitioning is handled INSIDE the Install.tsx wizard when "Something else" is selected)
  *
  * Physical dual-boot (Windows):
  *   idle → searching → downloading → flashing_usb → disk_prep
- *        → bios_setup → rebooting → boot_prompt → boot_menu → windows_setup
+ *        → rebooting → boot_prompt → boot_menu → windows_setup
  *        → installing → grub_menu → oobe → complete
  *
  * Physical live-usb:
- *   idle → searching → downloading → flashing_usb → bios_setup
- *        → rebooting → boot_prompt → boot_menu → live_welcome → live_desktop
+ *   idle → searching → downloading → flashing_usb → rebooting
+ *        → boot_prompt → boot_menu → live_welcome → live_desktop
  *        → installing → grub_menu → complete
  *
  * VM:
@@ -35,7 +35,6 @@ export type SimEvent =
   | { type: "SEARCH_DONE" }
   | { type: "DOWNLOAD_DONE" }
   | { type: "FLASH_DONE" }
-  | { type: "BIOS_DONE" }
   | { type: "BOOT_KEY_PRESSED" }
   | { type: "BOOT_KEY_TIMEOUT" }
   | { type: "REBOOT_DONE" }
@@ -146,18 +145,13 @@ export const simulationMachine = setup({
       on: {
         FLASH_DONE: [
           { guard: "isDualBoot", target: "disk_prep" },
-          { target: "bios_setup" },
+          { target: "rebooting" },
         ],
       },
     },
 
     disk_prep: {
-      on: { DISK_PREPPED: "bios_setup" },
-    },
-
-    /* ── BIOS Setup ── */
-    bios_setup: {
-      on: { BIOS_DONE: "rebooting" },
+      on: { DISK_PREPPED: "rebooting" },
     },
 
     /* ── Reboot / POST ── */
@@ -283,7 +277,6 @@ export const SIM_SCENES = [
   "downloading",
   "flashing_usb",
   "disk_prep",
-  "bios_setup",
   "rebooting",
   "boot_prompt",
   "boot_menu",

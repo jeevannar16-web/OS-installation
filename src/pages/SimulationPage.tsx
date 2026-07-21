@@ -20,7 +20,6 @@ import CreateVM from "../components/scenes/CreateVM";
 import MountISO from "../components/scenes/MountISO";
 import VmBoot from "../components/scenes/VmBoot";
 import VmClose from "../components/scenes/VmClose";
-import BiosSetup from "../components/scenes/BiosSetup";
 import BootPrompt from "../components/scenes/BootPrompt";
 import WindowsSetup from "../components/scenes/WindowsSetup";
 import WindowsOOBE from "../components/scenes/WindowsOOBE";
@@ -44,7 +43,6 @@ const SCENE_LABELS: Record<string, string> = {
   downloading: "Locate ISO",
   flashing_usb: "Flash USB",
   disk_prep: "Disk Prep",
-  bios_setup: "BIOS Setup",
   rebooting: "Reboot",
   boot_prompt: "Boot from USB",
   boot_menu: "Boot Menu",
@@ -67,8 +65,7 @@ const STATUS_TEXT: Record<string, string> = {
   downloading: "Locating the ISO file in your Downloads folder…",
   flashing_usb: "Flashing the ISO image to your USB drive…",
   disk_prep: "Shrink Windows partition to create space…",
-  bios_setup: "Configuring BIOS/UEFI settings…",
-  rebooting: "Restarting and entering BIOS…",
+  rebooting: "Restarting…",
   boot_prompt: "Press a key to boot from USB…",
   boot_menu: "Select a boot device from the menu…",
   windows_setup: "Running Windows Setup…",
@@ -91,8 +88,7 @@ const SPEAKER_NOTES: Record<string, string> = {
   downloading: "Show the file manager with the downloaded ISO. Explain that ISO files are disk images — like a perfect copy of a DVD. They're typically 2-4 GB.",
   flashing_usb: "Walk through Rufus/Ventoy/BalenaEtcher. Explain that 'flashing' writes the ISO to USB sector-by-sector — it's not just copying files. The USB will become bootable.",
   disk_prep: "Open Disk Management in Windows to shrink the existing partition. Right-click the C: drive, select Shrink Volume, and enter the amount of space to free up for the new OS.",
-  bios_setup: "Enter BIOS/UEFI setup. Show the different tabs (Main, Advanced, Boot, Exit). Explain Secure Boot, USB Boot priority, and boot order. F10 to save and exit.",
-  rebooting: "Explain POST (Power-On Self-Test) and how to enter BIOS. Different brands use different keys: F2, F12, Del, Esc. Show the BIOS splash screen.",
+  rebooting: "Explain POST (Power-On Self-Test). The system restarts and prepares to boot from USB.",
   boot_prompt: "This is the 'Press any key to boot from USB' prompt. You have 5 seconds — if you miss it, the computer boots from the hard drive instead. Press any key!",
   boot_menu: "This is the BIOS boot device menu. Explain that you select the USB drive to boot from. On real hardware, pressing F12 during POST opens this on most PCs.",
   windows_setup: "Walk through the Windows Setup wizard: choose language/time/keyboard, click Install Now, enter a product key (or skip), accept the license, choose Custom install.",
@@ -108,13 +104,12 @@ const SPEAKER_NOTES: Record<string, string> = {
 };
 
 const VM_ONLY = new Set(["select_host_os", "create_vm", "mount_iso", "vm_boot"]);
-const PHYSICAL_ONLY = new Set(["flashing_usb", "disk_prep", "bios_setup", "rebooting", "boot_prompt", "boot_menu"]);
+const PHYSICAL_ONLY = new Set(["flashing_usb", "disk_prep", "rebooting", "boot_prompt", "boot_menu"]);
 
 const TRANSITIONS: Record<string, string> = {
   searching: "SEARCH_DONE",
   downloading: "DOWNLOAD_DONE",
   disk_prep: "DISK_PREPPED",
-  bios_setup: "BIOS_DONE",
   rebooting: "REBOOT_DONE",
   boot_prompt: "BOOT_KEY_PRESSED",
   boot_menu: "BOOT_SELECTED",
@@ -163,9 +158,6 @@ function SimulationPageInner() {
   const historyRef = useRef<string[]>([]);
 
   const [, setDiskShrunk] = useState(false);
-  const [secureBoot, setSecureBoot] = useState(true);
-  const [vtEnabled, setVtEnabled] = useState(false);
-  const [bootOrderUSB, setBootOrderUSB] = useState(false);
   const setRufusPartitionScheme = () => {};
 
   const current = String(state.value);
@@ -378,8 +370,7 @@ function SimulationPageInner() {
       case "downloading": return <FileManager config={cfg} onComplete={() => send({ type: "DOWNLOAD_DONE" })} />;
       case "flashing_usb": return <FlashUSB config={cfg} speed={speed} onComplete={() => send({ type: "FLASH_DONE" })} setRufusPartitionScheme={setRufusPartitionScheme} />;
       case "disk_prep": return <DiskManagement onComplete={() => send({ type: "DISK_PREPPED" })} setDiskShrunk={setDiskShrunk} />;
-      case "bios_setup": return <BiosSetup onComplete={() => send({ type: "BIOS_DONE" })} secureBoot={secureBoot} setSecureBoot={setSecureBoot} osId={cfg.id} />;
-      case "rebooting": return <Reboot speed={speed} onComplete={() => send({ type: "REBOOT_DONE" })} secureBoot={secureBoot} setSecureBoot={setSecureBoot} vtEnabled={vtEnabled} setVtEnabled={setVtEnabled} bootOrderUSB={bootOrderUSB} setBootOrderUSB={setBootOrderUSB} />;
+      case "rebooting": return <Reboot speed={speed} onComplete={() => send({ type: "REBOOT_DONE" })} />;
       case "boot_prompt": return <BootPrompt onComplete={() => send({ type: "BOOT_KEY_PRESSED" })} onError={() => send({ type: "BOOT_KEY_TIMEOUT" })} />;
       case "boot_menu": return <BootMenu config={cfg} onComplete={() => send({ type: path === "live-usb" ? "LIVE_TRY" : "BOOT_SELECTED" })} />;
       case "windows_setup": return <WindowsSetup onComplete={() => send({ type: "SETUP_DONE" })} />;
@@ -387,7 +378,7 @@ function SimulationPageInner() {
       case "live_desktop": return <LiveDesktop config={cfg} onInstallClick={() => send({ type: "LIVE_INSTALL" })} />;
       case "create_vm": return <CreateVM config={cfg} onComplete={() => send({ type: "VM_CREATED" })} />;
       case "mount_iso": return <MountISO config={cfg} onComplete={() => send({ type: "ISO_MOUNTED" })} />;
-      case "vm_boot": return <VmBoot config={cfg} speed={speed} onComplete={() => send({ type: "VM_POWERED_ON" })} vtEnabled={vtEnabled} onEnableVT={() => setVtEnabled(true)} />;
+      case "vm_boot": return <VmBoot config={cfg} speed={speed} onComplete={() => send({ type: "VM_POWERED_ON" })} />;
       case "installing": return cfg.id === "arch"
         ? <ArchInstall config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} />
         : <Install config={cfg} speed={speed} onComplete={() => send({ type: "INSTALL_DONE" })} path={path} />;
