@@ -59,49 +59,139 @@ const SCENE_LABELS: Record<string, string> = {
   complete: "Done",
 };
 
-const STATUS_TEXT: Record<string, string> = {
-  select_host_os: "Select your host operating system…",
-  searching: "Searching for the official download page…",
-  downloading: "Locating the ISO file in your Downloads folder…",
-  flashing_usb: "Flashing the ISO image to your USB drive…",
-  disk_prep: "Shrink Windows partition to create space…",
-  rebooting: "Restarting…",
-  boot_prompt: "Press a key to boot from USB…",
-  boot_menu: "Select a boot device from the menu…",
-  windows_setup: "Running Windows Setup…",
-  live_welcome: "Choose between trying or installing…",
-  live_desktop: "Exploring the live desktop environment…",
-  create_vm: "Setting up a new virtual machine…",
-  mount_iso: "Attaching the installation ISO…",
-  vm_boot: "Powering on the virtual machine…",
-  installing: "Installing the operating system…",
-  grub_menu: "Selecting your operating system…",
-  oobe: "Setting up Windows for the first time…",
-  vm_close: "Closing the virtual machine…",
-  complete: "Installation complete!",
+interface StepGuide {
+  instruction: string;
+  description: string;
+  action: string;
+  next: string;
+}
+
+const STEP_GUIDES: Record<string, StepGuide> = {
+  select_host_os: {
+    instruction: "Select your current operating system",
+    description: "Choose the OS you're running right now — Windows or Linux. This affects which tools and guides are shown.",
+    action: "Click the OS card that matches your current computer",
+    next: "The browser will open the official download page for your chosen OS.",
+  },
+  searching: {
+    instruction: "Find the official download page",
+    description: "This is a simulation of searching for the OS installer. Always download from the official website, not third-party sites.",
+    action: "Click through the search result to go to the official download page",
+    next: "The ISO file will appear in your Downloads folder.",
+  },
+  downloading: {
+    instruction: "Locate the downloaded ISO file",
+    description: "The ISO file is a complete disk image of the installer. It typically ranges from 2–6 GB depending on the OS.",
+    action: "Click on the ISO file in the file manager to proceed",
+    next: "You'll flash the ISO to a USB drive or attach it to a virtual machine.",
+  },
+  flashing_usb: {
+    instruction: "Write the ISO to a USB drive",
+    description: "Flashing creates a bootable USB drive. This is different from copying files — the ISO is written sector-by-sector.",
+    action: "Plug in your USB drive, then choose a flashing tool (Rufus, Ventoy, or BalenaEtcher). Follow the on-screen steps to select your device and ISO.",
+    next: "The USB drive will be bootable. You'll then reboot your computer.",
+  },
+  disk_prep: {
+    instruction: "Shrink your Windows partition",
+    description: "For dual-boot, you need free space on your hard drive. Windows Disk Management can shrink the C: drive to create unallocated space.",
+    action: "Right-click the C: partition and select 'Shrink Volume'. Enter the amount of space to free up.",
+    next: "The system will reboot and you can boot from USB.",
+  },
+  rebooting: {
+    instruction: "Restart your computer",
+    description: "The system goes through POST (Power-On Self-Test) to initialize hardware. After restart, you'll need to boot from USB.",
+    action: "Watch the POST screen. Click buttons to progress through the startup sequence.",
+    next: "A boot prompt will appear — press a key to boot from USB.",
+  },
+  boot_prompt: {
+    instruction: "Boot from the USB drive",
+    description: "When 'Press any key to boot from CD/DVD' appears, you have a few seconds to press a key. If you miss it, the system boots from the hard drive.",
+    action: "Press any key (or click the button) to boot from the USB drive.",
+    next: "The boot menu will let you select the USB drive.",
+  },
+  boot_menu: {
+    instruction: "Select the USB drive as boot device",
+    description: "The boot menu shows all available drives. Your USB drive should be listed. Select it to start the installer.",
+    action: "Click on the USB drive entry in the boot menu list.",
+    next: "The installer will start loading into memory.",
+  },
+  windows_setup: {
+    instruction: "Run Windows Setup",
+    description: "Windows Setup guides you through language selection, license agreement, partition selection, and installation.",
+    action: "Click through each step: language → install now → accept license → choose installation type → select partition.",
+    next: "Windows will copy files and restart several times.",
+  },
+  live_welcome: {
+    instruction: "Choose Try or Install",
+    description: "The live environment lets you test the OS before installing. 'Try' runs from USB only; 'Install' writes to the hard drive.",
+    action: "Click 'Try' to explore the live desktop, or 'Install' to start the installer immediately.",
+    next: "Try opens the desktop. Install starts the installation wizard.",
+  },
+  live_desktop: {
+    instruction: "Explore the live desktop",
+    description: "Everything runs from USB. Nothing is saved to the hard drive yet. You can open apps, browse the web, and test hardware.",
+    action: "Click the 'Install' icon on the desktop when you're ready to install.",
+    next: "The installation wizard will begin.",
+  },
+  create_vm: {
+    instruction: "Create a VirtualBox virtual machine",
+    description: "A virtual machine is a simulated computer that runs inside your real PC. You set the name, RAM, disk size, and attach the ISO.",
+    action: "Fill in the VM name → set memory (4GB+) → create virtual disk → review settings → click Finish.",
+    next: "The VM will be created. Next you'll attach the ISO as a virtual drive.",
+  },
+  mount_iso: {
+    instruction: "Attach the ISO to the virtual drive",
+    description: "In VirtualBox settings, you mount the ISO as a virtual CD/DVD drive so the VM can boot from it.",
+    action: "Select the ISO file from the file browser. It will be attached to the virtual optical drive.",
+    next: "Power on the VM — it will boot from the ISO automatically.",
+  },
+  vm_boot: {
+    instruction: "Power on the virtual machine",
+    description: "The VM will boot from the attached ISO, just like a real PC booting from a USB drive.",
+    action: "Wait for the boot sequence to complete. The installer will load automatically.",
+    next: "The operating system installer will start inside the VM.",
+  },
+  installing: {
+    instruction: "Install the operating system",
+    description: "The installer copies files, sets up partitions, configures the bootloader, and creates your user account.",
+    action: "Follow the on-screen installer: select language → keyboard → partition disk → create user → wait for installation to complete.",
+    next: "After installation, you'll set up GRUB (dual-boot) or reboot into the new OS.",
+  },
+  grub_menu: {
+    instruction: "Choose your operating system in GRUB",
+    description: "GRUB is the bootloader that shows at startup. On a dual-boot system, you pick between Windows and your new OS.",
+    action: "Select the OS you want to boot into from the GRUB menu.",
+    next: "The selected OS will boot. For Windows, you'll go through first-time setup (OOBE).",
+  },
+  oobe: {
+    instruction: "Complete Windows first-time setup",
+    description: "The Out-of-Box Experience (OOBE) guides you through region, keyboard, Wi-Fi, account, PIN, and privacy settings.",
+    action: "Click through each OOBE step: region → keyboard → network → account → PIN → privacy settings.",
+    next: "Windows will prepare your desktop and the installation is complete.",
+  },
+  vm_close: {
+    instruction: "Shut down the virtual machine",
+    description: "After installation inside the VM, shut it down cleanly. You can then remove the ISO from the virtual drive.",
+    action: "Click the close button or shut down through the OS menu.",
+    next: "The simulation is complete. For Windows in a VM, you'll continue to OOBE.",
+  },
+  complete: {
+    instruction: "Installation complete!",
+    description: "The OS has been successfully installed. You've gone through the entire process from download to boot.",
+    action: "Review what you accomplished, or click Restart to try again with a different OS or path.",
+    next: "You can return to the home page and try installing a different OS.",
+  },
 };
 
+const STATUS_TEXT: Record<string, string> = Object.fromEntries(
+  Object.entries(STEP_GUIDES).map(([key, val]) => [key, val.instruction])
+) as Record<string, string>;
 
 
-const SPEAKER_NOTES: Record<string, string> = {
-  searching: "This is the browser search step. Explain that you always go to the official website to download — never third-party sites. Point out the URL bar and search results.",
-  downloading: "Show the file manager with the downloaded ISO. Explain that ISO files are disk images — like a perfect copy of a DVD. They're typically 2-4 GB.",
-  flashing_usb: "Walk through Rufus/Ventoy/BalenaEtcher. Explain that 'flashing' writes the ISO to USB sector-by-sector — it's not just copying files. The USB will become bootable.",
-  disk_prep: "Open Disk Management in Windows to shrink the existing partition. Right-click the C: drive, select Shrink Volume, and enter the amount of space to free up for the new OS.",
-  rebooting: "Explain POST (Power-On Self-Test). The system restarts and prepares to boot from USB.",
-  boot_prompt: "This is the 'Press any key to boot from USB' prompt. You have 5 seconds — if you miss it, the computer boots from the hard drive instead. Press any key!",
-  boot_menu: "This is the BIOS boot device menu. Explain that you select the USB drive to boot from. On real hardware, pressing F12 during POST opens this on most PCs.",
-  windows_setup: "Walk through the Windows Setup wizard: choose language/time/keyboard, click Install Now, enter a product key (or skip), accept the license, choose Custom install.",
-  live_desktop: "Welcome to the live desktop! Everything runs from USB — nothing touches the hard drive. You can browse, open apps, test hardware compatibility.",
-  live_welcome: "The installer asks: Try or Install? 'Try' boots into the live desktop. 'Install' goes straight to installation. For a first-timer, 'Try' is safer.",
-  create_vm: "In VirtualBox, you create a virtual PC inside your real PC. Set RAM (4GB+), create a virtual hard disk, and attach the ISO as a virtual CD drive.",
-  mount_iso: "Attach the downloaded ISO as a virtual CD/DVD. This is like inserting a physical disc — the VM will boot from it.",
-  vm_boot: "Power on the VM. It boots from the attached ISO, just like a real machine booting from USB. You'll see the same installer screens.",
-  installing: "The installer copies files, sets up your user account, configures the bootloader. This takes 10-30 minutes on real hardware.",
-  grub_menu: "This is the GRUB bootloader menu. On a dual-boot machine, you choose between your Linux OS and Windows every time you start the PC.",
-  oobe: "The OOBE (Out-of-Box Experience) is Windows' first-boot wizard. Walk through region, keyboard, Wi-Fi, account creation, PIN setup, and privacy settings.",
-  vm_close: "After installation, shut down the VM. In VirtualBox, you'd remove the ISO from the virtual drive and reboot.",
-};
+
+function getGuide(current: string): StepGuide | null {
+  return STEP_GUIDES[current] ?? null;
+}
 
 const VM_ONLY = new Set(["select_host_os", "create_vm", "mount_iso", "vm_boot"]);
 const PHYSICAL_ONLY = new Set(["flashing_usb", "disk_prep", "rebooting", "boot_prompt", "boot_menu"]);
@@ -587,10 +677,10 @@ function SimulationPageInner() {
               <button
                 onClick={() => setShowNotes(!showNotes)}
                 className={`rounded-lg border px-3 py-1.5 text-[11px] font-medium transition-all ${
-                  showNotes ? "border-amber-500/30 bg-amber-500/10 text-amber-400" : "border-white/10 text-white/50 hover:text-white"
+                  showNotes ? "border-[#7c5cff]/30 bg-[#7c5cff]/10 text-[#7c5cff]" : "border-white/10 text-white/50 hover:text-white"
                 }`}
               >
-                {showNotes ? "✕ Notes" : "? Help"}
+                {showNotes ? "✕ Guide" : "? Guide"}
               </button>
             </div>
 
@@ -645,22 +735,40 @@ function SimulationPageInner() {
         </AnimatePresence>
 
         {/* ═══════════════════════════════════════════════════════════
-           PANELS — Speaker Notes (inline bar)
-           ═══════════════════════════════════════════════════════════ */}
+            PANELS — Step Guide (inline bar)
+            ═══════════════════════════════════════════════════════════ */}
         <AnimatePresence>
-          {showNotes && SPEAKER_NOTES[current] && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="w-full px-4 py-2 bg-amber-500/[0.06] border-t border-amber-500/20 shrink-0 overflow-hidden"
-            >
-              <div className="max-w-6xl mx-auto flex items-start gap-2">
-                <span className="text-xs mt-0.5">📝</span>
-                <p className="text-[12px] text-white/60 leading-relaxed">{SPEAKER_NOTES[current]}</p>
-              </div>
-            </motion.div>
-          )}
+          {showNotes && getGuide(current) && (() => {
+            const guide = getGuide(current)!;
+            return (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="w-full px-4 py-3 bg-[#1a1a2e]/80 border-t border-[#7c5cff]/20 shrink-0 overflow-hidden"
+              >
+                <div className="max-w-6xl mx-auto space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#7c5cff] text-sm">◉</span>
+                    <span className="text-[11px] font-bold text-white/90">What to do:</span>
+                    <span className="text-[11px] text-white/70">{guide.instruction}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-[#7c5cff] text-sm mt-0.5">◆</span>
+                    <span className="text-[11px] text-white/50 leading-relaxed">{guide.description}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-emerald-400 text-sm mt-0.5">▶</span>
+                    <span className="text-[11px] text-white/60 leading-relaxed"><span className="text-emerald-400 font-semibold">Action:</span> {guide.action}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-cyan-400 text-sm mt-0.5">→</span>
+                    <span className="text-[11px] text-white/40 leading-relaxed"><span className="text-cyan-400 font-semibold">Next:</span> {guide.next}</span>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })()}
         </AnimatePresence>
 
         {/* ═══════════════════════════════════════════════════════════

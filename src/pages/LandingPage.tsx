@@ -657,7 +657,7 @@ export default function LandingPage() {
               title="OS Install Simulator — click to refresh"
               className="flex items-center gap-2.5 rounded-lg hover:bg-white/5 transition-colors px-1 py-0.5 cursor-pointer"
             >
-              <img src="/logo.png" alt="OS Install Simulator" className="h-9 w-auto" />
+              <img src="/logo.svg" alt="OS Install Simulator" className="h-9 w-auto" />
               <span className="font-semibold text-sm text-white/80 tracking-tight">OS Install Simulator</span>
             </button>
           </div>
@@ -677,9 +677,9 @@ export default function LandingPage() {
             </div>
             <button
               onClick={() => setShowHelp(true)}
-              className="rounded-md bg-white/5 border border-white/10 px-3 py-1.5 text-[11px] text-white/45 hover:bg-white/10 hover:text-white/65 transition-colors"
+              className="rounded-md bg-[#7c5cff]/15 border border-[#7c5cff]/25 px-3 py-1.5 text-[11px] text-[#7c5cff] hover:bg-[#7c5cff]/20 transition-colors"
             >
-              Shortcuts
+              ? Help
             </button>
             <ThemePicker />
           </div>

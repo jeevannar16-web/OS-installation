@@ -1,92 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0a0a1a"/>
-      <stop offset="50%" stop-color="#12122a"/>
-      <stop offset="100%" stop-color="#1a1040"/>
+      <stop offset="0%" stop-color="#7c5cff"/>
+      <stop offset="100%" stop-color="#5a3fd4"/>
     </linearGradient>
-    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#7c5cff" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.1"/>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.05"/>
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#7c5cff" flood-opacity="0.3"/>
-    </filter>
   </defs>
-
-  <!-- Background -->
   <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <rect width="512" height="512" rx="96" fill="url(#glow)"/>
-
-  <!-- Orbit ring -->
-  <ellipse cx="256" cy="260" rx="160" ry="40" fill="none" stroke="#7c5cff" stroke-width="1.5" opacity="0.2"/>
-  <ellipse cx="256" cy="260" rx="120" ry="30" fill="none" stroke="#06b6d4" stroke-width="1" opacity="0.15"/>
-
-  <!-- Center: Install icon -->
-  <circle cx="256" cy="240" r="52" fill="#0a0a1a" stroke="#7c5cff" stroke-width="2" opacity="0.9"/>
-  <circle cx="256" cy="240" r="48" fill="#12122a"/>
-  <!-- Download arrow -->
-  <path d="M256 205 L256 260 M240 248 L256 264 L272 248" stroke="#7c5cff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <!-- Bottom line -->
-  <line x1="236" y1="272" x2="276" y2="272" stroke="#06b6d4" stroke-width="3" stroke-linecap="round"/>
-
-  <!-- Ubuntu logo (top-left) — Circle of Friends -->
-  <g transform="translate(90, 110)" filter="url(#shadow)">
-    <circle cx="0" cy="0" r="30" fill="#E95420"/>
-    <g fill="#ffffff">
-      <path d="M0 -11 A11 11 0 1 1 -0.02 -11 Z M0 -29 A29 29 0 0 1 25.1 -14.5 L19.1 -10.1 A21.5 21.5 0 0 0 0 -21.5 Z"/>
-      <path d="M-9.7 5.6 A11 11 0 1 1 -9.68 5.8 Z M-25.1 14.5 A29 29 0 0 1 -19.1 29 L-19.1 21.5 A21.5 21.5 0 0 0 -9.7 -2.8 Z"/>
-      <path d="M9.7 5.6 A11 11 0 1 1 9.68 5.8 Z M25.1 14.5 A29 29 0 0 1 19.1 29 L19.1 21.5 A21.5 21.5 0 0 0 9.7 -2.8 Z"/>
-    </g>
-    <circle cx="0" cy="0" r="6.8" fill="#2c001e"/>
+  <rect width="512" height="512" rx="96" fill="url(#ring)"/>
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="white" stroke-opacity="0.1" stroke-width="2"/>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="white" stroke-opacity="0.06" stroke-width="1"/>
+  <!-- Monitor icon -->
+  <g transform="translate(256, 220)">
+    <rect x="-56" y="-44" width="112" height="80" rx="8" fill="white" opacity="0.15"/>
+    <rect x="-50" y="-38" width="100" height="68" rx="4" fill="white"/>
+    <!-- Screen glow -->
+    <rect x="-46" y="-34" width="92" height="58" rx="3" fill="#7c5cff" opacity="0.08"/>
+    <!-- Install/download arrow on screen -->
+    <path d="M256 205 L256 260 M240 248 L256 264 L272 248" stroke="#7c5cff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(-256, -220)"/>
+    <line x1="232" y1="272" x2="280" y2="272" stroke="#7c5cff" stroke-width="4" stroke-linecap="round" transform="translate(-256, -220)"/>
+    <line x1="232" y1="280" x2="280" y2="280" stroke="#7c5cff" stroke-width="4" stroke-linecap="round" transform="translate(-256, -220)"/>
   </g>
-
-  <!-- Windows logo (top-right) -->
-  <g transform="translate(422, 110)" filter="url(#shadow)">
-    <rect x="-24" y="-24" width="22" height="22" fill="#F25022"/>
-    <rect x="2" y="-24" width="22" height="22" fill="#7FBA00"/>
-    <rect x="-24" y="2" width="22" height="22" fill="#00A4EF"/>
-    <rect x="2" y="2" width="22" height="22" fill="#FFB900"/>
-  </g>
-
-  <!-- Arch Linux logo (bottom-left) — the A -->
-  <g transform="translate(110, 390)" filter="url(#shadow)">
-    <circle cx="0" cy="0" r="30" fill="#ffffff"/>
-    <path d="M0 -20 L-17 20 L-6.8 20 L0 -4 L6.8 20 L17 20 Z" fill="#1793D1"/>
-  </g>
-
-  <!-- Fedora logo (bottom-right) — the f -->
-  <g transform="translate(402, 390)" filter="url(#shadow)">
-    <circle cx="0" cy="0" r="30" fill="#ffffff"/>
-    <path d="M9 24 C 4 24 7 15 2 12 C 9 12 13 17 11 24 Z M-11 -21 C -2 -21 0 -9 -2 -4 C 4 -10 7 -17 17 -19 C 8 -8 -2 -4 -2 6 C -2 16 -10 21 -17 19 C -8 17 -4 9 -8 2 C -12 -4 -17 -4 -17 4 C -17 12 -11 14 -5 12 C -16 18 -25 10 -21 -2 C -19 -10 -15 -16 -11 -21 Z" fill="#3C6EB4"/>
-  </g>
-
-  <!-- Debian logo (bottom-center) — the swirl -->
-  <g transform="translate(256, 420)" filter="url(#shadow)">
-    <circle cx="0" cy="0" r="24" fill="#ffffff"/>
-    <path d="M0 -15 C 9 -15 15 -8 15 0 C 15 8 9 15 0 15 C -4.5 15 -9 12 -9 7.5 C -9 4.5 -6 3.8 -3.8 3.8 C -1.5 3.8 0 5.3 0 7.5 C 0 12 4.5 13.5 9 10.5 L7 7 C 4.5 9.8 0 9 0 5.3 C 0 1.5 4.5 0.8 9 2.3 C 4.5 -1 0 -1.5 0 -6 C 0 -9 2.3 -10.5 5.3 -10.5 C 3 -7.5 2.3 -6 3 -4.5 C 3.8 -3.8 5.3 -4.5 6 -7 C 3.8 -10 -0.5 -10.5 0 -15 Z" fill="#D70A53"/>
-  </g>
-
-  <!-- USB icon (left) -->
-  <g transform="translate(42, 260)" opacity="0.6">
-    <rect x="-8" y="-16" width="16" height="32" rx="3" fill="#555" stroke="#777" stroke-width="1"/>
-    <rect x="-4" y="-20" width="8" height="8" rx="1" fill="#999"/>
-    <circle cx="0" cy="-6" r="2" fill="#22c55e"/>
-  </g>
-
-  <!-- Hard drive icon (right) -->
-  <g transform="translate(470, 260)" opacity="0.6">
-    <rect x="-12" y="-18" width="24" height="36" rx="3" fill="#333" stroke="#555" stroke-width="1"/>
-    <circle cx="0" cy="4" r="5" fill="none" stroke="#555" stroke-width="1.5"/>
-    <line x1="-8" y1="-10" x2="8" y2="-10" stroke="#555" stroke-width="1"/>
-    <line x1="-8" y1="-6" x2="8" y2="-6" stroke="#555" stroke-width="1"/>
-  </g>
-
-  <!-- Title text -->
-  <text x="256" y="330" text-anchor="middle" font-size="28" font-weight="800" fill="white" font-family="system-ui, sans-serif" letter-spacing="-0.5">
+  <!-- Stand -->
+  <rect x="236" y="272" width="40" height="8" rx="2" fill="white" opacity="0.4"/>
+  <rect x="246" y="280" width="20" height="14" rx="2" fill="white" opacity="0.25"/>
+  <!-- Title -->
+  <text x="256" y="360" text-anchor="middle" font-size="28" font-weight="800" fill="white" font-family="system-ui, sans-serif" letter-spacing="-0.5">
     OS Install
   </text>
-  <text x="256" y="358" text-anchor="middle" font-size="16" font-weight="400" fill="#7c5cff" font-family="system-ui, sans-serif" letter-spacing="3">
+  <text x="256" y="385" text-anchor="middle" font-size="15" font-weight="600" fill="rgba(255,255,255,0.6)" font-family="system-ui, sans-serif" letter-spacing="4">
     SIMULATOR
   </text>
+  <!-- USB icon bottom-left -->
+  <g transform="translate(85, 400)" opacity="0.4">
+    <rect x="-8" y="-16" width="16" height="32" rx="3" fill="white" stroke="white" stroke-width="0.5"/>
+    <rect x="-4" y="-22" width="8" height="8" rx="1" fill="white"/>
+    <circle cx="0" cy="-6" r="2" fill="#22c55e"/>
+  </g>
+  <!-- Boot icon bottom-right -->
+  <g transform="translate(427, 400)" opacity="0.4">
+    <circle cx="0" cy="0" r="16" fill="none" stroke="white" stroke-width="1.5"/>
+    <path d="M-5 -8 L8 0 L-5 8 Z" fill="white"/>
+  </g>
 </svg>

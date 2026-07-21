@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { OSConfig } from "../../data/types";
-import { playClick } from "../shared/sounds";
-import { useSceneAdvance } from "../shared/SceneAdvance";
+import { playSuccess } from "../shared/sounds";
 
 const DISPLAY: Record<string, { bg: string; accent: string; logo: string; bootMsg: string }> = {
   ubuntu:  { bg: "from-[#2c001e] to-[#1a0011]", accent: "#e95420", logo: "Ubuntu 24.04 LTS", bootMsg: "Starting Ubuntu installer..." },
@@ -17,18 +16,13 @@ export default function VmBoot({
   config,
   speed,
   onComplete,
-  vtEnabled: _vtEnabled,
-  onEnableVT: _onEnableVT,
 }: {
   config: OSConfig;
   speed: "normal" | "fast";
   onComplete: () => void;
-  vtEnabled?: boolean;
-  onEnableVT?: () => void;
 }) {
-  const { register: registerAdvance } = useSceneAdvance();
   const d = DISPLAY[config.id] || DISPLAY.ubuntu;
-  const [phase, setPhase] = useState<"presskey" | "booting" | "ready">("presskey");
+  const [phase, setPhase] = useState<"presskey" | "booting">("presskey");
   const [dots, setDots] = useState("");
 
   useEffect(() => {
@@ -40,32 +34,25 @@ export default function VmBoot({
 
   useEffect(() => {
     if (phase === "booting") {
-      const t = setTimeout(() => setPhase("ready"), speed === "fast" ? 600 : 2000);
+      const t = setTimeout(() => { playSuccess(); onComplete(); }, speed === "fast" ? 600 : 2000);
       return () => clearTimeout(t);
     }
-  }, [phase, speed]);
+  }, [phase, speed, onComplete]);
 
   useEffect(() => {
     const iv = setInterval(() => setDots(d => d.length >= 3 ? "" : d + "."), 400);
     return () => clearInterval(iv);
   }, []);
 
-  useEffect(() => {
-    if (phase === "ready") {
-      registerAdvance(() => { playClick(); onComplete(); });
-    }
-  }, [phase, registerAdvance, onComplete]);
-
   return (
-    <div className="mx-auto w-full max-w-4xl select-none cursor-pointer"
-      onClick={() => { if (phase === "ready") { playClick(); onComplete(); } }}>
+    <div className="mx-auto w-full max-w-4xl select-none">
       <div className="overflow-hidden rounded-lg border border-gray-600/30 shadow-2xl">
         <div className="bg-gradient-to-b from-[#e8e8e8] to-[#d4d4d4] px-2 py-1 text-[9px] text-gray-600 flex items-center border-b border-gray-300/50">
           <span className="font-semibold">{config.branding.shortName} VM</span>
           <span className="mx-2">—</span>
           <span className="text-gray-400">Oracle VM VirtualBox</span>
           <div className="flex-1" />
-          <span className={`h-1.5 w-1.5 rounded-full ${phase === "ready" ? "bg-green-500 animate-pulse" : "bg-amber-400"}`} />
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
         </div>
         <div className={`bg-gradient-to-b ${d.bg} flex items-center justify-center min-h-[360px] sm:min-h-[440px] lg:min-h-[540px]`}>
           {phase === "presskey" && (
@@ -88,18 +75,8 @@ export default function VmBoot({
               </div>
             </motion.div>
           )}
-          {phase === "ready" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="text-center px-6 py-8">
-              <div className="text-lg font-bold mb-1" style={{ color: d.accent }}>{d.logo}</div>
-              <div className="text-white/30 text-xs mb-1">Installer ready</div>
-            </motion.div>
-          )}
         </div>
       </div>
-      {phase === "ready" && (
-        <div className="mt-2 text-[10px] text-white/30 text-center">Click to begin installation</div>
-      )}
     </div>
   );
 }
