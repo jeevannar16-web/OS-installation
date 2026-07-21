@@ -849,7 +849,7 @@ export default function FlashUSB({
   onComplete: () => void;
   setRufusPartitionScheme: (v: "GPT" | "MBR") => void;
 }) {
-  const [tool, setTool] = useState<"plug_in" | "select" | "rufus" | "ventoy" | "balena" | "unsupported">("plug_in");
+  const [tool, setTool] = useState<"plug_in" | "select" | "rufus" | "ventoy" | "balena" | "unsupported">("select");
   const [overPort, setOverPort] = useState(false);
   const toast = useToast();
 
