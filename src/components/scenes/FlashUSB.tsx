@@ -687,6 +687,7 @@ export default function FlashUSB({
   const [overPort, setOverPort] = useState(false);
   const [plugging, setPlugging] = useState(false);
   const [ejectPhase, setEjectPhase] = useState<"idle" | "ejecting" | "done">("idle");
+  const [connecting, setConnecting] = useState(false);
 
   const handlePlugIn = useCallback(() => {
     setOverPort(false);
@@ -952,7 +953,6 @@ export default function FlashUSB({
   }
 
   if (phase === "reinsert") {
-    const [connecting, setConnecting] = useState(false);
     return (
       <div data-no-auto-advance className="mx-auto w-full max-w-lg relative">
         <div className="relative overflow-hidden rounded-2xl">
