@@ -657,7 +657,11 @@ export default function LandingPage() {
               title="OS Install Simulator — click to refresh"
               className="flex items-center gap-2.5 rounded-lg hover:bg-white/5 transition-colors px-1 py-0.5 cursor-pointer"
             >
-              <img src="/logo.svg" alt="OS Install Simulator" className="h-9 w-auto" />
+              <img src="/logo.svg" alt="OS Install Simulator" className="h-10 w-auto" />
+              <div className="flex flex-col leading-tight">
+                <span className="text-sm font-bold text-white tracking-tight">OS Install</span>
+                <span className="text-[9px] font-semibold text-[#7c5cff] tracking-[2px] uppercase">Simulator</span>
+              </div>
             </button>
           </div>
           <div className="flex items-center gap-2">
