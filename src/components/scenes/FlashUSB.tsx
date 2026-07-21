@@ -682,7 +682,7 @@ export default function FlashUSB({
   onComplete: () => void;
   setRufusPartitionScheme: (v: "GPT" | "MBR") => void;
 }) {
-  const [phase, setPhase] = useState<"plug_in" | "tool_select" | "eject">("plug_in");
+  const [phase, setPhase] = useState<"plug_in" | "tool_select" | "eject" | "reinsert">("plug_in");
   const [tool, setTool] = useState<"select" | "rufus" | "ventoy" | "balena" | "unsupported">("select");
   const [overPort, setOverPort] = useState(false);
   const [ejectPhase, setEjectPhase] = useState<"idle" | "ejecting" | "done">("idle");
@@ -779,12 +779,12 @@ export default function FlashUSB({
           <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a24] via-[#12121a] to-[#0a0a10] rounded-2xl" />
           <div className="relative z-10 p-8 lg:p-10">
             <div className="text-center mb-6">
-              <div className="text-xs lg:text-sm uppercase tracking-widest text-amber-300/40 font-medium">Step 3</div>
+              <div className="text-xs lg:text-sm uppercase tracking-widest text-amber-300/40 font-medium">Step 3 — Safely Eject</div>
               <h2 className="mt-2 text-xl lg:text-2xl font-bold text-white">
-                Safely remove USB
+                Safely remove the USB drive
               </h2>
               <p className="mt-2 text-sm text-white/40">
-                Always eject the USB safely before unplugging to avoid data corruption.
+                Before unplugging, you must safely eject the USB through the system tray. This ensures all cached write operations are flushed to the drive and prevents file system corruption. On Windows, click the "Safely Remove Hardware" icon in the notification area and select "Eject".
               </p>
             </div>
 
@@ -859,10 +859,10 @@ export default function FlashUSB({
                 {ejectPhase === "done" && (
                   <div className="pt-1">
                     <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
-                      USB safely ejected. You can now remove it.
+                      'USB Drive (E:)' has been safely ejected. All data has been flushed and it is now safe to unplug the device from your computer.
                     </div>
-                    <button onClick={() => { playClick(); onComplete(); }}
-                      className="mt-2 w-full rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity">
+                    <button onClick={() => { playClick(); setPhase("reinsert"); }}
+                      className="mt-2 w-full rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-colors">
                       Continue →
                     </button>
                   </div>
@@ -873,10 +873,80 @@ export default function FlashUSB({
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
                 <div className={`h-2 w-2 rounded-full ${ejectPhase === "done" ? "bg-red-400" : "bg-emerald-400"}`} />
                 <span className="text-[10px] text-white/40">
-                  {ejectPhase === "idle" ? "USB connected" : ejectPhase === "ejecting" ? "Ejecting…" : "Safe to remove"}
+                  {ejectPhase === "idle" ? "USB Drive (E:) — Connected" : ejectPhase === "ejecting" ? "Stopping device — do not unplug yet…" : "Safe to remove hardware"}
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "reinsert") {
+    return (
+      <div data-no-auto-advance className="mx-auto w-full max-w-4xl lg:max-w-5xl relative">
+        <div className="relative overflow-hidden rounded-2xl">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1a2420] via-[#121a16] to-[#0a100e] rounded-2xl" />
+          <div className="relative z-10 p-8 lg:p-10">
+            <div className="text-center mb-8">
+              <div className="text-xs lg:text-sm uppercase tracking-widest text-emerald-300/40 font-medium">Step 4 — Reconnect</div>
+              <h2 className="mt-2 text-xl lg:text-2xl xl:text-3xl font-bold text-white">
+                Reconnect the USB drive
+              </h2>
+              <p className="mt-2 text-sm lg:text-base text-white/40">
+                Now plug the USB back into your computer. Windows will detect it as a bootable removable device. The ISO has been written successfully and your USB drive is now ready to boot the installer on any compatible system.
+              </p>
+            </div>
+
+            <div className="relative flex flex-col sm:flex-row items-center justify-center gap-12 sm:gap-24 py-8">
+              <motion.div
+                draggable
+                onDragStart={() => {}}
+                onDragEnd={() => { if (!overPort) setOverPort(false); }}
+                animate={{ y: [0, -6, 0] }}
+                transition={{ y: { repeat: Infinity, duration: 2.5, ease: "easeInOut" } }}
+                whileDrag={{ scale: 1.08, rotate: -8, zIndex: 50, filter: "drop-shadow(0 8px 24px rgba(16,185,129,0.4))" }}
+                className="cursor-grab active:cursor-grabbing select-none"
+              >
+                <UsbStickSvg className="w-20 h-32 sm:w-24 sm:h-40 lg:w-28 lg:h-48 xl:w-32 xl:h-56 drop-shadow-lg" />
+                <div className="text-center mt-2 text-xs lg:text-sm xl:text-base text-emerald-200/40 font-semibold">reconnect →</div>
+              </motion.div>
+
+              <div
+                onDragOver={(e) => { e.preventDefault(); setOverPort(true); }}
+                onDragLeave={() => setOverPort(false)}
+                onDrop={(e) => { e.preventDefault(); setOverPort(false); playUsbConnect(); onComplete(); }}
+              >
+                <PcTower glowing={overPort} />
+                <div className="text-center mt-2">
+                  <div className={`text-xs font-medium ${overPort ? "text-emerald-400" : "text-white/30"}`}>
+                    {overPort ? "Release to connect bootable USB" : "Drag USB to the PC"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden sm:block">
+                {overPort && (
+                  <motion.div
+                    initial={{ scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 0.3 }}
+                    className="w-24 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent origin-left"
+                  />
+                )}
+              </div>
+            </div>
+
+            {overPort && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="text-center text-sm text-emerald-400 font-medium"
+              >
+                Release to connect
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
