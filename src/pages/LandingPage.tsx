@@ -658,7 +658,6 @@ export default function LandingPage() {
               className="flex items-center gap-2.5 rounded-lg hover:bg-white/5 transition-colors px-1 py-0.5 cursor-pointer"
             >
               <img src="/logo.svg" alt="OS Install Simulator" className="h-9 w-auto" />
-              <span className="font-semibold text-sm text-white/80 tracking-tight">OS Install Simulator</span>
             </button>
           </div>
           <div className="flex items-center gap-2">

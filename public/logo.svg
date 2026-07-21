@@ -4,29 +4,39 @@
       <stop offset="0%" stop-color="#7c5cff"/>
       <stop offset="100%" stop-color="#4f35c4"/>
     </linearGradient>
+    <linearGradient id="screen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0f0f1a"/>
+    </linearGradient>
   </defs>
   <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <!-- Monitor body -->
-  <rect x="120" y="100" width="272" height="200" rx="16" fill="white" opacity="0.15"/>
-  <rect x="136" y="116" width="240" height="164" rx="10" fill="white"/>
-  <!-- Screen content: download icon -->
-  <g transform="translate(256, 240)">
-    <path d="M0 -40 L0 30 M-18 12 L0 30 L18 12" stroke="#7c5cff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    <rect x="-40" y="36" width="80" height="8" rx="4" fill="#7c5cff"/>
-    <rect x="-40" y="52" width="80" height="8" rx="4" fill="#7c5cff"/>
+  <!-- Monitor -->
+  <rect x="116" y="72" width="280" height="196" rx="16" fill="white" opacity="0.15"/>
+  <rect x="126" y="82" width="260" height="176" rx="12" fill="url(#screen)"/>
+  <rect x="126" y="82" width="260" height="176" rx="12" fill="white" opacity="0.03"/>
+  <!-- OS Install screen content -->
+  <!-- Progress bar -->
+  <rect x="156" y="160" width="200" height="10" rx="5" fill="white" opacity="0.08"/>
+  <rect x="156" y="160" width="130" height="10" rx="5" fill="#7c5cff"/>
+  <!-- OS name on screen -->
+  <rect x="156" y="120" width="120" height="6" rx="3" fill="white" opacity="0.15"/>
+  <rect x="156" y="134" width="90" height="4" rx="2" fill="white" opacity="0.08"/>
+  <!-- USB icon being inserted into monitor side -->
+  <g transform="translate(400, 200)">
+    <rect x="-18" y="-40" width="36" height="68" rx="6" fill="white" opacity="0.9"/>
+    <rect x="-10" y="-52" width="20" height="18" rx="3" fill="white" opacity="0.7"/>
+    <circle cx="0" cy="-18" r="5" fill="#22c55e"/>
+    <rect x="-6" y="0" width="12" height="16" rx="2" fill="white" opacity="0.95"/>
+    <rect x="-3" y="4" width="6" height="8" rx="1" fill="#7c5cff"/>
+  </g>
+  <!-- Insertion arrow -->
+  <g transform="translate(380, 200)">
+    <path d="M0 -6 L-14 0 L0 6" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
   </g>
   <!-- Stand -->
-  <rect x="216" y="300" width="80" height="16" rx="6" fill="white" opacity="0.4"/>
-  <rect x="186" y="316" width="140" height="24" rx="8" fill="white" opacity="0.25"/>
-  <!-- USB icon bottom-left -->
-  <g transform="translate(120, 380)" opacity="0.35">
-    <rect x="-14" y="-28" width="28" height="56" rx="6" fill="white" stroke="white" stroke-width="1.5"/>
-    <rect x="-8" y="-38" width="16" height="14" rx="3" fill="white"/>
-    <circle cx="0" cy="-10" r="4" fill="#22c55e"/>
-  </g>
-  <!-- Play/boot icon bottom-right -->
-  <g transform="translate(392, 380)" opacity="0.35">
-    <circle cx="0" cy="0" r="28" fill="none" stroke="white" stroke-width="3"/>
-    <path d="M-10 -16 L16 0 L-10 16 Z" fill="white"/>
-  </g>
+  <rect x="216" y="268" width="80" height="14" rx="6" fill="white" opacity="0.4"/>
+  <rect x="186" y="282" width="140" height="22" rx="8" fill="white" opacity="0.25"/>
+  <!-- Label text inside the icon -->
+  <text x="256" y="390" text-anchor="middle" font-size="24" font-weight="800" fill="white" font-family="system-ui, sans-serif" letter-spacing="-0.3">OS Install</text>
+  <text x="256" y="416" text-anchor="middle" font-size="13" font-weight="600" fill="rgba(255,255,255,0.5)" font-family="system-ui, sans-serif" letter-spacing="3.5">SIMULATOR</text>
 </svg>
