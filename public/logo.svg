@@ -5,17 +5,16 @@
       <stop offset="100%" stop-color="#4f35c4"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <!-- Monitor outline - bold and simple -->
-  <rect x="120" y="96" width="272" height="200" rx="20" fill="white" opacity="0.2"/>
-  <rect x="136" y="112" width="240" height="168" rx="14" fill="white"/>
-  <!-- Bold download/install arrow -->
-  <g transform="translate(256, 240)">
-    <path d="M0 -56 L0 20 M-22 -2 L0 20 L22 -2" stroke="#7c5cff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    <rect x="-48" y="30" width="96" height="12" rx="6" fill="#7c5cff"/>
-    <rect x="-48" y="52" width="96" height="12" rx="6" fill="#7c5cff" opacity="0.5"/>
+  <rect width="512" height="512" rx="512" fill="url(#bg)"/>
+  <!-- Monitor -->
+  <rect x="104" y="112" width="304" height="224" rx="28" fill="white" opacity="0.2"/>
+  <rect x="116" y="124" width="280" height="200" rx="20" fill="white"/>
+  <!-- Bold download arrow -->
+  <g transform="translate(256, 252)">
+    <path d="M0 -60 L0 28 M-30 -2 L0 28 L30 -2" stroke="#7c5cff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <rect x="-56" y="42" width="112" height="16" rx="8" fill="#7c5cff"/>
   </g>
   <!-- Stand -->
-  <rect x="216" y="296" width="80" height="16" rx="8" fill="white" opacity="0.45"/>
-  <rect x="182" y="312" width="148" height="24" rx="10" fill="white" opacity="0.25"/>
+  <rect x="212" y="336" width="88" height="20" rx="10" fill="white" opacity="0.45"/>
+  <rect x="172" y="356" width="168" height="28" rx="14" fill="white" opacity="0.25"/>
 </svg>
