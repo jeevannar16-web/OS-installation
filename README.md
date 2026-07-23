@@ -9,293 +9,30 @@
 ![Vite](https://img.shields.io/badge/Vite_5-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![XState](https://img.shields.io/badge/XState_5-222222?style=for-the-badge&logo=xstate&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Deploy](https://img.shields.io/badge/Live_Demo-00C853?style=for-the-badge&logo=vercel&logoColor=white)
 
-### Practice installing an OS before you actually do it.
+**Practice installing operating systems — without risking your real machine.**
 
-**100% interactive. Every scene requires real user input.**
-
-**[Try it live](https://os-installation.vercel.app)**
+[Try it live](https://os-installation.vercel.app) · [Report Bug](https://github.com/jeevannar16-web/OS-installation/issues)
 
 </div>
 
 ---
 
-## How It Works
+## What is this?
 
-```
- You choose an OS          You go through           You finish with
- and install path     ---> real interactive   ---> a working desktop
-                          scenes that match
-                          real-world steps
-```
+A fully interactive browser-based OS installation simulator. Choose an OS (Ubuntu, Windows 11, Arch Linux, Fedora, Debian, Zorin, Linux Mint) and an install path (Virtual Machine, Dual Boot, or Live USB), then go through **every real-world step** — from downloading the ISO to booting into the finished desktop.
 
-```
- .─────────────────────────────────────────────────────────.
- │  SEARCH    DOWNLOAD    FLASH USB    REBOOT    INSTALL   │
- │   🔍    ->   📥    ->   💾    ->    🔄   ->   ⚙️     │
- │                                                         │
- │  Every arrow = you must complete the scene to advance   │
- '─────────────────────────────────────────────────────────'
-```
+No files are actually downloaded. No disks are modified. It's all simulated — but every click, every decision, and every sequence matches real installation.
 
 ---
 
-## 3 Installation Paths
+## One Command to Run
 
-```
-    ┌──────────────────────────────────────────────────────────────┐
-    │                    CHOOSE YOUR PATH                          │
-    └──────────┬───────────────────┬───────────────────┬──────────┘
-               │                   │                   │
-               ▼                   ▼                   ▼
-        ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-        │  VIRTUAL    │    │   DUAL      │    │   LIVE      │
-        │  MACHINE    │    │   BOOT      │    │   USB       │
-        │             │    │             │    │             │
-        │  Safest     │    │  Most       │    │  Try before │
-        │  option     │    │  realistic  │    │  you install│
-        └──────┬──────┘    └──────┬──────┘    └──────┬──────┘
-               │                  │                   │
-               ▼                  ▼                   ▼
-        Create VirtualBox   Flash USB to stick    Flash USB to stick
-        Attach ISO          Boot from USB         Boot from USB
-        Boot from ISO       Shrink Windows        Try Ubuntu live
-        Install             Partition & Install    Install from desktop
-        Done                GRUB Menu             GRUB Menu
-                            First Boot            First Boot
+```bash
+npm start
 ```
 
----
-
-## 20+ Interactive Scenes
-
-```
- .───────────────────────────────────────────────────────────────────.
- │                                                                   │
- │   🔍 Search         Fake browser with real URLs                  │
- │      ──────>        Type query, click results, download ISO      │
- │                                                                   │
- │   📥 Download       File manager with ISO + drag                 │
- │      ──────>        See the file, drag it to USB                 │
- │                                                                   │
- │   💾 Flash USB      Rufus / Ventoy / BalenaEtcher               │
- │      ──────>        Pick tool, watch progress + logs             │
- │                                                                   │
- │   🔌 Reinsert       Drag-and-drop USB to port                    │
- │      ──────>        Simulates moving USB to target PC            │
- │                                                                   │
- │   🔄 Reboot         POST screen + memory test + F12              │
- │      ──────>        Press F2 for full BIOS setup                 │
- │                                                                   │
- │   🖥️  BIOS          Full interactive BIOS (5 tabs)               │
- │      ──────>        Boot order, Secure Boot, VT-x               │
- │                                                                   │
- │   📋 Boot Menu      Select USB from device list                  │
- │      ──────>        Wrong entries show error feedback            │
- │                                                                   │
- │   💿 Disk Mgmt      Right-click C: -> Shrink                     │
- │      ──────>        Full Windows Disk Management UI              │
- │                                                                   │
- │   📊 Partition      Drag slider + partition table                │
- │      ──────>        Shows NTFS, ext4, swap, FAT32               │
- │                                                                   │
- │   ⚙️  Install        Fill wizard -> watch progress               │
- │      ──────>        File-copy names scroll in terminal           │
- │                                                                   │
- │   🐧 GRUB Menu      Select Ubuntu or Windows                     │
- │      ──────>        Windows actually boots!                      │
- │                                                                   │
- │   🪟 Windows        Explore Windows 11 desktop                   │
- │      ──────>        "Restart to GRUB" to go back                 │
- │                                                                   │
- │   👋 First Boot     Online Accounts + Privacy                    │
- │      ──────>        Toggle switches, complete wizard             │
- │                                                                   │
- │   🎉 Done           Open apps, type neofetch                    │
- │      ──────>        Interactive desktop with terminal            │
- │                                                                   │
- '───────────────────────────────────────────────────────────────────'
-```
-
----
-
-## Presentation Tools
-
-```
- .───────────────────────────────────────────────────────────────.
- │                                                               │
- │   🎬  PRESENTATION MODE                                      │
- │       Click button -> Fullscreen + auto-advance               │
- │                                                               │
- │   📝  SPEAKER NOTES                ⌨  KEYBOARD SHORTCUTS     │
- │       Press B -> shows what            Press ? -> overlay     │
- │       to say at each scene                                        │
- │                                                               │
- │   🗺️  SCENE NAVIGATOR             ⏪  BACK NAVIGATION        │
- │       Press N -> jump to               Press Backspace ->     │
- │       any scene directly                go back (even from     │
- │                                         the Done screen!)      │
- │                                                               │
- │   ⚡  SPEED MODE                   🎨  9 THEMES              │
- │       Press S -> 3-4x faster           Press T -> Dark,       │
- │                                         Light, Projector,     │
- │                                         Hi-Contrast, Ocean,   │
- │                                         Neon, Midnight, Warm,  │
- │                                         Minimal                │
- │                                                               │
- │   🔇  SOUND TOGGLE                 📱  TOUCH BAR             │
- │       Press M -> mute/unmute           Big buttons at bottom  │
- │                                         for smartboard touch   │
- │                                                               │
- '───────────────────────────────────────────────────────────────'
-```
-
-### Keyboard Shortcuts
-
-```
-  ┌──────────┬──────────────────────────────┐
-  │    ?     │  Show shortcuts              │
-  │  Enter   │  Continue / skip             │
-  │ Backspace│  Go back                     │
-  │  Space   │  Pause auto-advance          │
-  │    S     │  Speed mode                  │
-  │    T     │  Cycle theme                 │
-  │    M     │  Mute sounds                 │
-  │    N     │  Scene navigator             │
-  │    B     │  Speaker notes               │
-  │   Esc    │  Close overlays              │
-  └──────────┴──────────────────────────────┘
-```
-
----
-
-## What Makes It Realistic
-
-```
-  REAL SIMULATOR                         WHAT YOU SEE
-  ─────────────                          ────────────
-
-  Searching Google            ──>     Fake browser with real URLs
-  Downloading an ISO          ──>     File manager + progress bar
-  Flashing with Rufus         ──>     Rufus UI with log output
-  Moving USB to PC            ──>     Drag-and-drop animation
-  POST + BIOS                 ──>     Memory test, F12 prompt, full BIOS
-  Selecting boot device       ──>     Boot menu with wrong-entry errors
-  Shrinking C: drive          ──>     Windows Disk Management UI
-  Partitioning disk           ──>     Slider + table (NTFS/ext4/swap)
-  Running the installer       ──>     Wizard + scrolling filenames
-  GRUB bootloader             ──>     Interactive menu + countdown
-  First boot welcome          ──>     Ubuntu welcome wizard
-  Using the desktop           ──>     Files, Browser, Settings, Terminal
-```
-
----
-
-## Dual Boot Proof
-
-```
-  ┌─────────────────────────────────────────────────┐
-  │              GRUB BOOTLOADER MENU                │
-  │                                                  │
-  │  > Ubuntu                    Kernel 6.8.0-41     │
-  │    Advanced options for Ubuntu                   │
-  │    Windows Boot Manager      On /dev/sda1        │
-  │    UEFI Firmware Settings                        │
-  │                                                  │
-  │  Automatically boot in 10 seconds...             │
-  └──────────────────┬──────────────────────────────┘
-                     │
-          ┌──────────┴──────────┐
-          │                     │
-          ▼                     ▼
-   ┌─────────────┐      ┌─────────────┐
-   │   Ubuntu    │      │  Windows    │
-   │   boots!    │      │  11 boots!  │
-   │             │      │             │
-   │  "Restart   │      │  "Restart   │
-   │   to GRUB"  │      │   to GRUB"  │
-   └─────────────┘      └─────────────┘
-          │                     │
-          └──────────┬──────────┘
-                     │
-                     ▼
-            Back to GRUB menu
-```
-
----
-
-## Tech Stack
-
-```
-  ┌─────────────────────────────────────────┐
-  │                                         │
-  │   React 18 + TypeScript 5 + Vite 5     │
-  │                                         │
-  │   Tailwind CSS 3  +  Framer Motion 11  │
-  │                                         │
-  │   XState 5 (state machines)            │
-  │                                         │
-  │   Web Audio API (no external deps)     │
-  │                                         │
-  │   React Router 6  +  HTML5 DnD         │
-  │                                         │
-  └─────────────────────────────────────────┘
-```
-
----
-
-## Project Structure
-
-```
-  src/
-  ├── components/
-  │   ├── scenes/                  20+ interactive scenes
-  │   │   ├── FakeBrowser.tsx          🔍 Search for ISO
-  │   │   ├── FileManager.tsx          📥 Download ISO
-  │   │   ├── FlashUSB.tsx             💾 Flash USB drive
-  │   │   ├── UsbReinsert.tsx          🔌 Drag-and-drop USB
-  │   │   ├── Reboot.tsx               🔄 POST + BIOS setup
-  │   │   ├── BootMenu.tsx             📋 Boot device selector
-  │   │   ├── DiskManagement.tsx       💿 Windows Disk Mgmt
-  │   │   ├── Partition.tsx            📊 Partition slider + table
-  │   │   ├── Install.tsx              ⚙️  Installer wizard
-  │   │   ├── ArchInstall.tsx          🏹 Arch terminal installer
-  │   │   ├── LiveWelcome.tsx          👋 Try / Install choice
-  │   │   ├── LiveDesktop.tsx          🖥️  Live desktop with apps
-  │   │   ├── CreateVM.tsx             📦 VirtualBox VM wizard
-  │   │   ├── MountISO.tsx             💿 Attach ISO
-  │   │   ├── VmBoot.tsx               ⚡ Power on VM
-  │   │   ├── VmClose.tsx              ❌ Close VM
-  │   │   ├── GrubMenu.tsx             🐧 GRUB bootloader
-  │   │   ├── FirstBoot.tsx            👋 Welcome wizard
-  │   │   ├── Done.tsx                 🎉 Celebration + desktop
-  │   │   └── SelectHostOS.tsx         💻 Host OS picker
-  │   ├── shared/
-  │   │   ├── SceneAdvance.tsx         Scene advance system
-  │   │   ├── ThemeProvider.tsx        9 themes
-  │   │   ├── ThemePicker.tsx          Theme dropdown
-  │   │   ├── sounds.ts               Sound effects
-  │   │   └── ErrorBoundary.tsx        Error catcher
-  │   └── shell/
-  │       └── DesktopShell.tsx         OS window frame
-  ├── data/
-  │   ├── types.ts                     Shared types
-  │   ├── ubuntu.ts                    Ubuntu config
-  │   ├── windows.ts                   Windows 11 config
-  │   ├── arch.ts                      Arch Linux config
-  │   ├── debian.ts                    Debian (stub)
-  │   └── fedora.ts                    Fedora (stub)
-  ├── machines/
-  │   └── simulationMachine.ts         XState state machine
-  └── pages/
-      ├── LandingPage.tsx              Home page
-      └── SimulationPage.tsx           Scene router + tools
-```
-
----
-
-## Getting Started
+Or manually:
 
 ```bash
 git clone https://github.com/jeevannar16-web/OS-installation.git
@@ -304,75 +41,77 @@ npm install
 npm run dev
 ```
 
+---
+
+## Features
+
+- **20+ interactive scenes** — real browser, file manager, Rufus/Ventoy/Etcher UIs, BIOS setup with 5 tabs, boot menu, disk management, partition editor, GRUB menu, Windows OOBE, and more
+- **3 install paths** — Virtual Machine (VirtualBox 7.0), Dual Boot (shrink + partition), Live USB (try before installing)
+- **7 supported OSes** — Ubuntu, Windows 11, Arch Linux, Fedora, Debian, Zorin OS, Linux Mint
+- **Full BIOS simulation** — 5 tabs (Main, Advanced, Security, Boot, Exit), toggle Secure Boot, VT-x, boot order
+- **Interactive USB flashing** — plug, eject, reconnect with drag-and-drop + click-to-connect
+- **Guided help** — `? Guide` button on every step shows what to do, how to do it, and what happens next
+- **Dual-boot flow** — shrink Windows partition, install alongside, pick OS from GRUB
+- **Live desktop** — open apps, browse files, install from within the live environment
+- **VirtualBox integration** — create VM, mount ISO, power on, close VM
+- **Scrolling terminal install output** — real file-copy names scroll during installation
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 18 + TypeScript 5 |
+| Build | Vite 5 |
+| State | XState 5 (state machines) |
+| Animation | Framer Motion 11 |
+| Styling | Tailwind CSS 3 |
+| Routing | React Router 6 |
+| Audio | Web Audio API |
+
+---
+
+## Project Structure
+
 ```
-  ┌──────────────────────────────────────┐
-  │  Commands:                           │
-  │                                      │
-  │  npm run dev       Start dev server  │
-  │  npm run build     Production build  │
-  │  npm run preview   Preview build     │
-  └──────────────────────────────────────┘
+src/
+├── components/
+│   ├── scenes/         20+ interactive OS installation scenes
+│   │   ├── FakeBrowser.tsx       Download ISO from official site
+│   │   ├── FileManager.tsx       Locate ISO in Downloads
+│   │   ├── FlashUSB.tsx          Rufus / Ventoy / BalenaEtcher
+│   │   ├── Reboot.tsx            POST + BIOS setup + boot
+│   │   ├── BootMenu.tsx          Select boot device
+│   │   ├── DiskManagement.tsx    Shrink Windows partition
+│   │   ├── Partition.tsx         Partition slider + table
+│   │   ├── Install.tsx           Installer wizard + terminal output
+│   │   ├── ArchInstall.tsx       Arch Linux terminal installer
+│   │   ├── CreateVM.tsx          VirtualBox 7.0 VM wizard
+│   │   ├── MountISO.tsx          Attach ISO in VM settings
+│   │   ├── VmBoot.tsx            Power on VM boot sequence
+│   │   ├── GrubMenu.tsx          Dual-boot GRUB menu
+│   │   ├── WindowsSetup.tsx      Windows Setup wizard
+│   │   ├── WindowsOOBE.tsx       Windows first-boot setup
+│   │   ├── Done.tsx              Completion + desktop
+│   │   └── ...                   More scenes
+│   ├── shared/          Reusable UI components
+│   │   ├── SceneAdvance.tsx      Scene flow control
+│   │   ├── ThemeProvider.tsx     9 themes
+│   │   └── ErrorBoundary.tsx     Error handling
+│   └── ...
+├── data/               OS configurations (7 OSes)
+├── machines/           XState state machine
+└── pages/              Landing + simulation pages
 ```
 
 ---
 
-## Presentation Script (10-15 min)
+## SEO & Uniqueness
 
-```
-  .───────────────────────────────────────────────────────.
-  │  STEP    WHAT TO SHOW           WHAT TO SAY          │
-  ├───────────────────────────────────────────────────────┤
-  │                                                       │
-  │   1      Landing page           "This simulates OS   │
-  │          Choose Ubuntu +        installation — 100%   │
-  │          Dual Boot              interactive"          │
-  │                                                       │
-  │   2      Search browser         "Search for the ISO  │
-  │          Click download         like you would on     │
-  │                                  a real PC"           │
-  │                                                       │
-  │   3      Flash USB              "Flash the ISO to    │
-  │          Watch Rufus            USB — Rufus is the    │
-  │          progress               most popular tool"    │
-  │                                                       │
-  │   4      Drag USB               "Physically move the  │
-  │          Reboot                 USB to the target PC" │
-  │                                                       │
-  │   5      Press F2 for BIOS      "This is a full BIOS │
-  │          Navigate tabs          simulator — 5 tabs,   │
-  │          Show boot order        Secure Boot, VT-x"   │
-  │                                                       │
-  │   6      Shrink C: drive        "Windows Disk Mgmt — │
-  │          Drag partition slider  Create room for Linux"│
-  │                                                       │
-  │   7      Watch install          "File-copy names      │
-  │          Scroll filenames       scroll by — real      │
-  │          Watch timer            Linux filenames"      │
-  │                                                       │
-  │   8      Select Windows         "Dual-boot proof —    │
-  │          from GRUB              Windows boots!"       │
-  │                                                       │
-  │   9      Open Terminal          "Type neofetch —      │
-  │          Type neofetch          system info shows"    │
-  │                                                       │
-  '───────────────────────────────────────────────────────'
-```
+This is the **only interactive OS installation simulator** on the web. There are tutorial videos, written guides, and virtual lab services — but nothing that lets you click through every step of installing Ubuntu, Windows, Arch, and more, in a realistic browser-based environment.
 
-**Pro tips:**
-- Press **T** for Projector theme on big screens
-- Press **S** to speed through boring parts
-- Press **B** for speaker notes that tell you what to say
-- Ask students "which OS?" then press **N** to jump to it
-
----
-
-## Contributing
-
-1. Fork the repo
-2. Create your branch (`git checkout -b feature/my-os`)
-3. Make your changes
-4. Commit and push
-5. Open a Pull Request
+The simulator is used in classrooms, tech workshops, and by individuals learning to install operating systems for the first time — all without risk to their actual computer.
 
 ---
 
@@ -380,12 +119,10 @@ npm run dev
 
 [MIT](https://opensource.org/licenses/MIT)
 
----
+<br />
 
 <div align="center">
 
-**Built with React, XState, and an unreasonable number of reboot simulations.**
-
-If this helped you, consider giving it a star
+**Built with React, XState, and an unreasonable number of simulated reboots.**
 
 </div>
